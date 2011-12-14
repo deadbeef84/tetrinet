@@ -1,0 +1,63 @@
+Game.MSG_NAME (client)
+	t: 1
+	name: "Namn"
+	
+Game.MSG_SELF_ID (server)
+	t: 2
+	id: clientId
+	
+Game.MSG_ADD_PLAYER (server)
+	t: 3
+	id: clientId
+	name: "Player Name"
+	
+Game.MSG_REMOVE_PLAYER
+	t: 4
+	id: clientId
+	
+Game.MSG_START
+	t: 5
+	seed: int
+	
+Game.MSG_UPDATE_BOARD (client)
+	t: 6
+	data: []
+	
+Game.MSG_UPDATE_BOARD (server)
+	t: 6
+	id: clientId
+	data: []
+	
+Game.MSG_GAMEOVER (client)
+	t: 7
+	
+Game.MSG_GAMEOVER (server)
+	t: 7
+	id: clientId
+	
+Game.MSG_LINES (client)
+	t: 8
+	n: lines_to_add
+	
+Game.MSG_LINES (server)
+	t: 8
+	id: clientId
+	n: lines_to_add
+	
+Game.MSG_CHAT (client)
+	t: 9
+	text: "Message goes here"
+	
+Game.MSG_CHAT (server)
+	t: 9
+	id: clientId
+	text: "Message goes here"
+	
+Game.MSG_SPECIAL (client)
+	t: 10
+	id: clientId
+	s: specialId
+	
+Game.MSG_WINNER (server)
+	t: 11
+	id: clientId

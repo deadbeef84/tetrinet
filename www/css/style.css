@@ -1,0 +1,327 @@
+body {
+	font-family:Ubuntu, sans-serif;
+}
+a img { border: 0; }
+h1 {
+	font-family: 'Bevan', serif;
+	font-size: 48px;
+	text-transform: uppercase;
+	margin: 0;
+}
+h2 { /* player names */
+	font-size: 16px;
+}
+em { /* names in chat */
+	font-weight: bold;
+	font-size: 14px;
+}
+em.self { /* your name */
+	color: blue;
+}
+
+#openid_form {
+	margin: 0 auto;
+}
+
+#container {
+	width: 968px;
+	text-align: center;
+	margin: 0 auto;
+}
+#startbtn {
+	position: fixed;
+	width: 100%;
+	left: 0;
+	bottom:10px;
+}
+#chatbox {
+	text-align: left;
+	float: left;
+	width: 50%;
+	height: 150px;
+	background-color: #cfc;
+}
+	#chat {
+		height: 120px;
+		overflow: auto;
+	}
+	#chat p {
+		line-height: 1em;
+		margin: 0 0 .25em 0;
+	}
+#gamelogbox {
+	text-align: left;
+	float: right;
+	width: 50%;
+	background-color: #fcc;
+	height: 150px;
+}
+	#gamelog {
+		overflow: auto;
+		height: 150px;
+	}
+	#gamelog p {
+		line-height: 1em;
+		margin: 0 0 .25em 0;
+	}
+	
+#gamearea {
+	width: 100%;
+	min-height: 450px;
+	float: left;
+	clear: both;
+	position: relative;
+}
+#lobby ul {
+	padding: 0;
+}
+	#lobby ul li {
+		list-style-type: none;
+		width: 200px;
+		color: #666666;
+		padding: 15px 6px;
+		margin: 5px auto;
+		background: -moz-linear-gradient(
+			top,
+			#ccd4d8 0%,
+			#ffffff 10%,
+			#b2b6b7);
+		background: -webkit-gradient(
+			linear, left top, left bottom, 
+			from(#ccd4d8),
+			color-stop(0.10, #ffffff),
+			to(#b2b6b7));
+		border-radius: 8px;
+		-moz-border-radius: 8px;
+		-webkit-border-radius: 8px;
+		border: 1px solid #b2b6b7;
+		-moz-box-shadow:
+			0px 0px 0px rgba(000,000,000,0.5),
+			inset 0px 0px 0px rgba(255,255,255,0.7);
+		-webkit-box-shadow:
+			0px 0px 0px rgba(000,000,000,0.5),
+			inset 0px 0px 0px rgba(255,255,255,0.7);
+		text-shadow:
+			0px 0px 0px rgba(000,000,000,0),
+			0px 0px 0px rgba(255,255,255,0);
+	}
+	#lobby ul li a {
+		color: #444;
+		text-decoration: none;
+	}
+	#lobby ul li a:hover {
+		color: #666;
+	}
+
+/* players */
+.player {
+	width: 96px;
+	padding: 5px;
+	position: relative;
+	margin-bottom: 5px;
+	margin-right: 5px;
+	float: left;
+}
+	.player h2 {
+		margin: 0;
+		line-height: 20px;
+		font-size: 11px;
+		font-weight: normal;
+		white-space: nowrap;
+		overflow: hidden;
+	}
+	.player .board {
+		float: left;
+		position: relative;
+		-webkit-transition: -webkit-transform ease-in-out 1s; /* needed for quake */
+	}
+	.player .board::after {
+		content: "";
+		position: absolute;
+		top:0; right:0; bottom:0; left:0;
+	}
+	
+/* self */
+.player.self {
+	width: 272px;
+	margin-right: 10px;
+}
+	.player.self h2 {
+		font-size: 16px;
+	}
+	.player.self .nextpiece {
+		position: absolute;
+		z-index: 1;
+		top: 25px;
+		left: 202px;
+		width: 64px;
+		background-color: #eee;
+		padding: 5px;
+	}
+	.player.self .inventory {
+		clear: both;
+		margin: 5px -100px 0 0;
+		text-align: left;
+	}
+
+/* game states */
+.player.winner .board::after {
+	background: black url(../images/win.png) no-repeat 50% 50%;
+	opacity: .9;
+}
+.player.self.winner .board::after {
+	background-image: url(../images/win-self.png);
+}
+.player.gameover {
+	background-color: red;
+}
+.player.gameover .board::after {
+	background: black url(../images/skull.jpg) no-repeat 50% 50%;
+	opacity: .7;
+}
+.player.self.gameover .board::after {
+	background-image: url(../images/skull-self.jpg);
+}
+
+/* popup when someone attacks */
+.player p.attack {
+	text-align: center;
+	position: absolute;
+	top: -50px;
+	left: -50px;
+	right: -50px;
+	color: #444;
+	background: rgba(255, 255, 255, 0.7);
+	-webkit-border-radius: 8px;
+	-webkit-box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+	padding: 10px;
+}
+
+
+/* the board */
+.board-wrapper {
+	width: 96px;
+	background: black url(../images/skin/original.png) no-repeat -192px -24px;
+	overflow: hidden;
+}
+.self .board-wrapper {
+	background: black url(../images/skin/original.png) no-repeat 0 -24px;
+	width: 192px;
+}
+.row {
+	float: left;
+	width: 100%;
+}
+.cell {
+	float: left;
+	width: 8px;
+	height: 8px;
+	line-height: 8px;
+	font-size: 0;
+	background: url(../images/skin/original.png) no-repeat 0 0;
+}
+.self .cell {
+	width: 16px;
+	height: 16px;
+	line-height: 16px;
+}
+.cell.empty { background-image: none; }
+.cell.block { }
+.cell.special { background-position: -80px 0; }
+
+.self .cell.block-2, .self .cell.block-7 { background-position: 0 0; } /* blue: I, S */
+.self .cell.block-1, .self .cell.block-3 { background-position: -16px 0; } /* yellow: O, T */
+.self .cell.block-5 { background-position: -32px 0; } /* green: L */
+.self .cell.block-4 { background-position: -48px 0; } /* purple: J */
+.self .cell.block-6 { background-position: -64px 0; } /* red: Z */
+
+.cell.block-2, .cell.block-7 { background-position: 0px -16px; }
+.cell.block-1, .cell.block-3 { background-position: -8px -16px; }
+.cell.block-5 { background-position: -16px -16px; }
+.cell.block-4 { background-position: -24px -16px; }
+.cell.block-6 { background-position: -32px -16px; }
+
+.cell.block-10 { background-image: none; background-color: rgba(127,127,127,0.3); }
+
+.self .cell.special-1 { background-position: -80px 0; } /* add */
+.self .cell.special-2 { background-position: -96px 0; } /* clear */
+.self .cell.special-3 { background-position: -112px 0; } /* nuke */
+.self .cell.special-4 { background-position: -128px 0; } /* quake */
+.self .cell.special-5 { background-position: -144px 0; } /* random */
+.self .cell.special-6 { background-position: -160px 0; } /* clear specials */
+.self .cell.special-7 { background-position: -176px 0; } /* gravity */
+.self .cell.special-8 { background-position: -192px 0; } /* bomb */
+.self .cell.special-9 { background-position: -208px 0; } /* switch */
+.self .cell.special-10 { background-position: -224px 0; } /* left gravity */
+.self .cell.special-11 { background-position: -240px 0; } /* zebra */
+.self .cell.special-12 { background-position: -256px 0; } /* flip */
+.self .cell.special-13 { background-position: -272px 0; } /* invisibility */
+.self .cell.special-14 { background-position: -288px 0; } /* reflective shield */
+.self .cell.special-15 { background-position: -304px 0; } /* game of life */
+.self .cell.special-16 { background-position: -320px 0; } /* glue */
+.self .cell.special-17 { background-position: -336px 0; } /* rickroll */
+.self .cell.special-18 { background-position: -352px 0; } /* moses */
+.self .cell.special-19 { background-position: -368px 0; } /* invert */
+.self .cell.special-20 { background-position: -384px 0; } /* speed */
+.self .cell.special-21 { background-position: -400px 0; } /* surprise */
+.self .cell.special-22 { background-position: -416px 0; } /* s-block */
+
+.cell.special-1 { background-position: -40px -16px; } /* add */
+.cell.special-2 { background-position: -48px -16px; } /* clear */
+.cell.special-3 { background-position: -56px -16px; } /* nuke */
+.cell.special-4 { background-position: -64px -16px; } /* quake */
+.cell.special-5 { background-position: -72px -16px; } /* random */
+.cell.special-6 { background-position: -80px -16px; } /* clear specials */
+.cell.special-7 { background-position: -88px -16px; } /* gravity */
+.cell.special-8 { background-position: -96px -16px; } /* bomb */
+.cell.special-9 { background-position: -104px -16px; } /* switch */
+.cell.special-10 { background-position: -112px -16px; } /* left gravity */
+.cell.special-11 { background-position: -120px -16px; } /* zebra */
+.cell.special-12 { background-position: -128px -16px; } /* flip */
+.cell.special-13 { background-position: -136px -16px; } /* invisibility */
+.cell.special-14 { background-position: -144px -16px; } /* reflective shield */
+.cell.special-15 { background-position: -152px -16px; } /* game of life */
+.cell.special-16 { background-position: -160px -16px; } /* glue */
+.cell.special-17 { background-position: -168px -16px; } /* rickroll */
+.cell.special-18 { background-position: -176px -16px; } /* moses */
+.cell.special-19 { background-position: -184px -16px; } /* invert */
+.cell.special-20 { background-position: -192px -16px; } /* speed */
+.cell.special-21 { background-position: -200px -16px; } /* surprise */
+.cell.special-21 { background-position: -208px -16px; } /* s-block */
+
+/* flip */
+.flip {
+	-webkit-transform: scaleX(-1);
+}
+/* nuke */
+.board.nuke .board-wrapper {
+	background: transparent;
+}
+/* bomb */
+.explosion {
+	background-image: url('../images/explosion.gif');
+	width: 71px;
+	height: 100px;
+	margin: -42px -28px;
+	position: absolute;
+	z-index: 10;
+}
+/* rickrolling */
+.rickroll-1 .player.self .board::after {
+	opacity: 0.5;
+	background: url(../images/rickroll.gif) 50% 0%;
+}
+.rickroll-2 .player.self::after {
+	content: ' ';
+	position: absolute;
+	top:0; right:0; bottom:0; left:0;
+	opacity: 0.5;
+	background: url(../images/rickroll.gif);
+}
+.rickroll-3::after {
+	content: ' ';
+	position: absolute;
+	top:0; right:0; bottom:0; left:0;
+	opacity: 0.5;
+	background: url(../images/rickroll.gif);
+}
