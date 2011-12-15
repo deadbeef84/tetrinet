@@ -2,3 +2,4 @@ cms
 ucms
 *.bak
 *.log
+.DS_Store

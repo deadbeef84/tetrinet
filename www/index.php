@@ -1,45 +1,48 @@
 <?php
+require 'config.php';
 //session_start();
-if($_SERVER['HTTP_HOST'] != 'tetrinet.se') {
-	header('Location: http://tetrinet.se', true, 301);
+if ($_SERVER['HTTP_HOST'] != $CONFIG['host']) {
+	header("Location: http://{$CONFIG['host']}/", true, 301);
 }
-require 'openid.php';
-$name = 'Guest'.rand();
-$status = '';
-try {
-	//if(!isset($_SESSION['openid'])) {
-		# Change 'localhost' to your domain name.
-		$openid = new LightOpenID('tetrinet.se');
-		if(!$openid->mode) {
-			if(isset($_GET['openid_identifier'])) {
-				$openid->identity = $_GET['openid_identifier'];
-				# The following two lines request email, full name, and a nickname
-				# from the provider. Remove them if you don't need that data.
-				$openid->required = array('contact/email');
-				//$openid->optional = array('namePerson', 'namePerson/friendly');
-				
-				header('Location: ' . $openid->authUrl());
-			}
-		} elseif($openid->mode == 'cancel') {
-			$status = 'User has canceled authentication!';
-		} else {
-			if($openid->validate()) {
-				$status = 'User has logged in.';
-				$_SESSION['openid'] = array(
-					'identity' => $openid->identity,
-					'attributes' => $openid->getAttributes(),
-				);
-				$a = $openid->getAttributes();
-				$e = $a['contact/email'];
-				$name = substr($e, 0, strpos($e, '@'));
+if (!$CONFIG['singleplayer_enabled']) {
+	require 'openid.php';
+	$name = 'Guest'.rand();
+	$status = '';
+	try {
+		//if(!isset($_SESSION['openid'])) {
+			# Change 'localhost' to your domain name.
+			$openid = new LightOpenID('tetrinet.se');
+			if(!$openid->mode) {
+				if(isset($_GET['openid_identifier'])) {
+					$openid->identity = $_GET['openid_identifier'];
+					# The following two lines request email, full name, and a nickname
+					# from the provider. Remove them if you don't need that data.
+					$openid->required = array('contact/email');
+					//$openid->optional = array('namePerson', 'namePerson/friendly');
+					
+					header('Location: ' . $openid->authUrl());
+				}
+			} elseif($openid->mode == 'cancel') {
+				$status = 'User has canceled authentication!';
 			} else {
-				$status = 'not valid';
+				if($openid->validate()) {
+					$status = 'User has logged in.';
+					$_SESSION['openid'] = array(
+						'identity' => $openid->identity,
+						'attributes' => $openid->getAttributes(),
+					);
+					$a = $openid->getAttributes();
+					$e = $a['contact/email'];
+					$name = substr($e, 0, strpos($e, '@'));
+				} else {
+					$status = 'not valid';
+				}
 			}
-		}
-	//}
-}
-catch(Exception $e) {
-	echo $e->getMessage();
+		//}
+	}
+	catch(Exception $e) {
+		echo $e->getMessage();
+	}
 }
 $version = 2;
 ?>
@@ -50,9 +53,9 @@ $version = 2;
   <meta name="keywords" content="" />
   <meta name="description" content="" />
   <title>Tetrinet</title>
-  <base href="http://tetrinet.se/"></base>
+  <base href="<?=$CONFIG['base_href']?>"></base>
 
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" type="text/javascript"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
   <script src="http://tetrinet.se:7000/socket.io/socket.io.js" type="text/javascript"></script>
   <script src="js/base.js?<?=$version?>" type="text/javascript"></script>
   <script src="js/eventemitter.js?<?=$version?>" type="text/javascript"></script>
@@ -71,9 +74,10 @@ $version = 2;
   <link href="css/style.css" media="all" type="text/css" rel="stylesheet" />
 <script type="text/javascript">
 $(document).ready(function() {
-<?php if(!isset($_SESSION['openid'])) {?>
+<?php if(!$CONFIG['singleplayer_enabled']) {?>
+  <?php if(!isset($_SESSION['openid'])) {?>
 	openid.init('openid_identifier');
-<?php } else { ?>
+  <?php } else { ?>
 	$('#login-form').submit(function() {
 		var name = $(this).find('#name').val();
 		var g = new Game(name);
@@ -82,6 +86,13 @@ $(document).ready(function() {
 		$('#lobby').show();
 		return false;
 	});
+  <?php } ?>
+<?php } else { ?>
+	// autostart single player
+	$('#login').hide();
+	$('#ingame').show();
+	var g = new Game();
+	Object.seal(g);
 <?php } ?>
 });
 </script>
@@ -95,7 +106,7 @@ $(document).ready(function() {
     </header>
 
     <div id="login">
-      <?php if(!isset($_SESSION['openid'])) {?>
+      <?php if(!$CONFIG['singleplayer_enabled'] && !isset($_SESSION['openid'])) {?>
       <form action="/" method="get" id="openid_form">
         <?php echo $status ?>
         <input type="hidden" name="action" value="verify" />
@@ -117,7 +128,7 @@ $(document).ready(function() {
       </form>
       <?php } else { ?>
       <form action="/" method="get" id="login-form">
-        <input type="text" id="name" name="name" value="<?php echo $name; ?>" />
+        <input type="text" id="name" name="name" value="<?php echo (isset($name)?$name:''); ?>" />
         <button>Enter</button>
       </form>
       <?php } ?>

@@ -1,5 +1,4 @@
 function Game(name, token) {
-	this.socket = io.connect('//'+location.hostname+':7000');
 	
 	this.player = null;
 	this.players = {};
@@ -12,33 +11,49 @@ function Game(name, token) {
 	this.options = {};
 	
 	var self = this;
-	this.socket.on('connect', function(event) {
-		// send name
-		self.chat('You are now connected');
-		self.send({t: Message.JOIN, name:name, token: token});
-		/*setInterval(function() {
-			//if(self.ws.readyState == WebSocket.OPEN) {
-				self.send({t: Message.PING});
+	
+	if (name) {
+	
+		this.socket = io.connect('//'+location.hostname+':7000');
+		
+		this.socket.on('error', function(event) {
+			console.log(event);
+		});
+		this.socket.on('connect', function(event) {
+			// send name
+			self.chat('You are now connected');
+			self.send({t: Message.JOIN, name:name, token: token});
+			/*setInterval(function() {
+				//if(self.ws.readyState == WebSocket.OPEN) {
+					self.send({t: Message.PING});
+				//}
+			}, 2500);*/
+		});
+		this.socket.on('message', function(msg) {
+			//try {
+				self.handleMessage(JSON.parse(msg));
 			//}
-		}, 2500);*/
-	});
-	this.socket.on('message', function(msg) {
-		//try {
-			self.handleMessage(JSON.parse(msg));
-		//}
-		//catch(e) {
-		//	console.log(e);
-		//	alert(e.toString() + '\n' + e.filename + ':' + e.lineNumber);
-		//}
-	});
-	this.socket.on('disconnect', function(event) {
-		self.chat("socket closed");
-	});
+			//catch(e) {
+			//	console.log(e);
+			//	alert(e.toString() + '\n' + e.filename + ':' + e.lineNumber);
+			//}
+		});
+		this.socket.on('disconnect', function(event) {
+			self.chat("socket closed");
+		});
+	
+	} else {
+	
+		// this is a single player game
+		
+		this.handleMessage({ t:Message.OPTIONS, o:{height:24, width:12, specials: false} });
+		this.handleMessage({ t:Message.SET_PLAYER, self:true, p:{index:0, name:"You"} });
+	}
 	
 	$(document).keydown(function(e) {
 		if(document.activeElement && $(document.activeElement).filter(':text').length)
 			return;
-		console.log(e.which);
+		//console.log(e.which);
 		//if(e.which == 123) // start
 			//self.send({t:5});
 			
@@ -114,12 +129,30 @@ Game.prototype.checkNotify = function() {
 }
 
 Game.prototype.send = function(msg) {
-	this.socket.send(JSON.stringify(msg));
+	if (this.socket) {
+		this.socket.send(JSON.stringify(msg));
+	} else {
+		switch (msg.t) {
+			case Message.START:
+				var i = Math.floor(Math.random() * 1000000000);
+				this.handleMessage({t:Message.START, seed:i});
+				break;
+			case Message.GAMEOVER:
+				this.handleMessage({t:Message.GAMEOVER, id:this.player.id});
+				break;
+			case Message.UPDATE_BOARD:
+				this.handleMessage({t:Message.UPDATE_BOARD, id:this.player.id, d:msg.d});
+				break;
+			default:
+				// ???
+		}
+	}
 }
 
 Game.prototype.sendBoard = function() {
-	if(this.player)
+	if (this.player) {
 		this.send({t: Message.UPDATE_BOARD, d: this.player.data});
+	}
 }
 
 Game.prototype.gameLog = function(msg) {
