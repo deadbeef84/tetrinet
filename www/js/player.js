@@ -276,7 +276,7 @@ Player.prototype.initDrop = function() {
 }
 Player.prototype.getRandomBlock = function() {
 	var rndType = this.random.uint32();
-	var rndRot = this.random.uint32();
+	var rndRot = 0;//this.random.uint32();
 	if(this.sBlocks)
 		return new Block(rndType % 2 ? 5 : 6, rndRot);
 	return new Block(rndType, rndRot);
@@ -296,6 +296,7 @@ Player.prototype.doCreateNewBlock = function() {
 	this.currentBlock = this.nextBlock ? this.nextBlock : this.getRandomBlock();
 	this.nextBlock = this.getRandomBlock();
 	this.currentBlock.x = Math.floor(this.width / 2) - 1;
+	this.currentBlock.y = -this.currentBlock.getBoundingBox().miny;
 	this.emit(Board.EVENT_UPDATE);
 	if(this.collide(this.currentBlock)) {
 		this.putBlock(this.currentBlock);
@@ -314,18 +315,50 @@ Player.prototype.move = function(x,y,r,stick) {
 		x *= -1;
 	this.currentBlock.x += x;
 	this.currentBlock.y += y;
-	if(r)
+	if (r) {
 		this.currentBlock.rotate(r);
+		// make sure the block is never invisible
+		while (this.currentBlock.y + (this.currentBlock.getBoundingBox()).maxy < 0) {
+			this.currentBlock.y++;
+			verticalDisplacement++;
+		}
+	}
 	var c = this.collide(this.currentBlock);
 	if(c) {
 		if(c == -1 && x == 0 && y == 0 && r && !stick) {
-			// collided with wall when rotating?
 			var bb = this.currentBlock.getBoundingBox(),
-				ox = this.currentBlock.x;
+				ox = this.currentBlock.x,
+				oy = this.currentBlock.y;
+			// collided with wall when rotating?
 			this.currentBlock.x = (this.currentBlock.x < (this.width/2)) ? -bb.minx : this.width - bb.maxx - 1;
-			if(this.collide(this.currentBlock))
+			if (this.collide(this.currentBlock)) {
 				this.currentBlock.x = ox;
-			else {
+			} else {
+				this.emit(Board.EVENT_UPDATE);
+				return false; // no collision
+			}
+			// collided with floor when rotating?
+			for (var i = 0; i < Math.abs(bb.maxy - bb.miny) && this.collide(this.currentBlock); i++) {
+				this.currentBlock.y--;
+			}
+			if (this.collide(this.currentBlock)) {
+				this.currentBlock.y = oy;
+			} else {
+				this.emit(Board.EVENT_UPDATE);
+				return false; // no collision
+			}
+		}
+		if (c == 1 && x == 0 && y == 0 && r && !stick) {
+			var bb = this.currentBlock.getBoundingBox(),
+				oy = this.currentBlock.y;
+			// collided with floor when rotating?
+			console.log(c, bb.maxy, bb.miny);
+			for (var i = 0; i < Math.abs(bb.maxy - bb.miny) && this.collide(this.currentBlock); i++) {
+				this.currentBlock.y--;
+			}
+			if (this.collide(this.currentBlock)) {
+				this.currentBlock.y = oy;
+			} else {
 				this.emit(Board.EVENT_UPDATE);
 				return false; // no collision
 			}
@@ -445,7 +478,7 @@ Player.prototype.use = function(msg) {
 			var xpos = Math.round((480 - $boardWrapper.width()) * 0.5)-20;
 			$board.addClass('nuke');
 			$board.css({
-				'background': "black -"+xpos+"px bottom no-repeat url('../images/nuke.gif?" + Math.floor(Math.random()*1000000000) + "')"
+				'background': "black -"+xpos+"px bottom no-repeat url('../images/nuke.gif?" + Date.now() + "')"
 			});
 			clearTimeout(this.nukeTimer);
 			this.nukeTimer = setTimeout(function(obj) {
@@ -537,7 +570,7 @@ Player.prototype.use = function(msg) {
 						if(cell.length) {
 							var explosion = $('<div class="explosion" />');
 							explosion.css({ 'top': cell.offset().top, 'left': cell.offset().left,
-								'background-image': "url('../images/explosion.gif?" + Math.floor(Math.random()*1000000000) + "')" });
+								'background-image': "url('../images/explosion.gif?" + Date.now() + "')" });
 							$('#container').append(explosion);
 							setTimeout(function(obj){ obj.remove(); }, 2000, explosion);
 						}
