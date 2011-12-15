@@ -315,6 +315,7 @@ Player.prototype.move = function(x,y,r,stick) {
 		x *= -1;
 	this.currentBlock.x += x;
 	this.currentBlock.y += y;
+	var verticalDisplacement = 0;
 	if (r) {
 		this.currentBlock.rotate(r);
 		// make sure the block is never invisible
@@ -365,7 +366,7 @@ Player.prototype.move = function(x,y,r,stick) {
 		}
 		// revert position
 		this.currentBlock.x -= x;
-		this.currentBlock.y -= y;
+		this.currentBlock.y -= (y + verticalDisplacement);
 		if(r)
 			this.currentBlock.rotate(-r);
 		if(stick) {
@@ -570,7 +571,7 @@ Player.prototype.use = function(msg) {
 						if(cell.length) {
 							var explosion = $('<div class="explosion" />');
 							explosion.css({ 'top': cell.offset().top, 'left': cell.offset().left,
-								'background-image': "url('../images/explosion.gif?" + Date.now() + "')" });
+								'background-image': "url('../images/explosion.gif?" + Date.now()  + "')" });
 							$('#container').append(explosion);
 							setTimeout(function(obj){ obj.remove(); }, 2000, explosion);
 						}
