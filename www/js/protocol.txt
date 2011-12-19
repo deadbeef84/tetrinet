@@ -1,3 +1,17 @@
+Message.OPTIONS
+	t: "options"
+	o: { width:int, height:int, specials:bool }
+
+Message.SET_PLAYER
+	t: "set_player"
+	p: { index:int, name:string }
+	self: bool
+
+Message.ROOMS
+	t: "rooms"
+	r: [ { n:string, p:int }* ]
+
+
 Game.MSG_NAME (client)
 	t: 1
 	name: "Namn"

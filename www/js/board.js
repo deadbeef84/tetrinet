@@ -64,7 +64,8 @@ Board.prototype.putBlock = function(block) {
 	for(i = 0; i < block.data.length; ++i) {
 		x = block.x + block.data[i][0];
 		y = block.y + block.data[i][1];
-		this.data[y * this.width + x] = block.type + 1;
+		if (y >= 0)
+			this.data[y * this.width + x] = block.type + 1;
 	}
 	this.checklines(true);
 }
@@ -75,7 +76,7 @@ Board.prototype.collide = function(block) {
 	for(i = 0; i < block.data.length; ++i) {
 		bx = block.x + block.data[i][0];
 		by = block.y + block.data[i][1];
-		if(bx < 0 || bx >= this.width || by < 0 || by >= this.height)
+		if(bx < 0 || bx >= this.width || by >= this.height)// || by < 0)
 			return -1;
 	}
 	// check collision
