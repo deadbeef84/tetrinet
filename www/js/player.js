@@ -4,39 +4,41 @@ function Player(target) {
 	
 	var self = this;
 	
-	this.dropTimer = new Timer(1000);
+	this.dropTimer = new Timer(Player.DROP_DELAY);
 	this.dropTimer.on(Timer.EVENT_TIMER, function() { self.drop(); });
 	
-	this.newBlockTimer = new Timer(Player.DROP_DELAY, 1);
+	this.newBlockTimer = new Timer(Player.NEWBLOCK_DELAY, 1);
 	this.newBlockTimer.on(Timer.EVENT_TIMER, function() { self.doCreateNewBlock(); });
 	
-	this.flipTimer = new Timer(10000, 1);
+	this.flipTimer = new Timer(Player.TIME_FLIP, 1);
 	this.flipTimer.on(Timer.EVENT_TIMER, function() { self.flip = false; });
 	
-	this.invisibleTimer = new Timer(10000, 1);
+	this.invisibleTimer = new Timer(Player.TIME_INVISIBLE, 1);
 	this.invisibleTimer.on(Timer.EVENT_TIMER, function() { self.invisible = false; });
 	
-	this.reflectTimer = new Timer(10000, 1);
+	this.reflectTimer = new Timer(Player.TIME_REFLECT, 1);
 	this.reflectTimer.on(Timer.EVENT_TIMER, function() { self.reflect = false; });
 	
-	this.speedTimer = new Timer(15000, 1);
+	this.speedTimer = new Timer(Player.TIME_SPEED, 1);
 	this.speedTimer.on(Timer.EVENT_TIMER, function() { self.speed = false; });
 	
-	this.sTimer = new Timer(15000, 1);
+	this.sTimer = new Timer(Player.TIME_SBLOCKS, 1);
 	this.sTimer.on(Timer.EVENT_TIMER, function() { self.sBlocks = false; });
-	
-	this.animationTimer = new Timer(1000, 1);
-	this.animationTimer.on(Timer.EVENT_TIMER, function() {
-		self.animationMode = Player.ANIMATION_NONE;
-		self.animationData.count = 0;
-		self.animationStepTimer.stop();
-		self.emit(Board.EVENT_CHANGE);
-	});
-	this.animationStepTimer = new Timer(200);
-	this.animationStepTimer.on(Timer.EVENT_TIMER, function() { self.animate(); });
 }
 // Extend Board
 Bw.extend(Player, Board);
+
+Player.TIME_FLIP = 10000;
+Player.TIME_INVISIBLE = 10000;
+Player.TIME_REFLECT = 10000;
+Player.TIME_SPEED = 15000;
+Player.TIME_SBLOCKS = 15000;
+
+Player.NUM_SPECIALS = 21;
+Player.INVENTORY_MAX = 18;
+Player.DROP_DELAY = 1000;
+Player.NEWBLOCK_DELAY = 150;
+
 Player.EVENT_GAMEOVER = "gameover";
 Player.EVENT_INVENTORY = "inventory";
 Player.EVENT_NEW_BLOCK = "new_block";
@@ -63,9 +65,6 @@ Player.SPECIAL_INVERT = -19;
 Player.SPECIAL_SPEED = -20;
 Player.SPECIAL_RANDOM = -21;
 Player.SPECIAL_SBLOCKS = -22;
-Player.NUM_SPECIALS = 21;
-Player.INVENTORY_MAX = 18;
-Player.DROP_DELAY = 150;
 
 Player.special = {
 	'-1': {
@@ -158,11 +157,6 @@ Player.special = {
 	}
 };
 
-Player.ANIMATION_NONE = 0;
-Player.ANIMATION_GRAVITY = 1;
-Player.ANIMATION_LEFT_GRAVITY = 2;
-Player.ANIMATION_MOSES = 3;
-
 Player.prototype.reset = function(seed) {
 	this.currentBlock = null;
 	this.nextBlock = null;
@@ -183,9 +177,6 @@ Player.prototype.reset = function(seed) {
 	this.nukeTimer = null;
 	this.specials = true;
 	this.sBlocks = false;
-	
-	this.animationData = { count:0 };
-	this.animationMode = Player.ANIMATION_NONE;
 }
 
 Player.prototype.start = function(seed) {
@@ -229,20 +220,6 @@ Player.prototype.at = function(x,y) {
 			}
 		}
 		return 9;
-	}
-	switch (this.animationMode) {
-		case Player.ANIMATION_GRAVITY:
-			return this.data[y * this.width + x] <= 0 ? this.data[y * this.width + x] : 1 + (Math.abs(Math.floor(y/2)-this.animationData.count) % 5);
-		case Player.ANIMATION_LEFT_GRAVITY:
-			return this.data[y * this.width + x] <= 0 ? this.data[y * this.width + x] : 1 + (Math.abs(Math.floor(x/2)-this.animationData.count) % 5);
-		case Player.ANIMATION_MOSES:
-			if (this.data[y * this.width + x] <= 0)
-				break;
-			return 1 + (Math.abs(x < this.width/2 ? (this.animationData.count-x) : (this.animationData.count+x)) % 5);
-		case Player.ANIMATION_NONE:
-		default:
-			// do nothing
-			break;
 	}
 	return this.data[y * this.width + x];
 }
@@ -319,7 +296,6 @@ Player.prototype.getRandomBlock = function() {
 Player.prototype.createNewBlock = function() {
 	this.currentBlock = null;
 	this.emit(Board.EVENT_CHANGE);
-	
 	this.dropTimer.stop();
 	this.newBlockTimer.start();
 }
@@ -595,9 +571,6 @@ Player.prototype.use = function(msg) {
 					this.data[py-- * this.width + x] = 0;
 			}
 			change = true;
-			this.animationMode = Player.ANIMATION_GRAVITY;
-			this.animationTimer.start();
-			this.animationStepTimer.start();
 			break;
 			
 		case Player.SPECIAL_BOMB:
@@ -669,9 +642,6 @@ Player.prototype.use = function(msg) {
 					this.data[y * this.width + px++] = 0;
 			}
 			change = true;
-			this.animationMode = Player.ANIMATION_LEFT_GRAVITY;
-			this.animationTimer.start();
-			this.animationStepTimer.start();
 			break;
 			
 		case Player.SPECIAL_ZEBRA:
@@ -691,13 +661,14 @@ Player.prototype.use = function(msg) {
 			
 		case Player.SPECIAL_INVISIBLE:
 			this.invisible = true;
-			this.invisibleTimer.addDelay(10000);
+			this.invisibleTimer.addDelay(Player.TIME_INVISIBLE);
 			this.invisibleTimer.start();
 			change = true;
 			break;
 			
 		case Player.SPECIAL_REFLECT:
 			this.reflect = true;
+			this.reflectTimer.addDelay(Player.TIME_REFLECT);
 			this.reflectTimer.start();
 			break;
 			
@@ -770,9 +741,6 @@ Player.prototype.use = function(msg) {
 					this.data[y * this.width + x] = newRow[x];
 			}
 			change = true;
-			this.animationMode = Player.ANIMATION_MOSES;
-			this.animationTimer.start();
-			this.animationStepTimer.start();
 			break;
 			
 		case Player.SPECIAL_INVERT:
@@ -803,11 +771,11 @@ Player.prototype.use = function(msg) {
 					}
 				}
 			}
-			console.log(maxHeight);
 			this.speed = true;
+			this.speedTimer.addDelay(Player.TIME_SPEED);
+			this.speedTimer.start();
 			this.dropTimer.delay = 50 + maxHeight * 6;
 			this.dropTimer.start();
-			this.speedTimer.start();
 			break;
 			
 		case Player.SPECIAL_RANDOM:
@@ -818,7 +786,7 @@ Player.prototype.use = function(msg) {
 			
 		case Player.SPECIAL_SBLOCKS:
 			this.sBlocks = true;
-			this.sTimer.addDelay(10000);
+			this.sTimer.addDelay(Player.TIME_SBLOCKS);
 			this.sTimer.start();
 			break;
 			
@@ -829,20 +797,6 @@ Player.prototype.use = function(msg) {
 	if(change) {
 		this.moveUpIfBlocked();
 		this.emit(Board.EVENT_CHANGE);
-	}
-}
-
-Player.prototype.animate = function() {
-	switch (this.animationMode) {
-		case Player.ANIMATION_GRAVITY:
-		case Player.ANIMATION_LEFT_GRAVITY:
-		case Player.ANIMATION_MOSES:
-			this.animationData.count++;
-			this.emit(Board.EVENT_CHANGE);
-			break;
-		case Player.ANIMATION_NONE:
-		default:
-			break;
 	}
 }
 
