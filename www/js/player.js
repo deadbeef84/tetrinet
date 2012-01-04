@@ -6,6 +6,7 @@ function Player(target) {
 	
 	this.dropTimer = new Timer(1000);
 	this.dropTimer.on(Timer.EVENT_TIMER, function() { self.drop(); });
+	
 	this.newBlockTimer = new Timer(Player.DROP_DELAY, 1);
 	this.newBlockTimer.on(Timer.EVENT_TIMER, function() { self.doCreateNewBlock(); });
 	
@@ -23,11 +24,22 @@ function Player(target) {
 	
 	this.sTimer = new Timer(15000, 1);
 	this.sTimer.on(Timer.EVENT_TIMER, function() { self.sBlocks = false; });
+	
+	this.animationTimer = new Timer(1000, 1);
+	this.animationTimer.on(Timer.EVENT_TIMER, function() {
+		self.animationMode = Player.ANIMATION_NONE;
+		self.animationData.count = 0;
+		self.animationStepTimer.stop();
+		self.emit(Board.EVENT_CHANGE);
+	});
+	this.animationStepTimer = new Timer(200);
+	this.animationStepTimer.on(Timer.EVENT_TIMER, function() { self.animate(); });
 }
 // Extend Board
 Bw.extend(Player, Board);
 Player.EVENT_GAMEOVER = "gameover";
 Player.EVENT_INVENTORY = "inventory";
+Player.EVENT_NEW_BLOCK = "new_block";
 
 Player.SPECIAL_ADD_LINE = -1;
 Player.SPECIAL_CLEAR_LINE = -2;
@@ -146,6 +158,11 @@ Player.special = {
 	}
 };
 
+Player.ANIMATION_NONE = 0;
+Player.ANIMATION_GRAVITY = 1;
+Player.ANIMATION_LEFT_GRAVITY = 2;
+Player.ANIMATION_MOSES = 3;
+
 Player.prototype.reset = function(seed) {
 	this.currentBlock = null;
 	this.nextBlock = null;
@@ -166,6 +183,9 @@ Player.prototype.reset = function(seed) {
 	this.nukeTimer = null;
 	this.specials = true;
 	this.sBlocks = false;
+	
+	this.animationData = { count:0 };
+	this.animationMode = Player.ANIMATION_NONE;
 }
 
 Player.prototype.start = function(seed) {
@@ -209,6 +229,20 @@ Player.prototype.at = function(x,y) {
 			}
 		}
 		return 9;
+	}
+	switch (this.animationMode) {
+		case Player.ANIMATION_GRAVITY:
+			return this.data[y * this.width + x] <= 0 ? this.data[y * this.width + x] : 1 + (Math.abs(Math.floor(y/2)-this.animationData.count) % 5);
+		case Player.ANIMATION_LEFT_GRAVITY:
+			return this.data[y * this.width + x] <= 0 ? this.data[y * this.width + x] : 1 + (Math.abs(Math.floor(x/2)-this.animationData.count) % 5);
+		case Player.ANIMATION_MOSES:
+			if (this.data[y * this.width + x] <= 0)
+				break;
+			return 1 + (Math.abs(x < this.width/2 ? (this.animationData.count-x) : (this.animationData.count+x)) % 5);
+		case Player.ANIMATION_NONE:
+		default:
+			// do nothing
+			break;
 	}
 	return this.data[y * this.width + x];
 }
@@ -298,14 +332,16 @@ Player.prototype.doCreateNewBlock = function() {
 	this.currentBlock.x = Math.floor(this.width / 2) - 1;
 	this.currentBlock.y = -this.currentBlock.getBoundingBox().miny;
 	this.emit(Board.EVENT_UPDATE);
-	if(this.collide(this.currentBlock)) {
+	if (this.collide(this.currentBlock)) {
 		this.putBlock(this.currentBlock);
 		this.currentBlock = null;
 		this.isPlaying = false;
 		this.emit(Board.EVENT_CHANGE);
 		this.emit(Player.EVENT_GAMEOVER);
-	} else
+	} else {
 		this.initDrop();
+	}
+	this.emit(Player.EVENT_NEW_BLOCK);
 }
 
 Player.prototype.move = function(x,y,r,stick) {
@@ -515,8 +551,8 @@ Player.prototype.use = function(msg) {
 			var shakeFunction = function(count){
 				if (count) {
 					board.css({
-						'margin-left': (Math.random()-0.5)*50,
-						'-webkit-transform': 'rotate(' + (Math.random()-0.5)*30 + 'deg)'
+						'margin-left': Math.round((Math.random()-0.5)*50),
+						'-webkit-transform': 'rotate(' + Math.round((Math.random()-0.5)*40) + 'deg)'
 					});
 					setTimeout(shakeFunction, 25, --count);
 				}
@@ -559,6 +595,9 @@ Player.prototype.use = function(msg) {
 					this.data[py-- * this.width + x] = 0;
 			}
 			change = true;
+			this.animationMode = Player.ANIMATION_GRAVITY;
+			this.animationTimer.start();
+			this.animationStepTimer.start();
 			break;
 			
 		case Player.SPECIAL_BOMB:
@@ -570,8 +609,11 @@ Player.prototype.use = function(msg) {
 						var cell = this.target.find('.board-wrapper .row').eq(y).children().eq(x);
 						if(cell.length) {
 							var explosion = $('<div class="explosion" />');
-							explosion.css({ 'top': cell.offset().top, 'left': cell.offset().left,
-								'background-image': "url('../images/explosion.gif?" + Date.now()  + "')" });
+							explosion.css({
+								'top': cell.offset().top,
+								'left': cell.offset().left,
+								'background-image': "url('../images/explosion.gif?" + Date.now()  + "')"
+							});
 							$('#container').append(explosion);
 							setTimeout(function(obj){ obj.remove(); }, 2000, explosion);
 						}
@@ -627,6 +669,9 @@ Player.prototype.use = function(msg) {
 					this.data[y * this.width + px++] = 0;
 			}
 			change = true;
+			this.animationMode = Player.ANIMATION_LEFT_GRAVITY;
+			this.animationTimer.start();
+			this.animationStepTimer.start();
 			break;
 			
 		case Player.SPECIAL_ZEBRA:
@@ -646,11 +691,7 @@ Player.prototype.use = function(msg) {
 			
 		case Player.SPECIAL_INVISIBLE:
 			this.invisible = true;
-			if(this.invisibleTimer.isRunning())
-				this.invisibleTimer.delay = 10000 + Math.max(0, this.invisibleTimer.delay - this.invisibleTimer.time());
-			else
-				this.invisibleTimer.delay = 10000;
-			console.log('invis timer at ', this.invisibleTimer.delay);
+			this.invisibleTimer.addDelay(10000);
 			this.invisibleTimer.start();
 			change = true;
 			break;
@@ -729,6 +770,9 @@ Player.prototype.use = function(msg) {
 					this.data[y * this.width + x] = newRow[x];
 			}
 			change = true;
+			this.animationMode = Player.ANIMATION_MOSES;
+			this.animationTimer.start();
+			this.animationStepTimer.start();
 			break;
 			
 		case Player.SPECIAL_INVERT:
@@ -774,10 +818,7 @@ Player.prototype.use = function(msg) {
 			
 		case Player.SPECIAL_SBLOCKS:
 			this.sBlocks = true;
-			if(this.sTimer.isRunning())
-				this.sTimer.delay = 10000 + Math.max(0, this.sTimer.delay - this.invisibleTimer.time());
-			else
-				this.sTimer.delay = 10000;
+			this.sTimer.addDelay(10000);
 			this.sTimer.start();
 			break;
 			
@@ -790,6 +831,21 @@ Player.prototype.use = function(msg) {
 		this.emit(Board.EVENT_CHANGE);
 	}
 }
+
+Player.prototype.animate = function() {
+	switch (this.animationMode) {
+		case Player.ANIMATION_GRAVITY:
+		case Player.ANIMATION_LEFT_GRAVITY:
+		case Player.ANIMATION_MOSES:
+			this.animationData.count++;
+			this.emit(Board.EVENT_CHANGE);
+			break;
+		case Player.ANIMATION_NONE:
+		default:
+			break;
+	}
+}
+
 Object.freeze(Board.prototype);
 Bw.recursiveFreeze(Player.special);
 Object.freeze(Player.prototype);

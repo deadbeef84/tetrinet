@@ -4,14 +4,14 @@ require 'config.php';
 if ($_SERVER['HTTP_HOST'] != $CONFIG['host']) {
 	header("Location: http://{$CONFIG['host']}/", true, 301);
 }
-if (!$CONFIG['singleplayer_enabled']) {
+if ($CONFIG['openid_enabled'] && !$CONFIG['singleplayer_enabled']) {
 	require 'openid.php';
 	$name = 'Guest'.rand();
 	$status = '';
 	try {
 		//if(!isset($_SESSION['openid'])) {
 			# Change 'localhost' to your domain name.
-			$openid = new LightOpenID('tetrinet.se');
+			$openid = new LightOpenID($CONFIG['host']);
 			if(!$openid->mode) {
 				if(isset($_GET['openid_identifier'])) {
 					$openid->identity = $_GET['openid_identifier'];
@@ -44,7 +44,7 @@ if (!$CONFIG['singleplayer_enabled']) {
 		echo $e->getMessage();
 	}
 }
-$version = 2;
+$version = time('u');
 ?>
 <!DOCTYPE html>
 <html>
@@ -53,7 +53,7 @@ $version = 2;
   <meta name="keywords" content="" />
   <meta name="description" content="" />
   <title>Tetrinet</title>
-  <base href="<?=$CONFIG['base_href']?>"></base>
+  <base href="<?="http://{$CONFIG['host']}/{$CONFIG['base_path']}/"?>"></base>
 
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
   <script src="http://tetrinet.se:7000/socket.io/socket.io.js" type="text/javascript"></script>
@@ -66,6 +66,7 @@ $version = 2;
   <script src="js/player.js?<?=$version?>" type="text/javascript"></script>
   <script src="js/message.js?<?=$version?>" type="text/javascript"></script>
   <script src="js/game.js?<?=$version?>" type="text/javascript"></script>
+  <script src="js/bot.js?<?=$version?>" type="text/javascript"></script>
   <script type="text/javascript" src="openid-selector/js/openid-jquery.js"></script>
   <script type="text/javascript" src="openid-selector/js/openid-en.js"></script>
   <link type="text/css" rel="stylesheet" href="openid-selector/css/openid.css" />
@@ -75,13 +76,16 @@ $version = 2;
 <script type="text/javascript">
 $(document).ready(function() {
 <?php if(!$CONFIG['singleplayer_enabled']) {?>
-  <?php if(!isset($_SESSION['openid'])) {?>
+  <?php if($CONFIG['openid_enabled'] && !isset($_SESSION['openid'])) {?>
 	openid.init('openid_identifier');
   <?php } else { ?>
 	$('#login-form').submit(function() {
 		var name = $(this).find('#name').val();
 		var g = new Game(name);
 		Object.seal(g);
+  <?php if ($CONFIG['autoplay_enabled']) { ?>
+		var b = new Bot(g);
+  <?php } ?>
 		$('#login').hide();
 		$('#lobby').show();
 		return false;
@@ -93,6 +97,9 @@ $(document).ready(function() {
 	$('#ingame').show();
 	var g = new Game();
 	Object.seal(g);
+  <?php if ($CONFIG['autoplay_enabled']) { ?>
+	var b = new Bot(g);
+  <?php } ?>
 <?php } ?>
 });
 </script>
@@ -106,7 +113,7 @@ $(document).ready(function() {
     </header>
 
     <div id="login">
-      <?php if(!$CONFIG['singleplayer_enabled'] && !isset($_SESSION['openid'])) {?>
+      <?php if($CONFIG['openid_enabled'] && !$CONFIG['singleplayer_enabled'] && !isset($_SESSION['openid'])) {?>
       <form action="/" method="get" id="openid_form">
         <?php echo $status ?>
         <input type="hidden" name="action" value="verify" />
@@ -127,7 +134,8 @@ $(document).ready(function() {
         </fieldset>
       </form>
       <?php } else { ?>
-      <form action="/" method="get" id="login-form">
+      <form action="<?php echo $CONFIG['base_href'] ?>" method="get" id="login-form">
+        <?php if (isset($_GET['autoplay'])) echo '<input type="hidden" name="autoplay" value="1" />'; ?>
         <input type="text" id="name" name="name" value="<?php echo (isset($name)?$name:''); ?>" />
         <button>Enter</button>
       </form>

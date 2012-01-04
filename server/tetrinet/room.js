@@ -1,6 +1,7 @@
 var util = require('util'),
 	Message = require('./message'),
-	Player = require('./player');
+	Player = require('./player'),
+	Config = require('./config');
 
 // class Room extends EventEmitter
 var Room = function(game, name, options) {
@@ -109,23 +110,26 @@ Room.prototype.playerWon = function(player, s) {
 	var results = this.playerStats;
 	var actions = this.actions;
 	var self = this;
-	self.game.mysql.query('INSERT INTO game (date) VALUES(NOW())', function(err, info) {
-		if(err) {
-			console.log('failed to create game in database');
-			return false;
-		}
-		var game_id = info.insertId;
-		for(var index in results) {
-			var r = results[index];
-			self.game.mysql.query('INSERT INTO game_result (game_id,player_id,place,num_keys,num_blocks,num_lines,num_lines_sent,time) VALUES(?,?,?,?,?,?,?,?)',
-				[game_id, r.identity, r.place, r.s.keys, r.s.blocks, r.s.lines, r.s.lines_sent, r.time]);
-		}
-		for(var i = 0; i < actions.length; ++i) {
-			var a = actions[i];
-			self.game.mysql.query('INSERT INTO game_action (game_id,player_id,target_player_id,type,time) VALUES(?,?,?,?,?)',
-				[game_id, a.from, a.to, a.s, a.time]);
-		}
-	});
+	
+    if (Config.MYSQL_ENABLED) {
+		self.game.mysql.query('INSERT INTO game (date) VALUES(NOW())', function(err, info) {
+			if(err) {
+				console.log('failed to create game in database');
+				return false;
+			}
+			var game_id = info.insertId;
+			for(var index in results) {
+				var r = results[index];
+				self.game.mysql.query('INSERT INTO game_result (game_id,player_id,place,num_keys,num_blocks,num_lines,num_lines_sent,time) VALUES(?,?,?,?,?,?,?,?)',
+					[game_id, r.identity, r.place, r.s.keys, r.s.blocks, r.s.lines, r.s.lines_sent, r.time]);
+			}
+			for(var i = 0; i < actions.length; ++i) {
+				var a = actions[i];
+				self.game.mysql.query('INSERT INTO game_action (game_id,player_id,target_player_id,type,time) VALUES(?,?,?,?,?)',
+					[game_id, a.from, a.to, a.s, a.time]);
+			}
+		});
+	}
 }
 
 // checkGameState()
