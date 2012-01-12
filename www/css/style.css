@@ -64,6 +64,32 @@ em.self { /* your name */
 		line-height: 1em;
 		margin: 0 0 .25em 0;
 	}
+	#gamelogfilters {
+		display: none;
+	}
+	/*
+	#gamelog .log {
+		float: left;
+		overflow: auto;
+		height: 120px;
+		width: 100%;
+	}
+	#gamelogfilters {
+		float: left;
+		height: 30px;
+		width: 100%;
+		line-height: 30px;
+		margin: 0;
+		padding: 0;
+	}
+	#gamelogfilters li {
+		list-style: none;
+		float: left;
+	}
+	#gamelogfilters > li.current {
+		text-decoration: underline;
+	}
+	*/
 	
 #gamearea {
 	width: 100%;
@@ -324,4 +350,14 @@ em.self { /* your name */
 	top:0; right:0; bottom:0; left:0;
 	opacity: 0.5;
 	background: url(../images/rickroll.gif);
+}
+#settings_show {
+	position: absolute;
+	display: none;
+}
+#settingsbox {
+	position: absolute;
+	display: none;
+	background: #ddd;
+	z-index: 2;
 }

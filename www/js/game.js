@@ -51,33 +51,41 @@ function Game(name, token) {
 	}
 	
 	$(document).keydown(function(e) {
-		if(document.activeElement && $(document.activeElement).filter(':text').length)
+		
+		if (document.activeElement && $(document.activeElement).filter(':text').length)
 			return;
-		//console.log(e.which);
-		//if(e.which == 123) // start
-			//self.send({t:5});
+		
+		if (self.player && self.player.isPlaying) {
 			
-		if(self.player && self.player.isPlaying) {
-			if(e.which == 37) // left
-				self.player.move(-1,0,0,false);
-			else if(e.which == 39) // right
-				self.player.move(1,0,0,false);
-			else if(e.which == 32) // space
-				self.player.falldown(true);
-			else if(e.which == 17) // ctrl
-				self.player.falldown(false);
-			else if(e.which == 40) // down
-				self.player.move(0,1,0,true);
-			else if(e.which == 38 || e.which == 88) // up
-				self.player.move(0,0,1,false);
-			else if(e.which == 90) // rotate
-				self.player.move(0,0,-1,false);
-			else if(e.which >= 49 && e.which <= 57) // 1-9, use inventory
-				self.use(e.which - 49);
-			else if(e.which == 83) // self
-				self.use(self.player.id);
-			else
-				return;
+			switch (e.which) {
+				case Settings.keymap.left:			self.player.move(-1,0,0,false); break;
+				case Settings.keymap.right:			self.player.move(1,0,0,false); break;
+				case Settings.keymap.down:			self.player.move(0,1,0,false); break;
+				case Settings.keymap.drop:			self.player.falldown(true); break;
+				case Settings.keymap.soft_drop:		self.player.falldown(false); break;
+				case Settings.keymap.rotate_cw:		self.player.move(0,0,1,false); break;
+				case Settings.keymap.rotate_ccw:	self.player.move(0,0,-1,false); break;
+				case Settings.keymap.inventory_1:	self.use(0); break;
+				case Settings.keymap.inventory_2:	self.use(1); break;
+				case Settings.keymap.inventory_3:	self.use(2); break;
+				case Settings.keymap.inventory_4:	self.use(3); break;
+				case Settings.keymap.inventory_5:	self.use(4); break;
+				case Settings.keymap.inventory_6:	self.use(5); break;
+				case Settings.keymap.inventory_7:	self.use(6); break;
+				case Settings.keymap.inventory_8:	self.use(7); break;
+				case Settings.keymap.inventory_9:	self.use(8); break;
+				case Settings.keymap.inventory_self:
+					self.use(self.player.id);
+					break;
+				case Settings.keymap.inventory_target_left:
+				case Settings.keymap.inventory_target_right:
+				case Settings.keymap.inventory_target_send:
+					// unused for now
+					break;
+				default:
+					// unrecognized key
+					return;
+			}
 			++self.keyCount;
 			return false;
 		}
@@ -110,7 +118,57 @@ function Game(name, token) {
 		self.send({t:Message.CHAT, text: msg});
 		return false;
 	});
+	
+	var initSettings = function() {
+		$('#settings_name').val(Settings.name);
+		$('#settings_keys input').each(function(index) {
+			$(this).val(getCharFromKeyCode(Settings.keymap[$(this).attr('name')]));
+			$(this).data('keycode', Settings.keymap[$(this).attr('name')]);
+		});
+	};
+	var toggleSettings = function() {
+		if (!$('#settingsbox').hasClass('active'))
+			initSettings();
+		$('#settingsbox').slideToggle();
+		$('#settingsbox').toggleClass('active');
+		//$('#settings_show').slideToggle();
+		return false;
+	};
+	
+	$('#settings_show').show().click(toggleSettings);
+	$('#settings_cancel').click(toggleSettings);
+	
+	$('#settings').submit(function(){
+		// set settings
+		Settings.name[$('#settings_name').val()];
+		$('#settings_keys input').each(function() {
+			Settings.keymap[$(this).attr('name')] = $(this).data('keycode');
+		});
+		var date = new Date();
+		$.cookies.set('name', Settings.name, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
+		$.cookies.set('keymap', Settings.keymap, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
+		toggleSettings();
+		return false;
+	});
+    
+	$('#settings .keycode_listener').keydown(function(e){
+		$(this).val(getCharFromKeyCode(e.which));
+		$(this).data('keycode', e.which);
+		var nextKeyCodeListener = $(this).parent().nextAll().children('.keycode_listener');
+		if (nextKeyCodeListener.length > 0)
+			nextKeyCodeListener.first().focus();
+		else
+			$('#settings_submit').focus();
+		return false;
+	});
 }
+
+Game.LOG_YOU = 'log-you';
+Game.LOG_STATUS = 'log-status';
+Game.LOG_SPECIAL = 'log-special';
+Game.LOG_SPECIAL_SENT = 'log-special-sent';
+Game.LOG_SPECIAL_RECIEVED = 'log-special-recieved';
+Game.LOG_LINES = 'log-lines';
 
 Game.prototype.checkNotify = function() {
 	var p = window.webkitNotifications ? window.webkitNotifications.checkPermission() : 2;
@@ -155,9 +213,11 @@ Game.prototype.sendBoard = function() {
 	}
 }
 
-Game.prototype.gameLog = function(msg) {
+Game.prototype.gameLog = function(msg, logClass) {
+	if (isArray(logClass))
+		logClass = logClass.join(' ');
 	var c = $('#gamelog');
-	c.append('<p>'+msg+'</p>');
+	c.append('<p class="'+logClass+'">'+msg+'</p>');
 	c[0].scrollTop = c[0].scrollHeight;
 }
 
@@ -170,11 +230,13 @@ Game.prototype.chat = function(msg) {
 Game.prototype.use = function(id) {
 	if(this.player.inventory && this.player.inventory.length) {
 		var p = this.players[id];
-		if(p && p.isPlaying) {
+		if (p && p.isPlaying) {
+			var logClass = [ Game.LOG_SPECIAL, Game.LOG_SPECIAL_SENT, Game.LOG_YOU ];
+			if (id == this.player.id)
+				logClass.push(Game.LOG_SPECIAL_RECIEVED);
 			var s = this.player.inventory.shift();
-			this.gameLog('<em>'+htmlspecialchars(this.player.name)+'</em> used special <strong>' + Player.special[s].name + '</strong> on <em>' + htmlspecialchars(p.name) + '</em>');
+			this.gameLog('<em>'+htmlspecialchars(this.player.name)+'</em> used special <strong>' + Player.special[s].name + '</strong> on <em>' + htmlspecialchars(p.name) + '</em>', logClass);
 			var msg = {t: Message.SPECIAL, 's': s, id: p.id};
-			
 			if(s == Player.SPECIAL_SWITCH) {
 				// switch needs some manual work
 				if(p !== this.player) {
@@ -255,7 +317,7 @@ Game.prototype.handleMessage = function(msg) {
 					if(l > 1) {
 						var linesToAdd = (l == 4 ? l : (l-1));
 						self.linesSent += linesToAdd;
-						self.gameLog('<em>' + htmlspecialchars(self.player.name) + '</em> added <strong>' + linesToAdd + '</strong> lines to all');
+						self.gameLog('<em>' + htmlspecialchars(self.player.name) + '</em> added <strong>' + linesToAdd + '</strong> lines to all', [ Game.LOG_LINES, Game.LOG_YOU ]);
 						self.send({t: Message.LINES, n: linesToAdd});
 					}
 				});
@@ -274,30 +336,26 @@ Game.prototype.handleMessage = function(msg) {
 		case Message.GAMEOVER:
 			var p = this.players[msg.id];
 			p.isPlaying = false;
-			this.gameLog(htmlspecialchars(p.name) + ' is dead.');
+			this.gameLog(htmlspecialchars(p.name) + ' is dead.', Game.LOG_STATUS);
 			p.container.addClass('gameover');
 			break;
 			
 		case Message.WINNER:
 			var p = this.players[msg.id];
 			p.isPlaying = false;
-			this.gameLog(htmlspecialchars(p.name) + ' has won the game.');
 			p.container.addClass('winner');
-			if(p === this.player) {
+			if (p === this.player) {
 				this.send({t: Message.WINNER, s: this.getStats()});
 				this.player.stop();
 				this.printStats();
 				$('body').addClass('winner');
 			}
+			this.gameLog(htmlspecialchars(p.name) + ' has won the game.', Game.LOG_STATUS);
 			break;
 			
 		case Message.LINES:
-			if(msg.id) {
-				var p = this.players[msg.id];
-				this.gameLog('<em>' + htmlspecialchars(p.name) + '</em> added <strong>' + msg.n + '</strong> lines to all');
-			} else {
-				this.gameLog('<em>Server</em> added <strong>' + msg.n + '</strong> lines to all');
-			}
+			var name = msg.id != null ? this.players[msg.id].name : 'Server';
+			this.gameLog('<em>' + htmlspecialchars(name) + '</em> added <strong>' + msg.n + '</strong> lines to all', [ Game.LOG_STATUS, Game.LOG_YOU ]);
 			if(this.player.isPlaying) {
 				this.player.addLines(msg.n);
 				this.player.moveUpIfBlocked();
@@ -319,13 +377,7 @@ Game.prototype.handleMessage = function(msg) {
 			this.linesRemoved = 0;
 			this.linesSent = 0;
 			this.startTime = (new Date().getTime());
-			/*if(this.notify) {
-				var notification = window.webkitNotifications.createNotification("images/explosion.gif", "tetrinet", "The fun has started!");
-				setTimeout(function() { notification.cancel(); }, 2000);
-				notification.show();
-			}*/
 			$('#gamelog').empty();
-			this.gameLog('The game is starting!');
 			$('body').removeClass('winner');
 			$('.player').removeClass('gameover winner');
 			for(var p in this.players)
@@ -340,12 +392,16 @@ Game.prototype.handleMessage = function(msg) {
 			break;
 			
 		case Message.CHAT:
-			var name = msg.id ? this.players[msg.id].name : 'Server';
-			this.chat(name + ': ' + msg.text);
-			if(this.notify && !Bw.windowIsActive) {
-				var notification = window.webkitNotifications.createNotification("images/explosion.gif", "Tetrinet: " + name, msg.text);
-				setTimeout(function() { notification.cancel(); }, 2000);
-				notification.show();
+			if (msg.id == null) {
+				this.gameLog('<em class="status">'+ msg.text +'</em>', Game.LOG_STATUS);
+			} else {
+				var name = this.players[msg.id].name;
+				this.chat(name + ': ' + msg.text);
+				if(this.notify && !Bw.windowIsActive) {
+					var notification = window.webkitNotifications.createNotification("images/explosion.gif", "Tetrinet: " + name, msg.text);
+					setTimeout(function() { notification.cancel(); }, 2000);
+					notification.show();
+				}
 			}
 			break;
 			
@@ -353,7 +409,14 @@ Game.prototype.handleMessage = function(msg) {
 			var sourcePlayer = this.players[msg.sid];
 			var targetPlayer = this.players[msg.id];
 			if(targetPlayer) {
-				this.gameLog('<em class="'+(msg.sid==this.player.id?'self':'other')+'">' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <strong>' + Player.special[msg.s].name + '</strong> on <em class="'+(msg.id==this.player.id?'self':'other')+'">' + targetPlayer.name + '</em>');
+				var logClass = [ Game.LOG_SPECIAL ];
+				if (msg.sid == this.player.id)
+					logClass.push(Game.LOG_SPECIAL_SENT);
+				if (msg.id == this.player.id)
+					logClass.push(Game.LOG_SPECIAL_RECIEVED);
+				if (msg.sid == this.player.id || msg.id == this.player.id)
+					logClass.push(Game.LOG_YOU);
+				this.gameLog('<em class="'+(msg.sid==this.player.id?'self':'other')+'">' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <strong>' + Player.special[msg.s].name + '</strong> on <em class="'+(msg.id==this.player.id?'self':'other')+'">' + targetPlayer.name + '</em>', logClass);
 				if(targetPlayer.id == this.player.id) {
 					if(this.player.reflect) {
 						if(msg.reflect) {

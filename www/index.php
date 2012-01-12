@@ -4,9 +4,11 @@ require 'config.php';
 if ($_SERVER['HTTP_HOST'] != $CONFIG['host']) {
 	header("Location: http://{$CONFIG['host']}/", true, 301);
 }
+
+$name = isset($_COOKIE['name']) ? $_COOKIE['name'] : 'Guest'.rand();
+
 if ($CONFIG['openid_enabled'] && !$CONFIG['singleplayer_enabled']) {
 	require 'openid.php';
-	$name = 'Guest'.rand();
 	$status = '';
 	try {
 		//if(!isset($_SESSION['openid'])) {
@@ -57,6 +59,7 @@ $version = time('u');
 
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
   <script src="http://tetrinet.se:7000/socket.io/socket.io.js" type="text/javascript"></script>
+  <script src="js/jquery.cookies.2.2.0.min.js" type="text/javascript"></script>
   <script src="js/base.js?<?=$version?>" type="text/javascript"></script>
   <script src="js/eventemitter.js?<?=$version?>" type="text/javascript"></script>
   <script src="js/timer.js?<?=$version?>" type="text/javascript"></script>
@@ -66,6 +69,7 @@ $version = time('u');
   <script src="js/player.js?<?=$version?>" type="text/javascript"></script>
   <script src="js/message.js?<?=$version?>" type="text/javascript"></script>
   <script src="js/game.js?<?=$version?>" type="text/javascript"></script>
+  <script src="js/settings.js?<?=$version?>" type="text/javascript"></script>
   <script src="js/bot.js?<?=$version?>" type="text/javascript"></script>
   <script type="text/javascript" src="openid-selector/js/openid-jquery.js"></script>
   <script type="text/javascript" src="openid-selector/js/openid-en.js"></script>
@@ -81,6 +85,8 @@ $(document).ready(function() {
   <?php } else { ?>
 	$('#login-form').submit(function() {
 		var name = $(this).find('#name').val();
+		var date = new Date();
+		$.cookies.set('name', name, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
 		var g = new Game(name);
 		Object.seal(g);
   <?php if ($CONFIG['autoplay_enabled']) { ?>
@@ -107,6 +113,27 @@ $(document).ready(function() {
 
 <body id="page">
   <div id="container">
+  
+    <a href="" id="settings_show" class="settings_toggle" title="Settings">Settings</a>
+    <div id="settingsbox">
+      <form id="settings">
+        <h2>Settings</h2>
+<!--        <h3>Misc</h3>
+        <p><label for="settings_name">Name</label><input id="settings_name" type="text" name="name" /></p>
+-->        <h3>Keys</h3>
+        <div id="settings_keys">
+	      <p><label for="settings_km_left">Left</label><input id="settings_km_left" class="keycode_listener" type="text" name="left" /></p>
+	      <p><label for="settings_km_right">Right</label><input id="settings_km_right" class="keycode_listener" type="text" name="right" /></p>
+	      <p><label for="settings_km_down">Down</label><input id="settings_km_down" class="keycode_listener" type="text" name="down" /></p>
+	      <p><label for="settings_km_drop">Drop</label><input id="settings_km_drop" class="keycode_listener" type="text" name="drop" /></p>
+	      <p><label for="settings_km_softdrop">Soft drop</label><input id="settings_km_softdrop" class="keycode_listener" type="text" name="soft_drop" /></p>
+	      <p><label for="settings_km_rotatecw">Rotate CW</label><input id="settings_km_rotatecw" class="keycode_listener" type="text" name="rotate_cw" /></p>
+	      <p><label for="settings_km_rotateccw">Rotate CCW</label><input id="settings_km_rotateccw" class="keycode_listener" type="text" name="rotate_ccw" /></p>
+	      <p><label for="settings_km_self">Self</label><input id="settings_km_self" class="keycode_listener" type="text" name="inventory_self" /></p>
+	    </div>
+        <p><input type="button" class="settings_toggle" id="settings_cancel" value="Cancel" /><input type="submit" id="settings_submit" value="Save" /></p>
+      </form>
+    </div>
   
     <header>
       <h1>Tetrinet</h1>
@@ -162,6 +189,7 @@ $(document).ready(function() {
         </form>
       </div>
       <div id="gamelogbox">
+        <ul id="gamelogfilters"></ul>
         <div id="gamelog"></div>
       </div>
     </div>
