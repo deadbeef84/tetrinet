@@ -208,6 +208,12 @@ em.self { /* your name */
 .player.self.gameover .board::after {
 	background-image: url(../images/skull-self.jpg);
 }
+.player.target h2 {
+	color: #900;
+}
+.player.target h2:before {
+	content: "* ";
+}
 
 /* popup when someone attacks */
 .player p.attack {

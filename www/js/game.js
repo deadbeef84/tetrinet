@@ -9,6 +9,7 @@ function Game(name, token) {
 	this.linesRemoved = 0;
 	this.linesSent = 0;
 	this.options = {};
+	this.target = 0;
 	
 	var self = this;
 	
@@ -78,9 +79,13 @@ function Game(name, token) {
 					self.use(self.player.id);
 					break;
 				case Settings.keymap.inventory_target_left:
+					self.cycleTarget(-1);
+					break;
 				case Settings.keymap.inventory_target_right:
+					self.cycleTarget(1);
+					break;
 				case Settings.keymap.inventory_target_send:
-					// unused for now
+					self.use(self.target);
 					break;
 				default:
 					// unrecognized key
@@ -169,6 +174,33 @@ Game.LOG_SPECIAL = 'log-special';
 Game.LOG_SPECIAL_SENT = 'log-special-sent';
 Game.LOG_SPECIAL_RECIEVED = 'log-special-recieved';
 Game.LOG_LINES = 'log-lines';
+
+Game.prototype.cycleTarget = function(dir) {
+	var newTarget = -1;
+	var playerIds = [];
+	for (id in this.players)
+		playerIds.push(id);
+	for (var i = 0; i < playerIds.length; i++) {
+		if (this.target == playerIds[i]) {
+			var newIndex = i + dir;
+			if (newIndex < 0)
+				newIndex += playerIds.length;
+			if (newIndex >= playerIds.length)
+				newIndex -= playerIds.length;
+			newTarget = playerIds[newIndex];
+			break;
+		}
+	}
+	if (newTarget < 0)
+		newTarget = this.player.id;
+	this.setTarget(newTarget);
+}
+
+Game.prototype.setTarget = function(id) {
+	this.players[this.target].container.removeClass('target');
+	this.target = id;
+	this.players[this.target].container.addClass('target');
+}
 
 Game.prototype.checkNotify = function() {
 	var p = window.webkitNotifications ? window.webkitNotifications.checkPermission() : 2;
@@ -292,7 +324,7 @@ Game.prototype.handleMessage = function(msg) {
 		case Message.SET_PLAYER:
 			var p;
 			var container = $('<div class="player"><h2>Player</h2><div class="board"></div><div class="nextpiece"></div><div class="inventory"></div></div>').appendTo('#gamearea');
-			if(msg.self) {
+			if (msg.self) {
 				container.prependTo('#gamearea');
 				container.addClass('self');
 				this.player = p = new Player( container );
@@ -311,6 +343,7 @@ Game.prototype.handleMessage = function(msg) {
 					self.printStats();
 					self.send({t:Message.GAMEOVER, s: self.getStats()});
 					p.container.addClass('gameover');
+					$('.player').removeClass('target');
 				});
 				p.on(Board.EVENT_LINES, function(l) {
 					self.linesRemoved += l;
@@ -349,6 +382,7 @@ Game.prototype.handleMessage = function(msg) {
 				this.player.stop();
 				this.printStats();
 				$('body').addClass('winner');
+				$('.player').removeClass('target');
 			}
 			this.gameLog(htmlspecialchars(p.name) + ' has won the game.', Game.LOG_STATUS);
 			break;
@@ -366,8 +400,8 @@ Game.prototype.handleMessage = function(msg) {
 		case Message.REMOVE_PLAYER:
 			//alert('disconnected ' + msg.id);
 			var p = this.players[msg.id];
-			//p.destroy();
 			p.container.remove();
+			this.cycleTarget(-1);
 			delete this.players[msg.id];
 			this.updatePlayers();
 			break;
@@ -383,6 +417,7 @@ Game.prototype.handleMessage = function(msg) {
 			for(var p in this.players)
 				this.players[p].isPlaying = true;
 			this.player.start(msg.seed);
+			this.setTarget(this.player.id);
 			break;
 			
 		case Message.UPDATE_BOARD:

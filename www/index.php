@@ -130,6 +130,9 @@ $(document).ready(function() {
 	      <p><label for="settings_km_rotatecw">Rotate CW</label><input id="settings_km_rotatecw" class="keycode_listener" type="text" name="rotate_cw" /></p>
 	      <p><label for="settings_km_rotateccw">Rotate CCW</label><input id="settings_km_rotateccw" class="keycode_listener" type="text" name="rotate_ccw" /></p>
 	      <p><label for="settings_km_self">Self</label><input id="settings_km_self" class="keycode_listener" type="text" name="inventory_self" /></p>
+	      <p><label for="settings_km_targetleft">Target left</label><input id="settings_km_targetleft" class="keycode_listener" type="text" name="inventory_target_left" /></p>
+	      <p><label for="settings_km_targetright">Target right</label><input id="settings_km_targetright" class="keycode_listener" type="text" name="inventory_target_right" /></p>
+	      <p><label for="settings_km_targetshoot">Target shoot</label><input id="settings_km_targetshoot" class="keycode_listener" type="text" name="inventory_target_send" /></p>
 	    </div>
         <p><input type="button" class="settings_toggle" id="settings_cancel" value="Cancel" /><input type="submit" id="settings_submit" value="Save" /></p>
       </form>

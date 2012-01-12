@@ -21,9 +21,9 @@ Settings = {
 		'inventory_8': 56,
 		'inventory_9': 57,
 		'inventory_self': 83,
-		'inventory_target_left': 87,
+		'inventory_target_left': 81,
 		'inventory_target_right': 69,
-		'inventory_target_send': 81
+		'inventory_target_send': 87
 	}
 };
 
