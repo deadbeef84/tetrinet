@@ -41,4 +41,9 @@ Timer.prototype._onTimer = function() {
 		this.emit(Timer.EVENT_TIMER_COMPLETE);
 	}
 }
+
+Timer.prototype.addDelay = function(time) {
+	this.delay = this.isRunning() ? time + Math.max(0, this.delay - this.time()) : time;
+}
+
 Object.freeze(Timer.prototype);

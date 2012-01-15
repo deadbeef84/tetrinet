@@ -1,16 +1,22 @@
 var Message = require('./message'),
 	Player = require('./player'),
 	Room = require('./room'),
-	mysql = require('mysql'),
-	util = require('util'),
-	openid = require('openid');
-	
-var relyingParty = new openid.RelyingParty(
-    'http://example.com/verify', // Verification URL (yours)
-    null, // Realm (optional, specifies realm for OpenID authentication)
-    true, // Use stateless verification
-    false, // Strict mode
-    []); // List of extensions to enable and include
+	Config = require('./config'),
+	util = require('util');
+
+if (Config.MYSQL_ENABLED) {
+	var mysql = require('mysql');
+}
+
+if (Config.OPENID_ENABLED) {
+	var openid = require('openid');
+	var relyingParty = new openid.RelyingParty(
+	    'http://example.com/verify', // Verification URL (yours)
+	    null, // Realm (optional, specifies realm for OpenID authentication)
+	    true, // Use stateless verification
+	    false, // Strict mode
+	    []); // List of extensions to enable and include
+}
 
 // class Game extends EventEmitter
 var Game = function(port) {
@@ -25,30 +31,31 @@ var Game = function(port) {
 			//,'xhr-polling'
 			//,'jsonp-polling'
 		]);
-		io.set('origins', 'tetrinet.se:*')
+		io.set('origins', Config.HOST + ':*')
 		io.set('log level', 1);
 		io.set('authorization', function (handshakeData, callback) {
-			// use openid to verify identity
-			relyingParty.verifyAssertion(handshakeData.headers.referer, function(err, result) {
-				if(err)
-					return callback(err);
-				if(result.authenticated)
-					handshakeData.identity = result.claimedIdentifier;
-				callback(null, result.authenticated);
-			});
+			if (Config.OPENID_ENABLED) {
+				// use openid to verify identity
+				relyingParty.verifyAssertion(handshakeData.headers.referer, function(err, result) {
+					if(err)
+						return callback(err);
+					if(result.authenticated)
+						handshakeData.identity = result.claimedIdentifier;
+					callback(null, result.authenticated);
+				});
+			} else {
+				// make sure we disable stats i guess?
+				Config.ENABLE_MYSQL = false;
+				callback(null, true);
+			}
 		});
    	});
    	this.io = io;
     
-    this.mysql = mysql.createClient({
-    	// Use either host and port fom tcp or just port for socket. 
-		// host: 'localhost',
-		port: '/var/run/mysqld/mysqld.sock',
-		database: 'ucms_tetrinet',
-		user: 'ucms_tetrinet',
-		password: 'dummy'
-	});
-	
+    if (Config.MYSQL_ENABLED) {
+	    this.mysql = mysql.createClient(Config.MYSQL_LOGIN_DATA);
+	}
+		
 	// Setup rooms
 	var room = new Room(this, "Cookies", {width:12, height:24, specials: true});
 	this.rooms["Cookies"] = room;

@@ -1,5 +1,6 @@
 var util = require('util'),
-	Message = require('./message');
+	Message = require('./message'),
+	Config = require('./config');
 
 // class Player extends EventEmitter
 var Player = function(game, client) {
@@ -32,8 +33,10 @@ Player.prototype.handleMessage = function(p) {
 			this.name = p.name || "Error";
 			
 			var id = this.client.handshake.identity;
-			this.game.mysql.query('INSERT INTO player (player_id,name) VALUES(?, ?) ON DUPLICATE KEY UPDATE name=?', [id, this.name, this.name]);
 			
+		    if (Config.MYSQL_ENABLED) {
+				this.game.mysql.query('INSERT INTO player (player_id,name) VALUES(?, ?) ON DUPLICATE KEY UPDATE name=?', [id, this.name, this.name]);
+			}
 			this.emit(Player.EVENT_JOIN);
 			this.send(Message.ROOMS, {r: this.game.getRoomInfo()});
 			break;
