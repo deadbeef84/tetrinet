@@ -87,6 +87,7 @@ $(document).ready(function() {
 		var name = $(this).find('#name').val();
 		var date = new Date();
 		$.cookies.set('name', name, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
+		Settings.name = name;
 		var g = new Game(name);
 		Object.seal(g);
   <?php if ($CONFIG['autoplay_enabled']) { ?>
@@ -192,11 +193,11 @@ $(document).ready(function() {
         </form>
       </div>
       <div id="gamelogbox">
-        <ul id="gamelogfilters"></ul>
+        <ul id="gamelogfilters"><li id="gamelogfilters_add">+</li></ul>
         <div id="gamelog"></div>
       </div>
     </div>
-
+    
   </div>
 </body>
 </html>

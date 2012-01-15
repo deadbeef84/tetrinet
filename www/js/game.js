@@ -124,6 +124,8 @@ function Game(name, token) {
 		return false;
 	});
 	
+	// setup settings dialog
+	
 	var initSettings = function() {
 		$('#settings_name').val(Settings.name);
 		$('#settings_keys input').each(function(index) {
@@ -165,6 +167,28 @@ function Game(name, token) {
 		else
 			$('#settings_submit').focus();
 		return false;
+	});
+	
+	// gamelog filtering
+	
+	$.each(Settings.tabs.filters, function(key, obj){
+		var listItem = $('<li>' + key + '</li>');
+		listItem.data(obj);
+		$('#gamelogfilters_add').before(listItem);
+		$('#gamelog').append($('<div class="' + obj.join(' ') + '"></div>'));
+	});
+	
+	$('#gamelogfilters > li:not(#gamelogfilters_add)').click(function(){
+		$('#gamelogfilters > li').removeClass('active');
+		$(this).removeClass('updated').addClass('active');
+		$('#gamelog > div').hide();
+		var c = $('#gamelog > div:eq(' + $(this).index() + ')');
+		c.show();
+		c[0].scrollTop = c[0].scrollHeight;
+	}).filter(':first-child').click();
+	
+	$('#gamelogfilters_add').click(function(){
+		console.log('not yet');
 	});
 }
 
@@ -246,11 +270,17 @@ Game.prototype.sendBoard = function() {
 }
 
 Game.prototype.gameLog = function(msg, logClass) {
-	if (isArray(logClass))
-		logClass = logClass.join(' ');
-	var c = $('#gamelog');
-	c.append('<p class="'+logClass+'">'+msg+'</p>');
-	c[0].scrollTop = c[0].scrollHeight;
+	if (!isArray(logClass))
+		logClass = [logClass];
+	for (i in logClass)
+		logClass[i] = '#gamelog > div.' + logClass[i];
+	var c = $(logClass.join(','));
+	c.append('<p>'+msg+'</p>');
+	c.each(function(){
+		this.scrollTop = this.scrollHeight;
+		while ($(this).children().length > Settings.tabs.buffer_size)
+			$(this).children(':first').remove();
+	});
 }
 
 Game.prototype.chat = function(msg) {
@@ -350,7 +380,7 @@ Game.prototype.handleMessage = function(msg) {
 					if(l > 1) {
 						var linesToAdd = (l == 4 ? l : (l-1));
 						self.linesSent += linesToAdd;
-						self.gameLog('<em>' + htmlspecialchars(self.player.name) + '</em> added <strong>' + linesToAdd + '</strong> lines to all', [ Game.LOG_LINES, Game.LOG_YOU ]);
+						self.gameLog('<em>' + htmlspecialchars(self.player.name) + '</em> added <strong>' + linesToAdd + '</strong> lines to all', [ Game.LOG_LINES ]);
 						self.send({t: Message.LINES, n: linesToAdd});
 					}
 				});
@@ -411,7 +441,7 @@ Game.prototype.handleMessage = function(msg) {
 			this.linesRemoved = 0;
 			this.linesSent = 0;
 			this.startTime = (new Date().getTime());
-			$('#gamelog').empty();
+			//$('#gamelog').empty();
 			$('body').removeClass('winner');
 			$('.player').removeClass('gameover winner');
 			for(var p in this.players)

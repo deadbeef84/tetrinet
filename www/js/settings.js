@@ -2,7 +2,7 @@
 
 Settings = {
 	'name': '',
-	'tabs': { buffer_size: 100, filters: [ [], [Game.LOG_YOU] ] },
+	'tabs': { buffer_size: 100, filters: { 'All':[Game.LOG_YOU,Game.LOG_STATUS,Game.LOG_SPECIAL,Game.LOG_LINES], 'You':[Game.LOG_YOU] } },
 	'keymap': {
 		'left': 37,
 		'right': 39,

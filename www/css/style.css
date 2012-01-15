@@ -56,25 +56,25 @@ em.self { /* your name */
 	background-color: #fcc;
 	height: 150px;
 }
-	#gamelog {
+/*	#gamelog {
 		overflow: auto;
 		height: 150px;
 	}
-	#gamelog p {
+*/	#gamelog p {
 		line-height: 1em;
 		margin: 0 0 .25em 0;
 	}
-	#gamelogfilters {
-		display: none;
-	}
-	/*
-	#gamelog .log {
+	#gamelog {
 		float: left;
+		width: 100%;
+	}
+	#gamelog > div {
 		overflow: auto;
 		height: 120px;
 		width: 100%;
 	}
 	#gamelogfilters {
+		background: #c99;
 		float: left;
 		height: 30px;
 		width: 100%;
@@ -83,13 +83,24 @@ em.self { /* your name */
 		padding: 0;
 	}
 	#gamelogfilters li {
+		cursor: pointer;
 		list-style: none;
 		float: left;
+		text-align: center;
+		min-width: 60px;
 	}
-	#gamelogfilters > li.current {
-		text-decoration: underline;
+	#gamelogfilters > li.active {
+		background: #fcc;
 	}
-	*/
+	#gamelogfilters > li.updated::after {
+		content: "*";
+	}
+	#gamelogfilters #gamelogfilters_add {
+		min-width: inherit;
+		padding: 0 10px;
+		float: right;
+		display: none;
+	}
 	
 #gamearea {
 	width: 100%;
@@ -211,7 +222,7 @@ em.self { /* your name */
 .player.target h2 {
 	color: #900;
 }
-.player.target h2:before {
+.player.target h2::before {
 	content: "* ";
 }
 
