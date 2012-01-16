@@ -4,30 +4,44 @@ function Player(target) {
 	
 	var self = this;
 	
-	this.dropTimer = new Timer(1000);
+	this.dropTimer = new Timer(Player.DROP_DELAY);
 	this.dropTimer.on(Timer.EVENT_TIMER, function() { self.drop(); });
-	this.newBlockTimer = new Timer(Player.DROP_DELAY, 1);
+	
+	this.newBlockTimer = new Timer(Player.NEWBLOCK_DELAY, 1);
 	this.newBlockTimer.on(Timer.EVENT_TIMER, function() { self.doCreateNewBlock(); });
 	
-	this.flipTimer = new Timer(10000, 1);
+	this.flipTimer = new Timer(Player.TIME_FLIP, 1);
 	this.flipTimer.on(Timer.EVENT_TIMER, function() { self.flip = false; });
 	
-	this.invisibleTimer = new Timer(10000, 1);
+	this.invisibleTimer = new Timer(Player.TIME_INVISIBLE, 1);
 	this.invisibleTimer.on(Timer.EVENT_TIMER, function() { self.invisible = false; });
 	
-	this.reflectTimer = new Timer(10000, 1);
+	this.reflectTimer = new Timer(Player.TIME_REFLECT, 1);
 	this.reflectTimer.on(Timer.EVENT_TIMER, function() { self.reflect = false; });
 	
-	this.speedTimer = new Timer(15000, 1);
+	this.speedTimer = new Timer(Player.TIME_SPEED, 1);
 	this.speedTimer.on(Timer.EVENT_TIMER, function() { self.speed = false; });
 	
-	this.sTimer = new Timer(15000, 1);
+	this.sTimer = new Timer(Player.TIME_SBLOCKS, 1);
 	this.sTimer.on(Timer.EVENT_TIMER, function() { self.sBlocks = false; });
 }
 // Extend Board
 Bw.extend(Player, Board);
+
+Player.TIME_FLIP = 10000;
+Player.TIME_INVISIBLE = 10000;
+Player.TIME_REFLECT = 10000;
+Player.TIME_SPEED = 15000;
+Player.TIME_SBLOCKS = 15000;
+
+Player.NUM_SPECIALS = 21;
+Player.INVENTORY_MAX = 18;
+Player.DROP_DELAY = 1000;
+Player.NEWBLOCK_DELAY = 150;
+
 Player.EVENT_GAMEOVER = "gameover";
 Player.EVENT_INVENTORY = "inventory";
+Player.EVENT_NEW_BLOCK = "new_block";
 
 Player.SPECIAL_ADD_LINE = -1;
 Player.SPECIAL_CLEAR_LINE = -2;
@@ -51,9 +65,6 @@ Player.SPECIAL_INVERT = -19;
 Player.SPECIAL_SPEED = -20;
 Player.SPECIAL_RANDOM = -21;
 Player.SPECIAL_SBLOCKS = -22;
-Player.NUM_SPECIALS = 21;
-Player.INVENTORY_MAX = 18;
-Player.DROP_DELAY = 150;
 
 Player.special = {
 	'-1': {
@@ -285,7 +296,6 @@ Player.prototype.getRandomBlock = function() {
 Player.prototype.createNewBlock = function() {
 	this.currentBlock = null;
 	this.emit(Board.EVENT_CHANGE);
-	
 	this.dropTimer.stop();
 	this.newBlockTimer.start();
 }
@@ -298,14 +308,16 @@ Player.prototype.doCreateNewBlock = function() {
 	this.currentBlock.x = Math.floor(this.width / 2) - 1;
 	this.currentBlock.y = -this.currentBlock.getBoundingBox().miny;
 	this.emit(Board.EVENT_UPDATE);
-	if(this.collide(this.currentBlock)) {
+	if (this.collide(this.currentBlock)) {
 		this.putBlock(this.currentBlock);
 		this.currentBlock = null;
 		this.isPlaying = false;
 		this.emit(Board.EVENT_CHANGE);
 		this.emit(Player.EVENT_GAMEOVER);
-	} else
+	} else {
 		this.initDrop();
+	}
+	this.emit(Player.EVENT_NEW_BLOCK);
 }
 
 Player.prototype.move = function(x,y,r,stick) {
@@ -515,8 +527,8 @@ Player.prototype.use = function(msg) {
 			var shakeFunction = function(count){
 				if (count) {
 					board.css({
-						'margin-left': (Math.random()-0.5)*50,
-						'-webkit-transform': 'rotate(' + (Math.random()-0.5)*30 + 'deg)'
+						'margin-left': Math.round((Math.random()-0.5)*50),
+						'-webkit-transform': 'rotate(' + Math.round((Math.random()-0.5)*40) + 'deg)'
 					});
 					setTimeout(shakeFunction, 25, --count);
 				}
@@ -570,8 +582,11 @@ Player.prototype.use = function(msg) {
 						var cell = this.target.find('.board-wrapper .row').eq(y).children().eq(x);
 						if(cell.length) {
 							var explosion = $('<div class="explosion" />');
-							explosion.css({ 'top': cell.offset().top, 'left': cell.offset().left,
-								'background-image': "url('../images/explosion.gif?" + Date.now()  + "')" });
+							explosion.css({
+								'top': cell.offset().top,
+								'left': cell.offset().left,
+								'background-image': "url('../images/explosion.gif?" + Date.now()  + "')"
+							});
 							$('#container').append(explosion);
 							setTimeout(function(obj){ obj.remove(); }, 2000, explosion);
 						}
@@ -646,17 +661,14 @@ Player.prototype.use = function(msg) {
 			
 		case Player.SPECIAL_INVISIBLE:
 			this.invisible = true;
-			if(this.invisibleTimer.isRunning())
-				this.invisibleTimer.delay = 10000 + Math.max(0, this.invisibleTimer.delay - this.invisibleTimer.time());
-			else
-				this.invisibleTimer.delay = 10000;
-			console.log('invis timer at ', this.invisibleTimer.delay);
+			this.invisibleTimer.addDelay(Player.TIME_INVISIBLE);
 			this.invisibleTimer.start();
 			change = true;
 			break;
 			
 		case Player.SPECIAL_REFLECT:
 			this.reflect = true;
+			this.reflectTimer.addDelay(Player.TIME_REFLECT);
 			this.reflectTimer.start();
 			break;
 			
@@ -759,11 +771,11 @@ Player.prototype.use = function(msg) {
 					}
 				}
 			}
-			console.log(maxHeight);
 			this.speed = true;
+			this.speedTimer.addDelay(Player.TIME_SPEED);
+			this.speedTimer.start();
 			this.dropTimer.delay = 50 + maxHeight * 6;
 			this.dropTimer.start();
-			this.speedTimer.start();
 			break;
 			
 		case Player.SPECIAL_RANDOM:
@@ -774,10 +786,7 @@ Player.prototype.use = function(msg) {
 			
 		case Player.SPECIAL_SBLOCKS:
 			this.sBlocks = true;
-			if(this.sTimer.isRunning())
-				this.sTimer.delay = 10000 + Math.max(0, this.sTimer.delay - this.invisibleTimer.time());
-			else
-				this.sTimer.delay = 10000;
+			this.sTimer.addDelay(Player.TIME_SBLOCKS);
 			this.sTimer.start();
 			break;
 			
@@ -790,6 +799,7 @@ Player.prototype.use = function(msg) {
 		this.emit(Board.EVENT_CHANGE);
 	}
 }
+
 Object.freeze(Board.prototype);
 Bw.recursiveFreeze(Player.special);
 Object.freeze(Player.prototype);

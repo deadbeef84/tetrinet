@@ -56,13 +56,50 @@ em.self { /* your name */
 	background-color: #fcc;
 	height: 150px;
 }
-	#gamelog {
+/*	#gamelog {
 		overflow: auto;
 		height: 150px;
 	}
-	#gamelog p {
+*/	#gamelog p {
 		line-height: 1em;
 		margin: 0 0 .25em 0;
+	}
+	#gamelog {
+		float: left;
+		width: 100%;
+	}
+	#gamelog > div {
+		overflow: auto;
+		height: 120px;
+		width: 100%;
+	}
+	#gamelogfilters {
+		background: #c99;
+		float: left;
+		height: 30px;
+		width: 100%;
+		line-height: 30px;
+		margin: 0;
+		padding: 0;
+	}
+	#gamelogfilters li {
+		cursor: pointer;
+		list-style: none;
+		float: left;
+		text-align: center;
+		min-width: 60px;
+	}
+	#gamelogfilters > li.active {
+		background: #fcc;
+	}
+	#gamelogfilters > li.updated::after {
+		content: "*";
+	}
+	#gamelogfilters #gamelogfilters_add {
+		min-width: inherit;
+		padding: 0 10px;
+		float: right;
+		display: none;
 	}
 	
 #gamearea {
@@ -181,6 +218,12 @@ em.self { /* your name */
 }
 .player.self.gameover .board::after {
 	background-image: url(../images/skull-self.jpg);
+}
+.player.target h2 {
+	color: #900;
+}
+.player.target h2::before {
+	content: "* ";
 }
 
 /* popup when someone attacks */
@@ -324,4 +367,14 @@ em.self { /* your name */
 	top:0; right:0; bottom:0; left:0;
 	opacity: 0.5;
 	background: url(../images/rickroll.gif);
+}
+#settings_show {
+	position: absolute;
+	display: none;
+}
+#settingsbox {
+	position: absolute;
+	display: none;
+	background: #ddd;
+	z-index: 2;
 }
