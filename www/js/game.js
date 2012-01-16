@@ -10,6 +10,7 @@ function Game(name, token) {
 	this.linesSent = 0;
 	this.options = {};
 	this.target = 0;
+	this.targetList = [];
 	
 	var self = this;
 	
@@ -138,7 +139,6 @@ function Game(name, token) {
 			initSettings();
 		$('#settingsbox').slideToggle();
 		$('#settingsbox').toggleClass('active');
-		//$('#settings_show').slideToggle();
 		return false;
 	};
 	
@@ -146,7 +146,6 @@ function Game(name, token) {
 	$('#settings_cancel').click(toggleSettings);
 	
 	$('#settings').submit(function(){
-		// set settings
 		Settings.name[$('#settings_name').val()];
 		$('#settings_keys input').each(function() {
 			Settings.keymap[$(this).attr('name')] = $(this).data('keycode');
@@ -200,24 +199,19 @@ Game.LOG_SPECIAL_RECIEVED = 'log-special-recieved';
 Game.LOG_LINES = 'log-lines';
 
 Game.prototype.cycleTarget = function(dir) {
-	var newTarget = -1;
-	var playerIds = [];
-	for (id in this.players)
-		playerIds.push(id);
-	for (var i = 0; i < playerIds.length; i++) {
-		if (this.target == playerIds[i]) {
-			var newIndex = i + dir;
-			if (newIndex < 0)
-				newIndex += playerIds.length;
-			if (newIndex >= playerIds.length)
-				newIndex -= playerIds.length;
-			newTarget = playerIds[newIndex];
-			break;
-		}
+	var targetIndex = this.targetList.indexOf(this.target);
+	if (targetIndex > -1) {
+		do {
+			targetIndex += dir;
+			if (targetIndex < 0)
+				targetIndex += this.targetList.length;
+			if (targetIndex >= this.targetList.length)
+				targetIndex -= this.targetList.length;
+		} while (!this.players[this.targetList[targetIndex]].isPlaying);
+		this.setTarget(this.targetList[targetIndex]);
+	} else {
+		this.setTarget(this.player.id);
 	}
-	if (newTarget < 0)
-		newTarget = this.player.id;
-	this.setTarget(newTarget);
 }
 
 Game.prototype.setTarget = function(id) {
@@ -394,6 +388,10 @@ Game.prototype.handleMessage = function(msg) {
 			p.id = msg.p.index;
 			this.players[p.id] = p;
 			this.updatePlayers();
+			if (msg.self)
+				this.targetList.unshift(p.id);
+			else
+				this.targetList.push(p.id);
 			break;
 			
 		case Message.GAMEOVER:
@@ -401,6 +399,8 @@ Game.prototype.handleMessage = function(msg) {
 			p.isPlaying = false;
 			this.gameLog(htmlspecialchars(p.name) + ' is dead.', Game.LOG_STATUS);
 			p.container.addClass('gameover');
+			if (this.target == p.id)
+				this.cycleTarget(-1);
 			break;
 			
 		case Message.WINNER:
@@ -430,8 +430,12 @@ Game.prototype.handleMessage = function(msg) {
 		case Message.REMOVE_PLAYER:
 			//alert('disconnected ' + msg.id);
 			var p = this.players[msg.id];
+			if (this.target == p.id)
+				this.cycleTarget(-1);
+			var targetIndex = this.targetList.indexOf(p.id);
+			if (targetIndex > -1)
+				this.targetList.splice(targetIndex, 1);
 			p.container.remove();
-			this.cycleTarget(-1);
 			delete this.players[msg.id];
 			this.updatePlayers();
 			break;

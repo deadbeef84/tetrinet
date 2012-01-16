@@ -56,11 +56,7 @@ em.self { /* your name */
 	background-color: #fcc;
 	height: 150px;
 }
-/*	#gamelog {
-		overflow: auto;
-		height: 150px;
-	}
-*/	#gamelog p {
+	#gamelog p {
 		line-height: 1em;
 		margin: 0 0 .25em 0;
 	}
