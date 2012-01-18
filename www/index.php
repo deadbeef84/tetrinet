@@ -35,7 +35,8 @@ if ($CONFIG['openid_enabled'] && !$CONFIG['singleplayer_enabled']) {
 					);
 					$a = $openid->getAttributes();
 					$e = $a['contact/email'];
-					$name = substr($e, 0, strpos($e, '@'));
+					if (!isset($_COOKIE['name']))
+						$name = substr($e, 0, strpos($e, '@'));
 				} else {
 					$status = 'not valid';
 				}
@@ -58,8 +59,9 @@ $version = time('u');
   <base href="<?="http://{$CONFIG['host']}/{$CONFIG['base_path']}/"?>"></base>
 
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-  <script src="http://tetrinet.se:7000/socket.io/socket.io.js" type="text/javascript"></script>
+  <script src="http://<?=$CONFIG['host']?>:7000/socket.io/socket.io.js" type="text/javascript"></script>
   <script src="js/jquery.cookies.2.2.0.min.js" type="text/javascript"></script>
+  <script src="js/jquery.bw.catbox.js" type="text/javascript"></script>
   <script src="js/base.js?<?=$version?>" type="text/javascript"></script>
   <script src="js/eventemitter.js?<?=$version?>" type="text/javascript"></script>
   <script src="js/timer.js?<?=$version?>" type="text/javascript"></script>
@@ -113,15 +115,15 @@ $(document).ready(function() {
 </head>
 
 <body id="page">
-  <div id="container">
   
-    <a href="" id="settings_show" class="settings_toggle" title="Settings">Settings</a>
-    <div id="settingsbox">
+  <div id="popup">
+    <div id="settings_popup">
       <form id="settings">
-        <h2>Settings</h2>
-<!--        <h3>Misc</h3>
+        <h3>Misc</h3>
         <p><label for="settings_name">Name</label><input id="settings_name" type="text" name="name" /></p>
--->        <h3>Keys</h3>
+        <p><label for="settings_buffersize">Log buffer size</label><input id="settings_buffersize" type="text" name="buffersize" disabled="disabled" /></p>
+        <p><label for="settings_ghostpiece">Ghost piece</label><input id="settings_ghostpiece" type="checkbox" name="ghostpiece" checked="checked" disabled="disabled" /></p>
+        <h3>Keys</h3>
         <div id="settings_keys">
 	      <p><label for="settings_km_left">Left</label><input id="settings_km_left" class="keycode_listener" type="text" name="left" /></p>
 	      <p><label for="settings_km_right">Right</label><input id="settings_km_right" class="keycode_listener" type="text" name="right" /></p>
@@ -138,6 +140,28 @@ $(document).ready(function() {
         <p><input type="button" class="settings_toggle" id="settings_cancel" value="Cancel" /><input type="submit" id="settings_submit" value="Save" /></p>
       </form>
     </div>
+    <div id="filtersettings_popup">
+      <form id="filtersettings">
+        <p>
+          <label for="filtersettings_name">Name</label>
+          <input id="filtersettings_name" type="text" name="name" />
+        </p>
+        <p>
+          <label for="filtersettings_filters">Filters</label>
+          <select id="filtersettings_filters" name="buffersize" multiple="multiple">
+          </select>
+        </p>
+        <p>
+          <input type="button" id="filtersettings_cancel" value="Cancel" />
+          <input type="submit" id="filtersettings_submit" value="Save" />
+        </p>
+      </form>
+    </div>
+  </div>
+  
+  <div id="container">
+  
+    <a href="" id="settings_show" class="settings_toggle" title="Settings">Settings</a>
   
     <header>
       <h1>Tetrinet</h1>

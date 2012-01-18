@@ -2,7 +2,10 @@
 
 Settings = {
 	'name': '',
-	'tabs': { buffer_size: 100, filters: { 'All':[Game.LOG_YOU,Game.LOG_STATUS,Game.LOG_SPECIAL,Game.LOG_LINES], 'You':[Game.LOG_YOU] } },
+	'log': {
+		buffer_size: 100,
+		filters: [ { title: 'All', classes: ['log-you', 'log-status', 'log-lines', 'log-specials'], closeButton: false } ]
+	},
 	'keymap': {
 		'left': 37,
 		'right': 39,
@@ -31,7 +34,7 @@ if ($ && $.cookies) {
 
 	var SavedSettings = {
 		'name': $.cookies.get('name'),
-		'tabs': $.cookies.get('tabs'),
+		'log': $.cookies.get('log'),
 		'keymap': $.cookies.get('keymap')
 	};
 	

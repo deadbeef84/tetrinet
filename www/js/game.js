@@ -125,35 +125,31 @@ function Game(name, token) {
 		return false;
 	});
 	
-	// setup settings dialog
+	// settings dialog
 	
 	var initSettings = function() {
 		$('#settings_name').val(Settings.name);
+		$('#settings_buffersize').val(Settings.log.buffer_size);
 		$('#settings_keys input').each(function(index) {
 			$(this).val(getCharFromKeyCode(Settings.keymap[$(this).attr('name')]));
 			$(this).data('keycode', Settings.keymap[$(this).attr('name')]);
 		});
 	};
-	var toggleSettings = function() {
-		if (!$('#settingsbox').hasClass('active'))
-			initSettings();
-		$('#settingsbox').slideToggle();
-		$('#settingsbox').toggleClass('active');
+	$('#settings_show').show().click(function() {
+		initSettings();
+		$('#settings_popup').catbox('Settings');
 		return false;
-	};
-	
-	$('#settings_show').show().click(toggleSettings);
-	$('#settings_cancel').click(toggleSettings);
+	});
+	$('#settings_cancel').click($.BW.catbox.close);
 	
 	$('#settings').submit(function(){
 		Settings.name[$('#settings_name').val()];
 		$('#settings_keys input').each(function() {
 			Settings.keymap[$(this).attr('name')] = $(this).data('keycode');
 		});
-		var date = new Date();
-		$.cookies.set('name', Settings.name, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
-		$.cookies.set('keymap', Settings.keymap, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
-		toggleSettings();
+		self.setCookie('name', Settings.name);
+		self.setCookie('keymap', Settings.keymap);
+		$.BW.catbox.close();
 		return false;
 	});
     
@@ -168,27 +164,91 @@ function Game(name, token) {
 		return false;
 	});
 	
-	// gamelog filtering
+	// log filtering
 	
-	$.each(Settings.tabs.filters, function(key, obj){
-		var listItem = $('<li>' + key + '</li>');
-		listItem.data(obj);
+	var addFilter = function(index, obj) {
+		var listItem = $('<li>' + obj.title + '</li>');
+		if (obj.closeButton)
+			listItem.append($('<a href="" class="gamelogfilters_close">X</a>'));
 		$('#gamelogfilters_add').before(listItem);
-		$('#gamelog').append($('<div class="' + obj.join(' ') + '"></div>'));
+		$('#gamelog').append($('<div class="' + obj.classes.join(' ') + '"></div>'));
+		return listItem;
+	};
+	
+	var initFilters = function() {
+		$.each(Settings.log.filters, addFilter);
+		$('#gamelogfilters > li:not(#gamelogfilters_add)').first().click();
+	};
+	
+	var initFilterSettings = function(index) {
+		
+		var name = Settings.log.filters[index] ? Settings.log.filters[index].name : "New filter";
+		var selectedFilters = Settings.log.filters[index] ? Settings.log.filters[index].classes : Game.LOG_FILTERS;
+		
+		$('#filtersettings_name').val(name);
+		$('#filtersettings_filters').empty();
+		
+		$.each(Game.LOG_FILTERS, function(key, obj){
+			var option = $('<option value="' + obj + '">' +  key + '</option>');
+			if (selectedFilters[key] != null)
+				option.attr('selected', 'selected');
+			$('#filtersettings_filters').append(option);
+		});
+	};
+	
+	$('#gamelogfilters').on('click', 'a.gamelogfilters_close', function() {
+		
+		var tabItem = $(this).parent();
+		var tabIndex = tabItem.index();
+		
+		tabItem.remove();
+		$('#gamelog > div:eq(' + tabIndex + ')').remove();
+		Settings.log.filters.splice(tabIndex, 1);
+		self.setCookie('log', Settings.log);
+		
+		var tabs = $('#gamelogfilters > li:not(#gamelogfilters_add)');
+		var newTabIndex = Math.max(0, Math.min(tabs.length - 1, tabIndex));
+		$('#gamelogfilters > li:eq(' + newTabIndex + ')').click();
+			
+		return false;
 	});
 	
-	$('#gamelogfilters > li:not(#gamelogfilters_add)').click(function(){
+	$('#gamelogfilters').on('click', 'li:not(#gamelogfilters_add)', function(){
 		$('#gamelogfilters > li').removeClass('active');
 		$(this).removeClass('updated').addClass('active');
 		$('#gamelog > div').hide();
 		var c = $('#gamelog > div:eq(' + $(this).index() + ')');
 		c.show();
 		c[0].scrollTop = c[0].scrollHeight;
-	}).filter(':first-child').click();
-	
-	$('#gamelogfilters_add').click(function(){
-		console.log('not yet');
 	});
+
+	$('#gamelogfilters_add').show().click(function() {
+		initFilterSettings();
+		$('#filtersettings_popup').catbox('New filter');
+		return false;
+	});
+	
+	$('#filtersettings').submit(function(){
+		var title = $('#filtersettings_name').val();
+		var selectedFilters = [];
+		$('#filtersettings_filters > option:selected').each(function(){
+			selectedFilters.push($(this).val());
+		});
+		var newFilter = {
+			'title': title,
+			'classes': selectedFilters,
+			'closeButton': true
+		};
+		Settings.log.filters.push(newFilter);
+		self.setCookie('log', Settings.log);
+		addFilter(Settings.log.filters.length - 1, newFilter).click();
+		$.BW.catbox.close();
+		return false;
+	});
+	
+	$('#filtersettings_cancel').click($.BW.catbox.close);
+	
+	initFilters();
 }
 
 Game.LOG_YOU = 'log-you';
@@ -197,6 +257,20 @@ Game.LOG_SPECIAL = 'log-special';
 Game.LOG_SPECIAL_SENT = 'log-special-sent';
 Game.LOG_SPECIAL_RECIEVED = 'log-special-recieved';
 Game.LOG_LINES = 'log-lines';
+Game.LOG_FILTERS = {
+	'You only': Game.LOG_YOU,
+	'Status messages': Game.LOG_STATUS,
+	'All specials': Game.LOG_SPECIAL,
+	'Specials sent': Game.LOG_SPECIAL_SENT,
+	'Specials recieved': Game.LOG_SPECIAL_RECIEVED,
+	'Lines': Game.LOG_LINES
+};
+
+Game.prototype.setCookie = function(name, data) {
+	var date = new Date();
+	var options = { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) };
+	$.cookies.set(name, data, options);
+}
 
 Game.prototype.cycleTarget = function(dir) {
 	var targetIndex = this.targetList.indexOf(this.target);
@@ -272,7 +346,7 @@ Game.prototype.gameLog = function(msg, logClass) {
 	c.append('<p>'+msg+'</p>');
 	c.each(function(){
 		this.scrollTop = this.scrollHeight;
-		while ($(this).children().length > Settings.tabs.buffer_size)
+		while ($(this).children().length > Settings.log.buffer_size)
 			$(this).children(':first').remove();
 	});
 }
@@ -430,7 +504,7 @@ Game.prototype.handleMessage = function(msg) {
 		case Message.REMOVE_PLAYER:
 			//alert('disconnected ' + msg.id);
 			var p = this.players[msg.id];
-			if (this.target == p.id)
+			if (this.target == p.id && this.player.isPlaying)
 				this.cycleTarget(-1);
 			var targetIndex = this.targetList.indexOf(p.id);
 			if (targetIndex > -1)

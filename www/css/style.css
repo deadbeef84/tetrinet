@@ -23,6 +23,9 @@ em.self { /* your name */
 	margin: 0 auto;
 }
 
+#popup {
+	display: none;
+}
 #container {
 	width: 968px;
 	text-align: center;
@@ -60,16 +63,14 @@ em.self { /* your name */
 		line-height: 1em;
 		margin: 0 0 .25em 0;
 	}
-	#gamelog {
-		float: left;
-		width: 100%;
-	}
+	#gamelog,
 	#gamelog > div {
 		overflow: auto;
 		height: 120px;
 		width: 100%;
 	}
 	#gamelogfilters {
+		overflow: hidden;
 		background: #c99;
 		float: left;
 		height: 30px;
@@ -78,12 +79,14 @@ em.self { /* your name */
 		margin: 0;
 		padding: 0;
 	}
-	#gamelogfilters li {
+	#gamelogfilters > li {
 		cursor: pointer;
 		list-style: none;
 		float: left;
-		text-align: center;
-		min-width: 60px;
+		text-align: left;
+		min-width: 40px;
+		padding: 0px 10px;
+		border-right: 1px solid #966;
 	}
 	#gamelogfilters > li.active {
 		background: #fcc;
@@ -91,11 +94,30 @@ em.self { /* your name */
 	#gamelogfilters > li.updated::after {
 		content: "*";
 	}
-	#gamelogfilters #gamelogfilters_add {
+	#gamelogfilters > li > a.gamelogfilters_close {
+		float: right;
+		text-decoration: none;
+		text-align: center;
+		color: #966;
+		line-height: 20px;
+		width: 20px;
+		height: 20px;
+		display: block;
+		margin: 5px -5px 5px 10px;
+		-webkit-border-radius: 10px;
+	}
+	#gamelogfilters > li > a.gamelogfilters_close:hover {
+		color: #fcc;
+		background-color: #966;
+	}
+	#gamelogfilters > li > a.gamelogfilters_close:active {
+		background-color: #633;
+	}
+	#gamelogfilters > #gamelogfilters_add {
 		min-width: inherit;
 		padding: 0 10px;
+		border: 0;
 		float: right;
-		display: none;
 	}
 	
 #gamearea {
@@ -368,9 +390,13 @@ em.self { /* your name */
 	position: absolute;
 	display: none;
 }
-#settingsbox {
-	position: absolute;
-	display: none;
-	background: #ddd;
-	z-index: 2;
+#cb_container {
+	background: #ccc;
+}
+#cb_titlebar {
+	margin: 0;
+	padding: 4px 10px;
+}
+#cb_container > div {
+	padding: 10px 20px;
 }
