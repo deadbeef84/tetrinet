@@ -10,6 +10,8 @@ function Game(name, token) {
 	this.linesSent = 0;
 	this.options = {};
 	this.target = 0;
+	this.targetList = [];
+	this.attackNotifierSlots = [];
 	
 	var self = this;
 	
@@ -124,37 +126,49 @@ function Game(name, token) {
 		return false;
 	});
 	
-	// setup settings dialog
+	// settings dialog
 	
 	var initSettings = function() {
 		$('#settings_name').val(Settings.name);
+		$('#settings_buffersize').val(Settings.log.buffer_size);
+		if (Settings.misc.ghost_block)
+			$('#settings_ghostblock').attr('checked', 'checked');
+		else
+			$('#settings_ghostblock').removeAttr('checked');
+		if (Settings.misc.attack_notifications)
+			$('#settings_attacknotifications').attr('checked', 'checked');
+		else
+			$('#settings_attacknotifications').removeAttr('checked');
 		$('#settings_keys input').each(function(index) {
 			$(this).val(getCharFromKeyCode(Settings.keymap[$(this).attr('name')]));
 			$(this).data('keycode', Settings.keymap[$(this).attr('name')]);
 		});
 	};
-	var toggleSettings = function() {
-		if (!$('#settingsbox').hasClass('active'))
-			initSettings();
-		$('#settingsbox').slideToggle();
-		$('#settingsbox').toggleClass('active');
-		//$('#settings_show').slideToggle();
+	$('#settings_show').show().click(function() {
+		initSettings();
+		$('#settings_popup').catbox('Settings');
 		return false;
-	};
-	
-	$('#settings_show').show().click(toggleSettings);
-	$('#settings_cancel').click(toggleSettings);
+	});
+	$('#settings_cancel').click($.BW.catbox.close);
 	
 	$('#settings').submit(function(){
-		// set settings
-		Settings.name[$('#settings_name').val()];
 		$('#settings_keys input').each(function() {
 			Settings.keymap[$(this).attr('name')] = $(this).data('keycode');
 		});
-		var date = new Date();
-		$.cookies.set('name', Settings.name, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
-		$.cookies.set('keymap', Settings.keymap, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
-		toggleSettings();
+		var newName = $('#settings_name').val();
+		if (newName != Settings.name) {
+			Settings.name = newName;
+			self.player.name = newName;
+			self.updatePlayers();
+			self.send({t:Message.NAME, id:self.player.id, name:newName});
+		}
+		Settings.misc.ghost_block = $('#settings_ghostblock').is(':checked');
+		Settings.misc.attack_notifications = $('#settings_attacknotifications').is(':checked');
+		Settings.log.buffer_size = Math.max(1, parseInt($('#settings_buffersize').val()));
+		self.setCookie('settings_name', Settings.name);
+		self.setCookie('settings_misc', Settings.misc);
+		self.setCookie('settings_keymap', Settings.keymap);
+		$.BW.catbox.close();
 		return false;
 	});
     
@@ -169,55 +183,128 @@ function Game(name, token) {
 		return false;
 	});
 	
-	// gamelog filtering
+	// log filtering
 	
-	$.each(Settings.tabs.filters, function(key, obj){
-		var listItem = $('<li>' + key + '</li>');
-		listItem.data(obj);
+	var addFilter = function(index, obj) {
+		var listItem = $('<li>' + obj.title + '</li>');
+		if (obj.closeButton)
+			listItem.append($('<a href="" class="gamelogfilters_close">X</a>'));
 		$('#gamelogfilters_add').before(listItem);
-		$('#gamelog').append($('<div class="' + obj.join(' ') + '"></div>'));
+		$('#gamelog').append($('<div class="' + obj.classes.join(' ') + '"></div>'));
+		return listItem;
+	};
+	
+	var initFilters = function() {
+		$.each(Settings.log.filters, addFilter);
+		$('#gamelogfilters > li:not(#gamelogfilters_add):eq(' + Settings.log.selected_filter + ')').click();
+	};
+	
+	var initFilterSettings = function(index) {
+		
+		var name = Settings.log.filters[index] ? Settings.log.filters[index].name : "New filter";
+		var selectedFilters = Settings.log.filters[index] ? Settings.log.filters[index].classes : Game.LOG_FILTERS;
+		
+		$('#filtersettings_name').val(name);
+		$('#filtersettings_filters').empty();
+		
+		$.each(Game.LOG_FILTERS, function(key, obj){
+			var option = $('<option value="' + obj + '">' +  key + '</option>');
+			if (selectedFilters[key] != null)
+				option.attr('selected', 'selected');
+			$('#filtersettings_filters').append(option);
+		});
+	};
+	
+	$('#gamelogfilters').on('click', 'a.gamelogfilters_close', function() {
+		
+		var tabItem = $(this).parent();
+		var tabIndex = tabItem.index();
+		
+		tabItem.remove();
+		$('#gamelog > div:eq(' + tabIndex + ')').remove();
+		Settings.log.filters.splice(tabIndex, 1);
+		self.setCookie('settings_log', Settings.log);
+		
+		var tabs = $('#gamelogfilters > li:not(#gamelogfilters_add)');
+		var newTabIndex = Math.max(0, Math.min(tabs.length - 1, tabIndex));
+		$('#gamelogfilters > li:eq(' + newTabIndex + ')').click();
+		return false;
 	});
 	
-	$('#gamelogfilters > li:not(#gamelogfilters_add)').click(function(){
+	$('#gamelogfilters').on('click', 'li:not(#gamelogfilters_add)', function(){
+		var index = $(this).index();
 		$('#gamelogfilters > li').removeClass('active');
 		$(this).removeClass('updated').addClass('active');
 		$('#gamelog > div').hide();
-		var c = $('#gamelog > div:eq(' + $(this).index() + ')');
+		var c = $('#gamelog > div:eq(' + index + ')');
 		c.show();
 		c[0].scrollTop = c[0].scrollHeight;
-	}).filter(':first-child').click();
-	
-	$('#gamelogfilters_add').click(function(){
-		console.log('not yet');
+		Settings.log.selected_filter = index;
+		self.setCookie('settings_log', Settings.log);
 	});
+
+	$('#gamelogfilters_add').show().click(function() {
+		initFilterSettings();
+		$('#filtersettings_popup').catbox('New filter');
+		return false;
+	});
+	
+	$('#filtersettings').submit(function(){
+		var title = $('#filtersettings_name').val();
+		var selectedFilters = [];
+		$('#filtersettings_filters > option:selected').each(function(){
+			selectedFilters.push($(this).val());
+		});
+		var newFilter = {
+			'title': title,
+			'classes': selectedFilters,
+			'closeButton': true
+		};
+		Settings.log.filters.push(newFilter);
+		self.setCookie('settings_log', Settings.log);
+		addFilter(Settings.log.filters.length - 1, newFilter).click();
+		$.BW.catbox.close();
+		return false;
+	});
+	
+	$('#filtersettings_cancel').click($.BW.catbox.close);
+	
+	initFilters();
 }
 
-Game.LOG_YOU = 'log-you';
+Game.LOG_LINES = 'log-lines';
 Game.LOG_STATUS = 'log-status';
 Game.LOG_SPECIAL = 'log-special';
 Game.LOG_SPECIAL_SENT = 'log-special-sent';
 Game.LOG_SPECIAL_RECIEVED = 'log-special-recieved';
-Game.LOG_LINES = 'log-lines';
+Game.LOG_FILTERS = {
+	'Status messages': Game.LOG_STATUS,
+	'Lines': Game.LOG_LINES,
+	'All specials': Game.LOG_SPECIAL,
+	'Specials sent': Game.LOG_SPECIAL_SENT,
+	'Specials recieved': Game.LOG_SPECIAL_RECIEVED
+};
+
+Game.prototype.setCookie = function(name, data) {
+	var date = new Date();
+	var options = { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) };
+	$.cookies.set(name, data, options);
+}
 
 Game.prototype.cycleTarget = function(dir) {
-	var newTarget = -1;
-	var playerIds = [];
-	for (id in this.players)
-		playerIds.push(id);
-	for (var i = 0; i < playerIds.length; i++) {
-		if (this.target == playerIds[i]) {
-			var newIndex = i + dir;
-			if (newIndex < 0)
-				newIndex += playerIds.length;
-			if (newIndex >= playerIds.length)
-				newIndex -= playerIds.length;
-			newTarget = playerIds[newIndex];
-			break;
-		}
+	var targetIndex = this.targetList.indexOf(this.target);
+	if (targetIndex > -1) {
+		do {
+			targetIndex += dir;
+			if (targetIndex < 0)
+				targetIndex += this.targetList.length;
+			if (targetIndex >= this.targetList.length)
+				targetIndex -= this.targetList.length;
+		} while (!this.players[this.targetList[targetIndex]].isPlaying);
+		this.setTarget(this.targetList[targetIndex]);
+	} else {
+		this.setTarget(this.player.id);
 	}
-	if (newTarget < 0)
-		newTarget = this.player.id;
-	this.setTarget(newTarget);
 }
 
 Game.prototype.setTarget = function(id) {
@@ -240,6 +327,12 @@ Game.prototype.checkNotify = function() {
 			})
 			.appendTo('body');
 	}
+}
+
+Game.prototype.createNotification = function(sender, message) {
+	var notification = window.webkitNotifications.createNotification("images/explosion.gif", "Tetrinet: " + sender, message);
+	setTimeout(function() { notification.cancel(); }, 2000);
+	notification.show();
 }
 
 Game.prototype.send = function(msg) {
@@ -278,7 +371,7 @@ Game.prototype.gameLog = function(msg, logClass) {
 	c.append('<p>'+msg+'</p>');
 	c.each(function(){
 		this.scrollTop = this.scrollHeight;
-		while ($(this).children().length > Settings.tabs.buffer_size)
+		while ($(this).children().length > Settings.log.buffer_size)
 			$(this).children(':first').remove();
 	});
 }
@@ -293,7 +386,7 @@ Game.prototype.use = function(id) {
 	if(this.player.inventory && this.player.inventory.length) {
 		var p = this.players[id];
 		if (p && p.isPlaying) {
-			var logClass = [ Game.LOG_SPECIAL, Game.LOG_SPECIAL_SENT, Game.LOG_YOU ];
+			var logClass = [ Game.LOG_SPECIAL, Game.LOG_SPECIAL_SENT ];
 			if (id == this.player.id)
 				logClass.push(Game.LOG_SPECIAL_RECIEVED);
 			var s = this.player.inventory.shift();
@@ -394,6 +487,10 @@ Game.prototype.handleMessage = function(msg) {
 			p.id = msg.p.index;
 			this.players[p.id] = p;
 			this.updatePlayers();
+			if (msg.self)
+				this.targetList.unshift(p.id);
+			else
+				this.targetList.push(p.id);
 			break;
 			
 		case Message.GAMEOVER:
@@ -401,6 +498,8 @@ Game.prototype.handleMessage = function(msg) {
 			p.isPlaying = false;
 			this.gameLog(htmlspecialchars(p.name) + ' is dead.', Game.LOG_STATUS);
 			p.container.addClass('gameover');
+			if (this.target == p.id && p.id != this.player.id)
+				this.cycleTarget(-1);
 			break;
 			
 		case Message.WINNER:
@@ -414,13 +513,13 @@ Game.prototype.handleMessage = function(msg) {
 				$('body').addClass('winner');
 				$('.player').removeClass('target');
 			}
-			this.gameLog(htmlspecialchars(p.name) + ' has won the game.', Game.LOG_STATUS);
+			this.gameLog(htmlspecialchars(p.name) + ' has won the game.', [ Game.LOG_STATUS ]);
 			break;
 			
 		case Message.LINES:
 			var name = msg.id != null ? this.players[msg.id].name : 'Server';
-			this.gameLog('<em>' + htmlspecialchars(name) + '</em> added <strong>' + msg.n + '</strong> lines to all', [ Game.LOG_STATUS, Game.LOG_YOU ]);
-			if(this.player.isPlaying) {
+			this.gameLog('<em>' + htmlspecialchars(name) + '</em> added <strong>' + msg.n + '</strong> lines to all', [ Game.LOG_LINES ]);
+			if (this.player.isPlaying) {
 				this.player.addLines(msg.n);
 				this.player.moveUpIfBlocked();
 				this.sendBoard();
@@ -430,8 +529,12 @@ Game.prototype.handleMessage = function(msg) {
 		case Message.REMOVE_PLAYER:
 			//alert('disconnected ' + msg.id);
 			var p = this.players[msg.id];
+			if (this.target == p.id && this.player.isPlaying)
+				this.cycleTarget(-1);
+			var targetIndex = this.targetList.indexOf(p.id);
+			if (targetIndex > -1)
+				this.targetList.splice(targetIndex, 1);
 			p.container.remove();
-			this.cycleTarget(-1);
 			delete this.players[msg.id];
 			this.updatePlayers();
 			break;
@@ -457,34 +560,32 @@ Game.prototype.handleMessage = function(msg) {
 			break;
 			
 		case Message.CHAT:
+			var name;
 			if (msg.id == null) {
+				name = 'Server';
 				this.gameLog('<em class="status">'+ msg.text +'</em>', Game.LOG_STATUS);
 			} else {
-				var name = this.players[msg.id].name;
+				name = this.players[msg.id].name;
 				this.chat(name + ': ' + msg.text);
-				if(this.notify && !Bw.windowIsActive) {
-					var notification = window.webkitNotifications.createNotification("images/explosion.gif", "Tetrinet: " + name, msg.text);
-					setTimeout(function() { notification.cancel(); }, 2000);
-					notification.show();
-				}
+			}
+			if (this.notify && !Bw.windowIsActive) {
+				this.createNotification(name, msg.text);
 			}
 			break;
 			
 		case Message.SPECIAL:
 			var sourcePlayer = this.players[msg.sid];
 			var targetPlayer = this.players[msg.id];
-			if(targetPlayer) {
+			if (targetPlayer) {
 				var logClass = [ Game.LOG_SPECIAL ];
 				if (msg.sid == this.player.id)
 					logClass.push(Game.LOG_SPECIAL_SENT);
 				if (msg.id == this.player.id)
 					logClass.push(Game.LOG_SPECIAL_RECIEVED);
-				if (msg.sid == this.player.id || msg.id == this.player.id)
-					logClass.push(Game.LOG_YOU);
 				this.gameLog('<em class="'+(msg.sid==this.player.id?'self':'other')+'">' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <strong>' + Player.special[msg.s].name + '</strong> on <em class="'+(msg.id==this.player.id?'self':'other')+'">' + targetPlayer.name + '</em>', logClass);
 				if(targetPlayer.id == this.player.id) {
 					if(this.player.reflect) {
-						if(msg.reflect) {
+						if (msg.reflect) {
 							
 						} else {
 							msg.id = msg.sid;
@@ -493,11 +594,22 @@ Game.prototype.handleMessage = function(msg) {
 							this.send(msg);
 						}
 					} else {
-						var $msg = $('<p class="attack">' + sourcePlayer.name + ' ' + (msg.reflect ? 'reflected' : 'used') + ' special ' + Player.special[msg.s].name + '</p>');
-						setTimeout(function(obj){
-							obj.animate({'opacity':0}, 1000, function(){ $(this).remove(); });
-						}, 1000, $msg);
-						this.player.container.append($msg);
+						if (Settings.misc.attack_notifications) {
+							var $msg = $('<p class="attack">' + sourcePlayer.name + ' ' + (msg.reflect ? 'reflected' : 'used') + ' special ' + Player.special[msg.s].name + '</p>');
+							var offset = 0;
+							for (var i = 0; this.attackNotifierSlots[i]; i++, offset++) ;
+							this.attackNotifierSlots[offset] = true;
+							$msg.data('offset', offset);
+							$msg.css('top', offset * 50);
+							var self = this;
+							setTimeout(function(obj){
+								obj.animate({'opacity':0}, 500, function(){
+									self.attackNotifierSlots[$(this).data('offset')] = false;
+									$(this).remove();
+								});
+							}, 2000, $msg);
+							this.player.container.append($msg);
+						}
 						this.player.use(msg);
 					}
 				}
@@ -526,6 +638,12 @@ Game.prototype.handleMessage = function(msg) {
 		case Message.OPTIONS:
 			this.options = msg.o;
 			//$('#startbtn').toggle(this.options.admin);
+			break;
+			
+		case Message.NAME:
+			this.gameLog('<em>' + this.players[msg.id].name + '</em> is now known as <em>' + msg.name + '</em>', [ Game.LOG_STATUS ]);
+			this.players[msg.id].name = msg.name;
+			this.updatePlayers();
 			break;
 			
 		default:

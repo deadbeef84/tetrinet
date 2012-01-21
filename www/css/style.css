@@ -23,6 +23,9 @@ em.self { /* your name */
 	margin: 0 auto;
 }
 
+#popup {
+	display: none;
+}
 #container {
 	width: 968px;
 	text-align: center;
@@ -56,16 +59,13 @@ em.self { /* your name */
 	background-color: #fcc;
 	height: 150px;
 }
-/*	#gamelog {
-		overflow: auto;
-		height: 150px;
-	}
-*/	#gamelog p {
+	#gamelog p {
 		line-height: 1em;
 		margin: 0 0 .25em 0;
 	}
 	#gamelog {
-		float: left;
+		overflow: hidden;
+		height: 120px;
 		width: 100%;
 	}
 	#gamelog > div {
@@ -74,6 +74,7 @@ em.self { /* your name */
 		width: 100%;
 	}
 	#gamelogfilters {
+		overflow: hidden;
 		background: #c99;
 		float: left;
 		height: 30px;
@@ -81,13 +82,16 @@ em.self { /* your name */
 		line-height: 30px;
 		margin: 0;
 		padding: 0;
+		position: relative;
 	}
-	#gamelogfilters li {
+	#gamelogfilters > li {
 		cursor: pointer;
 		list-style: none;
 		float: left;
-		text-align: center;
-		min-width: 60px;
+		text-align: left;
+		min-width: 40px;
+		padding: 0px 10px;
+		border-right: 1px solid #966;
 	}
 	#gamelogfilters > li.active {
 		background: #fcc;
@@ -95,11 +99,31 @@ em.self { /* your name */
 	#gamelogfilters > li.updated::after {
 		content: "*";
 	}
-	#gamelogfilters #gamelogfilters_add {
+	#gamelogfilters > li > a.gamelogfilters_close {
+		float: right;
+		text-decoration: none;
+		text-align: center;
+		color: #966;
+		line-height: 20px;
+		width: 20px;
+		height: 20px;
+		display: block;
+		margin: 5px -5px 5px 10px;
+		-webkit-border-radius: 10px;
+	}
+	#gamelogfilters > li > a.gamelogfilters_close:hover {
+		color: #fcc;
+		background-color: #966;
+	}
+	#gamelogfilters > li > a.gamelogfilters_close:active {
+		background-color: #633;
+	}
+	#gamelogfilters > #gamelogfilters_add {
 		min-width: inherit;
 		padding: 0 10px;
-		float: right;
-		display: none;
+		border: 0;
+		position: absolute;
+		right: 0;
 	}
 	
 #gamearea {
@@ -227,17 +251,25 @@ em.self { /* your name */
 }
 
 /* popup when someone attacks */
+@-webkit-keyframes attack-popup-blink {
+	0% { background: #ffe8e8; border-color: red; }
+	100% { background: #ffeeee; border-color: #fcc; }
+}
 .player p.attack {
 	text-align: center;
-	position: absolute;
-	top: -50px;
-	left: -50px;
-	right: -50px;
-	color: #444;
-	background: rgba(255, 255, 255, 0.7);
+	position: fixed;
+	top: 0;
+	left: 20px;
+	color: #600;
+	border: 3px solid #fcc;
+	background: #ffe8e8;
 	-webkit-border-radius: 8px;
-	-webkit-box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
-	padding: 10px;
+	-webkit-animation-name: attack-popup-blink;
+	-webkit-animation-direction: alternate;
+	-webkit-animation-duration: 0.5s;
+	-webkit-animation-iteration-count: infinite;
+	padding: 0 16px;
+	line-height: 34px;
 }
 
 
@@ -372,9 +404,13 @@ em.self { /* your name */
 	position: absolute;
 	display: none;
 }
-#settingsbox {
-	position: absolute;
-	display: none;
-	background: #ddd;
-	z-index: 2;
+#cb_container {
+	background: #ccc;
+}
+#cb_titlebar {
+	margin: 0;
+	padding: 4px 10px;
+}
+#cb_container > div {
+	padding: 10px 20px;
 }

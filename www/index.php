@@ -5,7 +5,7 @@ if ($_SERVER['HTTP_HOST'] != $CONFIG['host']) {
 	header("Location: http://{$CONFIG['host']}/", true, 301);
 }
 
-$name = isset($_COOKIE['name']) ? $_COOKIE['name'] : 'Guest'.rand();
+$name = isset($_COOKIE['settings_name']) ? $_COOKIE['settings_name'] : 'Guest'.rand();
 
 if ($CONFIG['openid_enabled'] && !$CONFIG['singleplayer_enabled']) {
 	require 'openid.php';
@@ -35,7 +35,8 @@ if ($CONFIG['openid_enabled'] && !$CONFIG['singleplayer_enabled']) {
 					);
 					$a = $openid->getAttributes();
 					$e = $a['contact/email'];
-					$name = substr($e, 0, strpos($e, '@'));
+					if (!isset($_COOKIE['settings_name']))
+						$name = substr($e, 0, strpos($e, '@'));
 				} else {
 					$status = 'not valid';
 				}
@@ -58,8 +59,9 @@ $version = time('u');
   <base href="<?="http://{$CONFIG['host']}/{$CONFIG['base_path']}/"?>"></base>
 
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-  <script src="http://tetrinet.se:7000/socket.io/socket.io.js" type="text/javascript"></script>
+  <script src="http://<?=$CONFIG['host']?>:7000/socket.io/socket.io.js" type="text/javascript"></script>
   <script src="js/jquery.cookies.2.2.0.min.js" type="text/javascript"></script>
+  <script src="js/jquery.bw.catbox.js" type="text/javascript"></script>
   <script src="js/base.js?<?=$version?>" type="text/javascript"></script>
   <script src="js/eventemitter.js?<?=$version?>" type="text/javascript"></script>
   <script src="js/timer.js?<?=$version?>" type="text/javascript"></script>
@@ -86,7 +88,7 @@ $(document).ready(function() {
 	$('#login-form').submit(function() {
 		var name = $(this).find('#name').val();
 		var date = new Date();
-		$.cookies.set('name', name, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
+		$.cookies.set('settings_name', name, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
 		Settings.name = name;
 		var g = new Game(name);
 		Object.seal(g);
@@ -113,15 +115,16 @@ $(document).ready(function() {
 </head>
 
 <body id="page">
-  <div id="container">
   
-    <a href="" id="settings_show" class="settings_toggle" title="Settings">Settings</a>
-    <div id="settingsbox">
+  <div id="popup">
+    <div id="settings_popup">
       <form id="settings">
-        <h2>Settings</h2>
-<!--        <h3>Misc</h3>
+        <h3>Misc</h3>
         <p><label for="settings_name">Name</label><input id="settings_name" type="text" name="name" /></p>
--->        <h3>Keys</h3>
+        <p><label for="settings_buffersize">Log buffer size</label><input id="settings_buffersize" type="text" name="buffersize" /></p>
+        <p><label for="settings_ghostblock">Ghost block</label><input id="settings_ghostblock" type="checkbox" name="ghostblock" /></p>
+        <p><label for="settings_attacknotifications">Attack notifications</label><input id="settings_attacknotifications" type="checkbox" name="attacknotifications" /></p>
+        <h3>Keys</h3>
         <div id="settings_keys">
 	      <p><label for="settings_km_left">Left</label><input id="settings_km_left" class="keycode_listener" type="text" name="left" /></p>
 	      <p><label for="settings_km_right">Right</label><input id="settings_km_right" class="keycode_listener" type="text" name="right" /></p>
@@ -138,6 +141,28 @@ $(document).ready(function() {
         <p><input type="button" class="settings_toggle" id="settings_cancel" value="Cancel" /><input type="submit" id="settings_submit" value="Save" /></p>
       </form>
     </div>
+    <div id="filtersettings_popup">
+      <form id="filtersettings">
+        <p>
+          <label for="filtersettings_name">Name</label>
+          <input id="filtersettings_name" type="text" name="name" />
+        </p>
+        <p>
+          <label for="filtersettings_filters">Filters</label>
+          <select id="filtersettings_filters" name="buffersize" multiple="multiple">
+          </select>
+        </p>
+        <p>
+          <input type="button" id="filtersettings_cancel" value="Cancel" />
+          <input type="submit" id="filtersettings_submit" value="Save" />
+        </p>
+      </form>
+    </div>
+  </div>
+  
+  <div id="container">
+  
+    <a href="" id="settings_show" class="settings_toggle" title="Settings">Settings</a>
   
     <header>
       <h1>Tetrinet</h1>
