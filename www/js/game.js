@@ -11,6 +11,7 @@ function Game(name, token) {
 	this.options = {};
 	this.target = 0;
 	this.targetList = [];
+	this.attackNotifierSlots = [];
 	
 	var self = this;
 	
@@ -130,6 +131,14 @@ function Game(name, token) {
 	var initSettings = function() {
 		$('#settings_name').val(Settings.name);
 		$('#settings_buffersize').val(Settings.log.buffer_size);
+		if (Settings.misc.ghost_block)
+			$('#settings_ghostblock').attr('checked', 'checked');
+		else
+			$('#settings_ghostblock').removeAttr('checked');
+		if (Settings.misc.attack_notifications)
+			$('#settings_attacknotifications').attr('checked', 'checked');
+		else
+			$('#settings_attacknotifications').removeAttr('checked');
 		$('#settings_keys input').each(function(index) {
 			$(this).val(getCharFromKeyCode(Settings.keymap[$(this).attr('name')]));
 			$(this).data('keycode', Settings.keymap[$(this).attr('name')]);
@@ -146,15 +155,19 @@ function Game(name, token) {
 		$('#settings_keys input').each(function() {
 			Settings.keymap[$(this).attr('name')] = $(this).data('keycode');
 		});
-		self.setCookie('keymap', Settings.keymap);
 		var newName = $('#settings_name').val();
 		if (newName != Settings.name) {
 			Settings.name = newName;
-			self.setCookie('name', Settings.name);
 			self.player.name = newName;
 			self.updatePlayers();
 			self.send({t:Message.NAME, id:self.player.id, name:newName});
 		}
+		Settings.misc.ghost_block = $('#settings_ghostblock').is(':checked');
+		Settings.misc.attack_notifications = $('#settings_attacknotifications').is(':checked');
+		Settings.log.buffer_size = Math.max(1, parseInt($('#settings_buffersize').val()));
+		self.setCookie('settings_name', Settings.name);
+		self.setCookie('settings_misc', Settings.misc);
+		self.setCookie('settings_keymap', Settings.keymap);
 		$.BW.catbox.close();
 		return false;
 	});
@@ -210,7 +223,7 @@ function Game(name, token) {
 		tabItem.remove();
 		$('#gamelog > div:eq(' + tabIndex + ')').remove();
 		Settings.log.filters.splice(tabIndex, 1);
-		self.setCookie('log', Settings.log);
+		self.setCookie('settings_log', Settings.log);
 		
 		var tabs = $('#gamelogfilters > li:not(#gamelogfilters_add)');
 		var newTabIndex = Math.max(0, Math.min(tabs.length - 1, tabIndex));
@@ -227,7 +240,7 @@ function Game(name, token) {
 		c.show();
 		c[0].scrollTop = c[0].scrollHeight;
 		Settings.log.selected_filter = index;
-		self.setCookie('log', Settings.log);
+		self.setCookie('settings_log', Settings.log);
 	});
 
 	$('#gamelogfilters_add').show().click(function() {
@@ -248,7 +261,7 @@ function Game(name, token) {
 			'closeButton': true
 		};
 		Settings.log.filters.push(newFilter);
-		self.setCookie('log', Settings.log);
+		self.setCookie('settings_log', Settings.log);
 		addFilter(Settings.log.filters.length - 1, newFilter).click();
 		$.BW.catbox.close();
 		return false;
@@ -500,13 +513,13 @@ Game.prototype.handleMessage = function(msg) {
 				$('body').addClass('winner');
 				$('.player').removeClass('target');
 			}
-			this.gameLog(htmlspecialchars(p.name) + ' has won the game.', Game.LOG_STATUS);
+			this.gameLog(htmlspecialchars(p.name) + ' has won the game.', [ Game.LOG_STATUS ]);
 			break;
 			
 		case Message.LINES:
 			var name = msg.id != null ? this.players[msg.id].name : 'Server';
 			this.gameLog('<em>' + htmlspecialchars(name) + '</em> added <strong>' + msg.n + '</strong> lines to all', [ Game.LOG_LINES ]);
-			if(this.player.isPlaying) {
+			if (this.player.isPlaying) {
 				this.player.addLines(msg.n);
 				this.player.moveUpIfBlocked();
 				this.sendBoard();
@@ -563,7 +576,7 @@ Game.prototype.handleMessage = function(msg) {
 		case Message.SPECIAL:
 			var sourcePlayer = this.players[msg.sid];
 			var targetPlayer = this.players[msg.id];
-			if(targetPlayer) {
+			if (targetPlayer) {
 				var logClass = [ Game.LOG_SPECIAL ];
 				if (msg.sid == this.player.id)
 					logClass.push(Game.LOG_SPECIAL_SENT);
@@ -572,7 +585,7 @@ Game.prototype.handleMessage = function(msg) {
 				this.gameLog('<em class="'+(msg.sid==this.player.id?'self':'other')+'">' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <strong>' + Player.special[msg.s].name + '</strong> on <em class="'+(msg.id==this.player.id?'self':'other')+'">' + targetPlayer.name + '</em>', logClass);
 				if(targetPlayer.id == this.player.id) {
 					if(this.player.reflect) {
-						if(msg.reflect) {
+						if (msg.reflect) {
 							
 						} else {
 							msg.id = msg.sid;
@@ -581,11 +594,22 @@ Game.prototype.handleMessage = function(msg) {
 							this.send(msg);
 						}
 					} else {
-						var $msg = $('<p class="attack">' + sourcePlayer.name + ' ' + (msg.reflect ? 'reflected' : 'used') + ' special ' + Player.special[msg.s].name + '</p>');
-						setTimeout(function(obj){
-							obj.animate({'opacity':0}, 1000, function(){ $(this).remove(); });
-						}, 1000, $msg);
-						this.player.container.append($msg);
+						if (Settings.misc.attack_notifications) {
+							var $msg = $('<p class="attack">' + sourcePlayer.name + ' ' + (msg.reflect ? 'reflected' : 'used') + ' special ' + Player.special[msg.s].name + '</p>');
+							var offset = 0;
+							for (var i = 0; this.attackNotifierSlots[i]; i++, offset++) ;
+							this.attackNotifierSlots[offset] = true;
+							$msg.data('offset', offset);
+							$msg.css('top', offset * 50);
+							var self = this;
+							setTimeout(function(obj){
+								obj.animate({'opacity':0}, 500, function(){
+									self.attackNotifierSlots[$(this).data('offset')] = false;
+									$(this).remove();
+								});
+							}, 2000, $msg);
+							this.player.container.append($msg);
+						}
 						this.player.use(msg);
 					}
 				}
@@ -617,7 +641,7 @@ Game.prototype.handleMessage = function(msg) {
 			break;
 			
 		case Message.NAME:
-			this.gameLog('<em>'+this.players[msg.id].name+'</em> is now known as <em>' + msg.name + '</em>', [ Game.LOG_STATUS ]);
+			this.gameLog('<em>' + this.players[msg.id].name + '</em> is now known as <em>' + msg.name + '</em>', [ Game.LOG_STATUS ]);
 			this.players[msg.id].name = msg.name;
 			this.updatePlayers();
 			break;

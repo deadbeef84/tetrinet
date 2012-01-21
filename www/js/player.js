@@ -207,7 +207,7 @@ Player.prototype.stop = function() {
 Player.prototype.at = function(x,y) {
 	if(this.currentBlock && this.currentBlock.hasPieceAt(x,y))
 		return this.currentBlock.type + 1;
-	if(this.ghostBlock && this.ghostBlock.hasPieceAt(x,y))
+	if(this.ghostBlock && this.ghostBlock.hasPieceAt(x,y) && Settings.misc.ghost_block)
 		return 10;
 	if(this.invisible) {
 		if(this.currentBlock) {
@@ -365,7 +365,6 @@ Player.prototype.move = function(x,y,r,stick) {
 			var bb = this.currentBlock.getBoundingBox(),
 				oy = this.currentBlock.y;
 			// collided with floor when rotating?
-			console.log(c, bb.maxy, bb.miny);
 			for (var i = 0; i < Math.abs(bb.maxy - bb.miny) && this.collide(this.currentBlock); i++) {
 				this.currentBlock.y--;
 			}

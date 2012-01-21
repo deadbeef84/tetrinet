@@ -5,7 +5,7 @@ if ($_SERVER['HTTP_HOST'] != $CONFIG['host']) {
 	header("Location: http://{$CONFIG['host']}/", true, 301);
 }
 
-$name = isset($_COOKIE['name']) ? $_COOKIE['name'] : 'Guest'.rand();
+$name = isset($_COOKIE['settings_name']) ? $_COOKIE['settings_name'] : 'Guest'.rand();
 
 if ($CONFIG['openid_enabled'] && !$CONFIG['singleplayer_enabled']) {
 	require 'openid.php';
@@ -35,7 +35,7 @@ if ($CONFIG['openid_enabled'] && !$CONFIG['singleplayer_enabled']) {
 					);
 					$a = $openid->getAttributes();
 					$e = $a['contact/email'];
-					if (!isset($_COOKIE['name']))
+					if (!isset($_COOKIE['settings_name']))
 						$name = substr($e, 0, strpos($e, '@'));
 				} else {
 					$status = 'not valid';
@@ -88,7 +88,7 @@ $(document).ready(function() {
 	$('#login-form').submit(function() {
 		var name = $(this).find('#name').val();
 		var date = new Date();
-		$.cookies.set('name', name, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
+		$.cookies.set('settings_name', name, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
 		Settings.name = name;
 		var g = new Game(name);
 		Object.seal(g);
@@ -121,8 +121,9 @@ $(document).ready(function() {
       <form id="settings">
         <h3>Misc</h3>
         <p><label for="settings_name">Name</label><input id="settings_name" type="text" name="name" /></p>
-        <p><label for="settings_buffersize">Log buffer size</label><input id="settings_buffersize" type="text" name="buffersize" disabled="disabled" /></p>
-        <p><label for="settings_ghostpiece">Ghost piece</label><input id="settings_ghostpiece" type="checkbox" name="ghostpiece" checked="checked" disabled="disabled" /></p>
+        <p><label for="settings_buffersize">Log buffer size</label><input id="settings_buffersize" type="text" name="buffersize" /></p>
+        <p><label for="settings_ghostblock">Ghost block</label><input id="settings_ghostblock" type="checkbox" name="ghostblock" /></p>
+        <p><label for="settings_attacknotifications">Attack notifications</label><input id="settings_attacknotifications" type="checkbox" name="attacknotifications" /></p>
         <h3>Keys</h3>
         <div id="settings_keys">
 	      <p><label for="settings_km_left">Left</label><input id="settings_km_left" class="keycode_listener" type="text" name="left" /></p>

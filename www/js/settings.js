@@ -1,13 +1,17 @@
 // Set default settings and check for cookie.
 
 Settings = {
-	'name': '',
-	'log': {
+	name: '',
+	misc: {
+		ghost_block: true,
+		attack_notifications: true
+	},
+	log: {
 		buffer_size: 100,
 		selected_filter: 0,
 		filters: [ { title: 'All', classes: ['log-you', 'log-status', 'log-lines', 'log-specials'], closeButton: false } ]
 	},
-	'keymap': {
+	keymap: {
 		'left': 37,
 		'right': 39,
 		'down': 40,
@@ -34,9 +38,10 @@ Settings = {
 if ($ && $.cookies) {
 
 	var SavedSettings = {
-		'name': $.cookies.get('name'),
-		'log': $.cookies.get('log'),
-		'keymap': $.cookies.get('keymap')
+		'name': $.cookies.get('settings_name'),
+		'misc': $.cookies.get('settings_misc'),
+		'log': $.cookies.get('settings_log'),
+		'keymap': $.cookies.get('settings_keymap')
 	};
 	
 	for (key in Settings) {
