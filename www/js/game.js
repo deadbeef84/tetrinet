@@ -479,7 +479,7 @@ Game.prototype.handleMessage = function(msg) {
 			p.isPlaying = false;
 			this.gameLog(htmlspecialchars(p.name) + ' is dead.', Game.LOG_STATUS);
 			p.container.addClass('gameover');
-			if (this.target == p.id)
+			if (this.target == p.id && p.id != this.player.id)
 				this.cycleTarget(-1);
 			break;
 			
