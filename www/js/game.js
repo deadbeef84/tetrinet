@@ -177,7 +177,7 @@ function Game(name, token) {
 	
 	var initFilters = function() {
 		$.each(Settings.log.filters, addFilter);
-		$('#gamelogfilters > li:not(#gamelogfilters_add)').first().click();
+		$('#gamelogfilters > li:not(#gamelogfilters_add):eq(' + Settings.log.selected_filter + ')').click();
 	};
 	
 	var initFilterSettings = function(index) {
@@ -209,17 +209,19 @@ function Game(name, token) {
 		var tabs = $('#gamelogfilters > li:not(#gamelogfilters_add)');
 		var newTabIndex = Math.max(0, Math.min(tabs.length - 1, tabIndex));
 		$('#gamelogfilters > li:eq(' + newTabIndex + ')').click();
-			
 		return false;
 	});
 	
 	$('#gamelogfilters').on('click', 'li:not(#gamelogfilters_add)', function(){
+		var index = $(this).index();
 		$('#gamelogfilters > li').removeClass('active');
 		$(this).removeClass('updated').addClass('active');
 		$('#gamelog > div').hide();
-		var c = $('#gamelog > div:eq(' + $(this).index() + ')');
+		var c = $('#gamelog > div:eq(' + index + ')');
 		c.show();
 		c[0].scrollTop = c[0].scrollHeight;
+		Settings.log.selected_filter = index;
+		self.setCookie('log', Settings.log);
 	});
 
 	$('#gamelogfilters_add').show().click(function() {
@@ -251,19 +253,17 @@ function Game(name, token) {
 	initFilters();
 }
 
-Game.LOG_YOU = 'log-you';
+Game.LOG_LINES = 'log-lines';
 Game.LOG_STATUS = 'log-status';
 Game.LOG_SPECIAL = 'log-special';
 Game.LOG_SPECIAL_SENT = 'log-special-sent';
 Game.LOG_SPECIAL_RECIEVED = 'log-special-recieved';
-Game.LOG_LINES = 'log-lines';
 Game.LOG_FILTERS = {
-	'You only': Game.LOG_YOU,
 	'Status messages': Game.LOG_STATUS,
+	'Lines': Game.LOG_LINES,
 	'All specials': Game.LOG_SPECIAL,
 	'Specials sent': Game.LOG_SPECIAL_SENT,
-	'Specials recieved': Game.LOG_SPECIAL_RECIEVED,
-	'Lines': Game.LOG_LINES
+	'Specials recieved': Game.LOG_SPECIAL_RECIEVED
 };
 
 Game.prototype.setCookie = function(name, data) {
@@ -308,6 +308,12 @@ Game.prototype.checkNotify = function() {
 			})
 			.appendTo('body');
 	}
+}
+
+Game.prototype.createNotification = function(sender, message) {
+	var notification = window.webkitNotifications.createNotification("images/explosion.gif", "Tetrinet: " + sender, message);
+	setTimeout(function() { notification.cancel(); }, 2000);
+	notification.show();
 }
 
 Game.prototype.send = function(msg) {
@@ -361,7 +367,7 @@ Game.prototype.use = function(id) {
 	if(this.player.inventory && this.player.inventory.length) {
 		var p = this.players[id];
 		if (p && p.isPlaying) {
-			var logClass = [ Game.LOG_SPECIAL, Game.LOG_SPECIAL_SENT, Game.LOG_YOU ];
+			var logClass = [ Game.LOG_SPECIAL, Game.LOG_SPECIAL_SENT ];
 			if (id == this.player.id)
 				logClass.push(Game.LOG_SPECIAL_RECIEVED);
 			var s = this.player.inventory.shift();
@@ -493,7 +499,7 @@ Game.prototype.handleMessage = function(msg) {
 			
 		case Message.LINES:
 			var name = msg.id != null ? this.players[msg.id].name : 'Server';
-			this.gameLog('<em>' + htmlspecialchars(name) + '</em> added <strong>' + msg.n + '</strong> lines to all', [ Game.LOG_STATUS, Game.LOG_YOU ]);
+			this.gameLog('<em>' + htmlspecialchars(name) + '</em> added <strong>' + msg.n + '</strong> lines to all', [ Game.LOG_LINES ]);
 			if(this.player.isPlaying) {
 				this.player.addLines(msg.n);
 				this.player.moveUpIfBlocked();
@@ -535,16 +541,16 @@ Game.prototype.handleMessage = function(msg) {
 			break;
 			
 		case Message.CHAT:
+			var name;
 			if (msg.id == null) {
+				name = 'Server';
 				this.gameLog('<em class="status">'+ msg.text +'</em>', Game.LOG_STATUS);
 			} else {
-				var name = this.players[msg.id].name;
+				name = this.players[msg.id].name;
 				this.chat(name + ': ' + msg.text);
-				if(this.notify && !Bw.windowIsActive) {
-					var notification = window.webkitNotifications.createNotification("images/explosion.gif", "Tetrinet: " + name, msg.text);
-					setTimeout(function() { notification.cancel(); }, 2000);
-					notification.show();
-				}
+			}
+			if (this.notify && !Bw.windowIsActive) {
+				this.createNotification(name, msg.text);
 			}
 			break;
 			
@@ -557,8 +563,6 @@ Game.prototype.handleMessage = function(msg) {
 					logClass.push(Game.LOG_SPECIAL_SENT);
 				if (msg.id == this.player.id)
 					logClass.push(Game.LOG_SPECIAL_RECIEVED);
-				if (msg.sid == this.player.id || msg.id == this.player.id)
-					logClass.push(Game.LOG_YOU);
 				this.gameLog('<em class="'+(msg.sid==this.player.id?'self':'other')+'">' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <strong>' + Player.special[msg.s].name + '</strong> on <em class="'+(msg.id==this.player.id?'self':'other')+'">' + targetPlayer.name + '</em>', logClass);
 				if(targetPlayer.id == this.player.id) {
 					if(this.player.reflect) {

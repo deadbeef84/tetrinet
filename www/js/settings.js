@@ -4,6 +4,7 @@ Settings = {
 	'name': '',
 	'log': {
 		buffer_size: 100,
+		selected_filter: 0,
 		filters: [ { title: 'All', classes: ['log-you', 'log-status', 'log-lines', 'log-specials'], closeButton: false } ]
 	},
 	'keymap': {
