@@ -1,53 +1,49 @@
 <?php
 require 'config.php';
-//session_start();
+
+// force host
 if ($_SERVER['HTTP_HOST'] != $CONFIG['host']) {
 	header("Location: http://{$CONFIG['host']}/", true, 301);
 }
 
-$name = isset($_COOKIE['settings_name']) ? $_COOKIE['settings_name'] : 'Guest'.rand();
-
+// OpenID
+$loggedIn = false;
 if ($CONFIG['openid_enabled'] && !$CONFIG['singleplayer_enabled']) {
 	require 'openid.php';
-	$status = '';
-	try {
-		//if(!isset($_SESSION['openid'])) {
-			# Change 'localhost' to your domain name.
-			$openid = new LightOpenID($CONFIG['host']);
-			if(!$openid->mode) {
-				if(isset($_GET['openid_identifier'])) {
-					$openid->identity = $_GET['openid_identifier'];
-					# The following two lines request email, full name, and a nickname
-					# from the provider. Remove them if you don't need that data.
-					$openid->required = array('contact/email');
-					//$openid->optional = array('namePerson', 'namePerson/friendly');
-					
-					header('Location: ' . $openid->authUrl());
-				}
-			} elseif($openid->mode == 'cancel') {
-				$status = 'User has canceled authentication!';
-			} else {
-				if($openid->validate()) {
-					$status = 'User has logged in.';
-					$_SESSION['openid'] = array(
-						'identity' => $openid->identity,
-						'attributes' => $openid->getAttributes(),
-					);
-					$a = $openid->getAttributes();
-					$e = $a['contact/email'];
-					if (!isset($_COOKIE['settings_name']))
-						$name = substr($e, 0, strpos($e, '@'));
-				} else {
-					$status = 'not valid';
-				}
-			}
-		//}
-	}
-	catch(Exception $e) {
-		echo $e->getMessage();
+	
+	$openid = new LightOpenID($CONFIG['host']);
+	$openid->required = array('contact/email');
+	if(!$openid->mode) {
+		if(isset($_GET['logout'])) {
+			setcookie('openid', '');
+		} elseif(isset($_COOKIE['openid'])) {
+			// login using cookie
+			$openid->identity = $_COOKIE['openid'];
+			header('Location: ' . $openid->authUrl(true));
+			exit;
+		} elseif(isset($_GET['openid_identifier'])) {
+			// step 1: redirect to provider
+			$openid->identity = $_GET['openid_identifier'];
+			header('Location: ' . $openid->authUrl());
+			exit;
+		}
+	} elseif($openid->mode == 'cancel') {
+		die('User has canceled authentication!');
+	} elseif($openid->validate()) {
+		// step 2: logged in, remember claimed identity
+		setcookie('openid', $openid->identity, time() + 365*24*3600);
+		$a = $openid->getAttributes();
+		$loggedIn = $a['contact/email'];
+	} else {
+		die('error');
 	}
 }
-$version = time('u');
+
+// add modification time to filename
+function filewithmtime($file) {
+	return $file.'?'.filemtime($file);
+}
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -56,59 +52,59 @@ $version = time('u');
   <meta name="keywords" content="" />
   <meta name="description" content="" />
   <title>Tetrinet</title>
-  <base href="<?="http://{$CONFIG['host']}/{$CONFIG['base_path']}/"?>"></base>
-
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-  <script src="http://<?=$CONFIG['host']?>:7000/socket.io/socket.io.js" type="text/javascript"></script>
-  <script src="js/jquery.cookies.2.2.0.min.js" type="text/javascript"></script>
-  <script src="js/jquery.bw.catbox.js" type="text/javascript"></script>
-  <script src="js/base.js?<?=$version?>" type="text/javascript"></script>
-  <script src="js/eventemitter.js?<?=$version?>" type="text/javascript"></script>
-  <script src="js/timer.js?<?=$version?>" type="text/javascript"></script>
-  <script src="js/prng.js?<?=$version?>" type="text/javascript"></script>
-  <script src="js/block.js?<?=$version?>" type="text/javascript"></script>
-  <script src="js/board.js?<?=$version?>" type="text/javascript"></script>
-  <script src="js/player.js?<?=$version?>" type="text/javascript"></script>
-  <script src="js/message.js?<?=$version?>" type="text/javascript"></script>
-  <script src="js/game.js?<?=$version?>" type="text/javascript"></script>
-  <script src="js/settings.js?<?=$version?>" type="text/javascript"></script>
-  <script src="js/bot.js?<?=$version?>" type="text/javascript"></script>
-  <script type="text/javascript" src="openid-selector/js/openid-jquery.js"></script>
-  <script type="text/javascript" src="openid-selector/js/openid-en.js"></script>
-  <link type="text/css" rel="stylesheet" href="openid-selector/css/openid.css" />
+  
   <link href="http://fonts.googleapis.com/css?family=Bevan:regular" media="all" type="text/css" rel="stylesheet" />
   <link href="http://fonts.googleapis.com/css?family=Ubuntu:regular,bold&amp;subset=Latin" media="all" type="text/css" rel="stylesheet" />
   <link href="css/style.css" media="all" type="text/css" rel="stylesheet" />
+  <link type="text/css" rel="stylesheet" href="openid-selector/css/openid.css" />
+  
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+  <script src="http://<?=$CONFIG['host']?>:7000/socket.io/socket.io.js" type="text/javascript"></script>
+  <script src="js/jquery.cookies.2.2.0.min.js" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/jquery.bw.catbox.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/base.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/eventemitter.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/timer.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/prng.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/block.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/board.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/player.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/message.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/game.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/settings.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/bot.js')?>" type="text/javascript"></script>
+  <script type="text/javascript" src="openid-selector/js/openid-jquery.js"></script>
+  <script type="text/javascript" src="openid-selector/js/openid-en.js"></script>
+
 <script type="text/javascript">
 $(document).ready(function() {
-<?php if(!$CONFIG['singleplayer_enabled']) {?>
-  <?php if($CONFIG['openid_enabled'] && !isset($_SESSION['openid'])) {?>
-	openid.init('openid_identifier');
-  <?php } else { ?>
-	$('#login-form').submit(function() {
-		var name = $(this).find('#name').val();
-		var date = new Date();
-		$.cookies.set('settings_name', name, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
-		Settings.name = name;
+	// Update name field
+	$('#name').val($.cookies.get('settings_name') || ('Guest' + Math.floor(1000 * Math.random())));
+	
+	// Start game
+	function start(name) {
 		var g = new Game(name);
 		Object.seal(g);
-  <?php if ($CONFIG['autoplay_enabled']) { ?>
+		<?php if ($CONFIG['autoplay_enabled']) { ?>
 		var b = new Bot(g);
-  <?php } ?>
+		<?php } ?>
 		$('#login').hide();
-		$('#lobby').show();
+		$(name ? '#lobby' : '#ingame').show();
+	}
+	
+<?php if (!$CONFIG['singleplayer_enabled']) { ?>
+	// Login
+	$('#login-form').submit(function() {
+		var name = $(this).find('#name').val(),
+			date = new Date();
+		$.cookies.set('settings_name', name, { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) });
+		Settings.name = name;
+		start(name);
 		return false;
 	});
-  <?php } ?>
 <?php } else { ?>
-	// autostart single player
-	$('#login').hide();
-	$('#ingame').show();
-	var g = new Game();
-	Object.seal(g);
-  <?php if ($CONFIG['autoplay_enabled']) { ?>
-	var b = new Bot(g);
-  <?php } ?>
+	// Singleplayer
+	start('');
 <?php } ?>
 });
 </script>
@@ -169,9 +165,13 @@ $(document).ready(function() {
     </header>
 
     <div id="login">
-      <?php if($CONFIG['openid_enabled'] && !$CONFIG['singleplayer_enabled'] && !isset($_SESSION['openid'])) {?>
-      <form action="/" method="get" id="openid_form">
-        <?php echo $status ?>
+      <?php if($CONFIG['openid_enabled'] && !$CONFIG['singleplayer_enabled'] && $loggedIn === false) {?>
+      <script>
+      $(document).ready(function() {
+      	openid.init('openid_identifier');
+      });
+      </script>
+      <form action="#" method="get" id="openid_form">
         <input type="hidden" name="action" value="verify" />
         <fieldset>
           <legend>Sign-in or Create New Account</legend>
@@ -190,11 +190,13 @@ $(document).ready(function() {
         </fieldset>
       </form>
       <?php } else { ?>
-      <form action="<?php echo $CONFIG['base_href'] ?>" method="get" id="login-form">
-        <?php if (isset($_GET['autoplay'])) echo '<input type="hidden" name="autoplay" value="1" />'; ?>
-        <input type="text" id="name" name="name" value="<?php echo (isset($name)?$name:''); ?>" />
+      <form action="#" method="get" id="login-form">
+        <input type="text" id="name" name="name" value="" />
         <button>Enter</button>
       </form>
+        <?php if($loggedIn) {?>
+      <p><a href="?logout=1">Logout (<?php echo $loggedIn ?>)</a></p>
+        <?php } ?>
       <?php } ?>
     </div>
 

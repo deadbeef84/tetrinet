@@ -1,4 +1,4 @@
-function Game(name, token) {
+function Game(name) {
 	
 	this.player = null;
 	this.players = {};
@@ -25,7 +25,7 @@ function Game(name, token) {
 		this.socket.on('connect', function(event) {
 			// send name
 			self.chat('You are now connected');
-			self.send({t: Message.JOIN, name:name, token: token});
+			self.send({t: Message.JOIN, name:name});
 			/*setInterval(function() {
 				//if(self.ws.readyState == WebSocket.OPEN) {
 					self.send({t: Message.PING});
