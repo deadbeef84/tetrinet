@@ -90,6 +90,11 @@ Player.prototype.handleMessage = function(p) {
 			}
 			break;
 			
+		case Message.NAME:
+			this.name = p.name;
+			this.room.broadcast(Message.NAME, {id:this.index, name:this.name}, this);
+			break;
+			
 		default:
 			console.log('Unknown packet type');
 	}

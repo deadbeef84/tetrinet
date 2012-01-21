@@ -16,6 +16,7 @@ var messages =
     ,'ROOMS'
     ,'SET_ROOM'
     ,'OPTIONS'
+    ,'NAME'
 ];
 
 for(var i=0; i<messages.length; ++i) {

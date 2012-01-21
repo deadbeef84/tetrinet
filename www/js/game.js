@@ -143,12 +143,18 @@ function Game(name, token) {
 	$('#settings_cancel').click($.BW.catbox.close);
 	
 	$('#settings').submit(function(){
-		Settings.name[$('#settings_name').val()];
 		$('#settings_keys input').each(function() {
 			Settings.keymap[$(this).attr('name')] = $(this).data('keycode');
 		});
-		self.setCookie('name', Settings.name);
 		self.setCookie('keymap', Settings.keymap);
+		var newName = $('#settings_name').val();
+		if (newName != Settings.name) {
+			Settings.name = newName;
+			self.setCookie('name', Settings.name);
+			self.player.name = newName;
+			self.updatePlayers();
+			self.send({t:Message.NAME, id:self.player.id, name:newName});
+		}
 		$.BW.catbox.close();
 		return false;
 	});
@@ -608,6 +614,12 @@ Game.prototype.handleMessage = function(msg) {
 		case Message.OPTIONS:
 			this.options = msg.o;
 			//$('#startbtn').toggle(this.options.admin);
+			break;
+			
+		case Message.NAME:
+			this.gameLog('<em>'+this.players[msg.id].name+'</em> is now known as <em>' + msg.name + '</em>', [ Game.LOG_STATUS ]);
+			this.players[msg.id].name = msg.name;
+			this.updatePlayers();
 			break;
 			
 		default:
