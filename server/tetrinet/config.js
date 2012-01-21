@@ -1,7 +1,7 @@
 var Config = {
 
 	HOST:					'localhost',
-	BASE_HREF:				'http://localhost/tetrinet/www/',
+	PORT:					7000,
 	OPENID_ENABLED:			false,
 	MYSQL_ENABLED:			false,
 	MYSQL_LOGIN_DATA:		{

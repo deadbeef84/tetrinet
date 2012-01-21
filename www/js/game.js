@@ -1,4 +1,4 @@
-function Game(name) {
+function Game(name, port) {
 	
 	this.player = null;
 	this.players = {};
@@ -17,7 +17,7 @@ function Game(name) {
 	
 	if (name) {
 	
-		this.socket = io.connect('//'+location.hostname+':7000');
+		this.socket = io.connect('//'+location.hostname+':'+port);
 		
 		this.socket.on('error', function(event) {
 			console.log(event);

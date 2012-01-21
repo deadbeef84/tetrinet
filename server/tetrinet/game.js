@@ -19,10 +19,10 @@ if (Config.OPENID_ENABLED) {
 }
 
 // class Game extends EventEmitter
-var Game = function(port) {
+var Game = function() {
 	this.rooms = {};
 	
-	var io = require('socket.io').listen(port, {timeout: 5000});
+	var io = require('socket.io').listen(Config.PORT, {timeout: 5000});
 	io.configure(function(){
 		io.set('transports', [
 			'websocket'
@@ -62,7 +62,6 @@ var Game = function(port) {
 	this.rooms["Pure"] = new Room(this, "Pure", {width:12, height:24, specials: false});
 	this.rooms["Short"] = new Room(this, "Short", {width:12, height:12, specials: true});
 	this.rooms["Long"] = new Room(this, "Long", {width:12, height:35, specials: true});
-	this.rooms["H4CKN1GHT"] = new Room(this, "H4CKN1GHT", {width:12, height:24, specials: true});
     
     var self = this;
     this.io.sockets.on('connection', function(client) {

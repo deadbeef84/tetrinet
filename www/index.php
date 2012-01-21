@@ -59,7 +59,7 @@ function filewithmtime($file) {
   <link type="text/css" rel="stylesheet" href="openid-selector/css/openid.css" />
   
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-  <script src="http://<?=$CONFIG['host']?>:7000/socket.io/socket.io.js" type="text/javascript"></script>
+  <script src="http://<?=$CONFIG['host'].':'.$CONFIG['port']?>/socket.io/socket.io.js" type="text/javascript"></script>
   <script src="js/jquery.cookies.2.2.0.min.js" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/jquery.bw.catbox.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/base.js')?>" type="text/javascript"></script>
@@ -83,7 +83,7 @@ $(document).ready(function() {
 	
 	// Start game
 	function start(name) {
-		var g = new Game(name);
+		var g = new Game(name, <?=$CONFIG['port']?>);
 		Object.seal(g);
 		<?php if ($CONFIG['autoplay_enabled']) { ?>
 		var b = new Bot(g);
