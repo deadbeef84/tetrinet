@@ -16,8 +16,8 @@ var messages =
     ,'ROOMS'
     ,'CREATE_ROOM'
     ,'SET_ROOM'
-    ,'OPTIONS'
     ,'NAME'
+    ,'SET_TEAM'
 ];
 
 for(var i=0; i<messages.length; ++i) {

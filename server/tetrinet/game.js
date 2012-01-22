@@ -44,8 +44,6 @@ var Game = function() {
 					callback(null, result.authenticated);
 				});
 			} else {
-				// make sure we disable stats i guess?
-				Config.ENABLE_MYSQL = false;
 				callback(null, true);
 			}
 		});
@@ -102,9 +100,8 @@ Game.prototype.addRoom = function(room) {
 			return;
 		}
 		
-		var self = this;
 	    if (Config.MYSQL_ENABLED) {
-			self.mysql.query('INSERT INTO game (date) VALUES(NOW())', function(err, info) {
+			self.mysql.query('INSERT INTO game (date, room) VALUES(NOW(), ?)', [room.name], function(err, info) {
 				if(err) {
 					console.log('failed to create game in database');
 					return false;
@@ -112,8 +109,8 @@ Game.prototype.addRoom = function(room) {
 				var game_id = info.insertId;
 				for(var index in results) {
 					var r = results[index];
-					self.mysql.query('INSERT INTO game_result (game_id,player_id,place,num_keys,num_blocks,num_lines,num_lines_sent,time) VALUES(?,?,?,?,?,?,?,?)',
-						[game_id, r.identity, r.place, r.s.keys, r.s.blocks, r.s.lines, r.s.lines_sent, r.time]);
+					self.mysql.query('INSERT INTO game_result (game_id,player_id,team,place,num_keys,num_blocks,num_lines,num_lines_sent,time) VALUES(?,?,?,?,?,?,?,?,?)',
+						[game_id, r.identity, r.team, r.place, r.s.keys, r.s.blocks, r.s.lines, r.s.lines_sent, r.time]);
 				}
 				for(var i = 0; i < actions.length; ++i) {
 					var a = actions[i];

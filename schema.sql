@@ -25,6 +25,7 @@ DROP TABLE IF EXISTS `game`;
 CREATE TABLE `game` (
   `game_id` int(11) NOT NULL AUTO_INCREMENT,
   `date` datetime NOT NULL,
+  `room` varchar(255) NOT NULL,
   `calculated_results` tinyint(4) NOT NULL DEFAULT '0',
   `num_players` int(11) DEFAULT NULL,
   PRIMARY KEY (`game_id`)
@@ -63,6 +64,7 @@ CREATE TABLE `game_result` (
   `game_result_id` int(11) NOT NULL AUTO_INCREMENT,
   `game_id` int(11) NOT NULL,
   `player_id` varchar(255) COLLATE utf8_swedish_ci NOT NULL,
+  `team` varchar(255) DEFAULT '' NOT NULL,
   `place` int(11) NOT NULL,
   `num_keys` int(11) NOT NULL,
   `num_blocks` int(11) NOT NULL,

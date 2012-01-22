@@ -10,7 +10,7 @@ var Room = function(name, options) {
 	this.suddenDeathTimer = null;
 	this.state = Room.STATE_STOPPED;
 	
-	this.winner = null;
+	this.winners = [];
 	this.startTime = null;
 	this.actions = [];
 	this.playerStats = {};
@@ -49,8 +49,7 @@ Room.prototype.addPlayer = function(player) {
 	
 	player.setRoom(this, index);
 	
-	this.broadcast(Message.SET_PLAYER, {p: player.getClientInfo()}, player);
-	player.send(Message.OPTIONS, {o: this.options});
+	this.broadcast(Message.SET_PLAYER, {p: player.getClientInfo(), join: true}, player);
 	for(var i=0; i<this.players.length; ++i) {
 		if(!this.players[i])
 			continue;
@@ -67,7 +66,7 @@ Room.prototype.removePlayer = function(player) {
 	if(pos != -1) {
 		player.setRoom(null, 0);
 		this.players[pos] = null;
-		this.broadcast(Message.REMOVE_PLAYER, {id: pos});
+		this.broadcast(Message.REMOVE_PLAYER, {id: pos}, player);
 		this.emit(Room.EVENT_PART);
 	} else {
 		console.log('warning, player not found: ' + player.name);
@@ -94,7 +93,8 @@ Room.prototype.playerDied = function(player, s) {
 	}
 	
 	this.playerStats[player.index] = {
-		identity: player.client.handshake.identity,
+		identity: player.identity,
+		team: player.team,
 		place: numIsPlaying + 1,
 		time: Date.now() - this.startTime,
 		s: s
@@ -103,22 +103,29 @@ Room.prototype.playerDied = function(player, s) {
 }
 
 Room.prototype.playerWon = function(player, s) {
-	if(player !== this.winner) {
+	if(this.winners.indexOf(player) === -1) {
 		console.log('invalid winner!?');
 		return;
 	}
 	
-	this.state = Room.STATE_STOPPED;
 	this.playerStats[player.index].s = s; // set stats
 	
+	// wait for stats from all winners
+	for(var i in this.winners) {
+		var p = this.winners[i];
+		if(!this.playerStats[p.index].s)
+			return;
+	}
+
+	this.state = Room.STATE_STOPPED;
 	this.emit(Room.EVENT_GAMEOVER, this.playerStats, this.actions);
 }
 
 // checkGameState()
 Room.prototype.checkGameState = function() {
 	var room = this;
-	var numIsPlaying = 0;
-	var winner;
+	var activePlayers = [];
+	var activeTeams = [];
 	
 	if(this.state != Room.STATE_STARTED)
 		return;
@@ -126,26 +133,35 @@ Room.prototype.checkGameState = function() {
 	for(var i=0; i<this.players.length; ++i) {
 		if(!this.players[i])
 			continue;
-		if(this.players[i].isPlaying) {
-			++numIsPlaying;
-			winner = this.players[i];
+		var p = this.players[i];
+		if(p.isPlaying) {
+			activePlayers.push(p);
+			if(activeTeams.indexOf(p.team) == -1)
+				activeTeams.push(p.team);
 		}
 	}
-	if(numIsPlaying == 1) {
-		this.winner = winner;
-		this.playerStats[winner.index] = {
-			identity: winner.client.handshake.identity,
-			place: numIsPlaying,
-			time: Date.now() - this.startTime
-		};
-		this.broadcast(Message.WINNER, {id: winner.index});
-		winner.isPlaying = false;
+	
+	if(activePlayers.length == 1 || (activeTeams.length == 1 && activeTeams[0] != '')) {
+		var ids = [];
+		this.winners = activePlayers;
+		for(var i in activePlayers) {
+			var winner = activePlayers[i];
+			winner.isPlaying = false;
+			ids.push(winner.index);
+			this.playerStats[winner.index] = {
+				identity: winner.identity,
+				team: winner.team,
+				place: 1,
+				time: Date.now() - this.startTime
+			};
+		}
+		this.broadcast(Message.WINNER, {id: ids});
 		
 		if(this.suddenDeathTimer) {
 			clearInterval(this.suddenDeathTimer);
 			this.suddenDeathTimer = null;
 		}
-	} else if(numIsPlaying == 2) {
+	} else if(activePlayers.length == 2) {
 		// start sudden death timer
 		if(!this.suddenDeathTimer) {
 			this.broadcast(Message.CHAT, {text: '*** STARTING SUDDEN DEATH ***', id: null});
@@ -153,7 +169,7 @@ Room.prototype.checkGameState = function() {
 				room.broadcast(Message.LINES, {n: 1, id: null});
 			}, 3000);
 		}
-	} else if(numIsPlaying == 0) {
+	} else if(activePlayers.length == 0) {
 		this.state = Room.STATE_STOPPED;
 	}
 }
@@ -163,7 +179,7 @@ Room.prototype.sendSpecial = function(p)
 	var from = this.players[p.sid];
 	var to = this.players[p.id];
 	if(from && to)
-		this.actions.push({from: from.client.handshake.identity, to: to.client.handshake.identity, s: p.s, time: Date.now() - this.startTime});
+		this.actions.push({from: from.identity, to: to.identity, s: p.s, time: Date.now() - this.startTime});
 }
 
 Room.prototype.startGame = function() {
@@ -209,6 +225,14 @@ Room.prototype.doStartGame = function() {
 	this.playerStats = {};
 	
 	this.emit(Room.EVENT_START);
+	this.checkGameState();
+}
+
+Room.prototype.getClientInfo = function() {
+	return {
+		name: this.name,
+		options: this.options
+	};
 }
 
 // broadcast(int type, object message, int except)

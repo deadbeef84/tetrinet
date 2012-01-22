@@ -102,23 +102,18 @@ function Game(name, port) {
 		self.send({t:Message.START});
 	});
 	
+	$('#team').change(function() {
+		var team = $(this).val();
+		self.send({t:Message.SET_TEAM, team: team});
+	});
+	
 	$('#lobby ul').delegate('a', 'click', function() {
-		for(var pp in self.players) {
-			var p = self.players[pp];
-			p.container.remove();
-			delete self.players[pp];
-		}
-		self.updatePlayers();
 		self.send({t: Message.SET_ROOM, r: $(this).text()});
-		$('#lobby').hide();
-		$('#ingame').show();
 		return false;
 	});
 	
 	$('#leave_room').click(function() {
 		self.send({t: Message.SET_ROOM, r: ''});
-		$('#lobby').show();
-		$('#ingame').hide();
 		return false;
 	});
 	
@@ -452,10 +447,24 @@ Game.prototype.use = function(id) {
 	}
 }
 
+Game.prototype.removePlayer = function(index) {
+	var p = this.players[index];
+	if (this.target == p.id && this.player.isPlaying)
+		this.cycleTarget(-1);
+	var targetIndex = this.targetList.indexOf(p.id);
+	if (targetIndex > -1)
+		this.targetList.splice(targetIndex, 1);
+	p.container.remove();
+	delete this.players[index];
+	this.updatePlayers();
+}
+
 Game.prototype.updatePlayers = function() {
 	for(var pp in this.players) {
 		var p = this.players[pp];
-		p.container.find('h2').text('(' + (p.id + 1) + ') ' + p.name);
+		p.container.find('h2')
+			.text('(' + (p.id + 1) + ') ' + p.name)
+			.css({backgroundColor: p.team});
 	}
 }
 
@@ -481,6 +490,7 @@ Game.prototype.printStats = function() {
 
 Game.prototype.handleMessage = function(msg) {
 	//console.log(msg);
+	var self = this;
 	switch(msg.t) {
 		case Message.SET_PLAYER:
 			var p;
@@ -489,7 +499,6 @@ Game.prototype.handleMessage = function(msg) {
 				container.prependTo('#gamearea');
 				container.addClass('self');
 				this.player = p = new Player( container );
-				var self = this;
 				p.on(Board.EVENT_UPDATE, function() {
 					self.player.render();
 				});
@@ -521,8 +530,13 @@ Game.prototype.handleMessage = function(msg) {
 			}
 			p.setSize(this.options.width, this.options.height);
 			p.name = msg.p.name;
+			p.team = msg.p.team;
 			p.container = container;
 			p.id = msg.p.index;
+			if(msg.join)
+				this.gameLog('<em class="status">' + htmlspecialchars(p.name) + ' joined the game</em>', Game.LOG_STATUS);
+			if(this.players[p.id])
+				this.removePlayer(p.id);
 			this.players[p.id] = p;
 			this.updatePlayers();
 			if (msg.self)
@@ -541,17 +555,19 @@ Game.prototype.handleMessage = function(msg) {
 			break;
 			
 		case Message.WINNER:
-			var p = this.players[msg.id];
-			p.isPlaying = false;
-			p.container.addClass('winner');
-			if (p === this.player) {
-				this.send({t: Message.WINNER, s: this.getStats()});
-				this.player.stop();
-				this.printStats();
-				$('body').addClass('winner');
-				$('.player').removeClass('target');
+			for(var i in msg.id) {
+				var p = this.players[msg.id[i]];
+				p.isPlaying = false;
+				p.container.addClass('winner');
+				if (p === this.player) {
+					this.send({t: Message.WINNER, s: this.getStats()});
+					this.player.stop();
+					this.printStats();
+					$('body').addClass('winner');
+					$('.player').removeClass('target');
+				}
+				this.gameLog(htmlspecialchars(p.name) + ' has won the game.', [ Game.LOG_STATUS ]);
 			}
-			this.gameLog(htmlspecialchars(p.name) + ' has won the game.', [ Game.LOG_STATUS ]);
 			break;
 			
 		case Message.LINES:
@@ -565,16 +581,11 @@ Game.prototype.handleMessage = function(msg) {
 			break;
 		
 		case Message.REMOVE_PLAYER:
-			//alert('disconnected ' + msg.id);
 			var p = this.players[msg.id];
-			if (this.target == p.id && this.player.isPlaying)
-				this.cycleTarget(-1);
-			var targetIndex = this.targetList.indexOf(p.id);
-			if (targetIndex > -1)
-				this.targetList.splice(targetIndex, 1);
-			p.container.remove();
-			delete this.players[msg.id];
-			this.updatePlayers();
+			if(p) {
+				this.gameLog('<em class="status">' + htmlspecialchars(p.name) + ' left the game</em>', Game.LOG_STATUS);
+				this.removePlayer(msg.id);
+			}
 			break;
 			
 		case Message.START:
@@ -639,7 +650,6 @@ Game.prototype.handleMessage = function(msg) {
 							this.attackNotifierSlots[offset] = true;
 							$msg.data('offset', offset);
 							$msg.css('top', offset * 50);
-							var self = this;
 							setTimeout(function(obj){
 								obj.animate({'opacity':0}, 500, function(){
 									self.attackNotifierSlots[$(this).data('offset')] = false;
@@ -655,15 +665,31 @@ Game.prototype.handleMessage = function(msg) {
 			break;
 			
 		case Message.ROOMS:
-			var self = this;
 			var $rooms = $('#lobby ul').empty();
 			for(var i=0; i < msg.r.length; ++i)
 				$rooms.append('<li><a href="#">'+msg.r[i].n + '</a> (' + msg.r[i].p + ')</li>');
 			break;
 			
-		case Message.OPTIONS:
-			this.options = msg.o;
-			//$('#startbtn').toggle(this.options.admin);
+		case Message.SET_ROOM:
+			// clear players
+			for(var pp in this.players) {
+				var p = this.players[pp];
+				p.container.remove();
+			}
+			this.players = {};
+			this.updatePlayers();
+			this.team = '';
+			$('#team').val(this.team);
+			if(msg.r) {
+				// joined room
+				this.options = msg.r.options;
+				$('#lobby').hide();
+				$('#ingame').show();
+			} else {
+				// back to lobby
+				$('#lobby').show();
+				$('#ingame').hide();
+			}
 			break;
 			
 		case Message.NAME:

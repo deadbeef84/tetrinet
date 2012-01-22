@@ -234,6 +234,14 @@ $(document).ready(function() {
 
     <div id="ingame" style="display:none">
       <a href="" id="leave_room">Leave room</a>
+      <select id="team">
+        <option value="">[None]</option>
+        <option value="salmon">Red</option>
+        <option value="lightblue">Blue</option>
+        <option value="lightgreen">Green</option>
+        <option value="khaki">Yellow</option>
+        <option value="hotpink">Pink</option>
+      </select>
       <div id="startbtn">
         <button>Start Game</button>
       </div>

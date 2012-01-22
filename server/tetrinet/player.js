@@ -7,10 +7,12 @@ var util = require('util'),
 var Player = function(game, client) {
 	this.game = game;
 	this.client = client;
+	this.identity = 'unknown';
 	this.name = "client_" + client.id;
 	this.isPlaying = false;
 	this.room = null;
 	this.index = 0;
+	this.team = '';
 	
 	var player = this;
 	this.client.on('message', function(m) {
@@ -32,9 +34,9 @@ Player.prototype.handleMessage = function(p) {
 			
 		case Message.JOIN:
 			this.name = p.name || "Error";
+			this.identity = Config.OPENID_ENABLED ? this.client.handshake.identity : this.name;
 		    if (Config.MYSQL_ENABLED) {
-		    	var id = this.client.handshake.identity;
-				this.game.mysql.query('INSERT INTO player (player_id,name) VALUES(?, ?) ON DUPLICATE KEY UPDATE name=?', [id, this.name, this.name]);
+				this.game.mysql.query('INSERT INTO player (player_id,name) VALUES(?, ?) ON DUPLICATE KEY UPDATE name=?', [this.identity, this.name, this.name]);
 			}
 			this.emit(Player.EVENT_JOIN);
 			this.send(Message.ROOMS, {r: this.game.getRoomInfo()});
@@ -63,8 +65,15 @@ Player.prototype.handleMessage = function(p) {
 			break;
 			
 		case Message.LINES:
-			if(this.room)
-				this.room.broadcast(Message.LINES, {n: p.n, id: this.index}, this);
+			if(this.room) {
+				for(var i=0; i<this.room.players.length; ++i) {
+					var player = this.room.players[i];
+					if(!player)
+						continue;
+					if(player !== this && (this.team === '' || this.team !== player.team))
+						player.send(Message.LINES, {n: p.n, id: this.index});
+				}
+			}
 			break;
 			
 		case Message.CHAT:
@@ -83,6 +92,7 @@ Player.prototype.handleMessage = function(p) {
 		case Message.SET_ROOM:
 			if(this.room)
 				this.room.removePlayer(this);
+			this.team = '';
 			var room = this.game.rooms[p.r];
 			if(room)
 				room.addPlayer(this);
@@ -103,8 +113,16 @@ Player.prototype.handleMessage = function(p) {
 			this.room.broadcast(Message.NAME, {id:this.index, name:this.name}, this);
 			break;
 			
+		case Message.SET_TEAM:
+			if(this.room && this.room.state == Room.STATE_STOPPED) {
+				this.team = p.team;
+				this.send(Message.SET_PLAYER, {p: this.getClientInfo(), self: true});
+				this.room.broadcast(Message.SET_PLAYER, {p: this.getClientInfo()}, this);
+			}
+			break;
+			
 		default:
-			console.log('Unknown packet type');
+			console.log('Unknown packet type: ' + p.t);
 	}
 }
 
@@ -112,6 +130,7 @@ Player.prototype.getClientInfo = function() {
 	return {
 		name: this.name,
 		index: this.index,
+		team: this.team
 	};
 }
 
@@ -119,6 +138,7 @@ Player.prototype.getClientInfo = function() {
 Player.prototype.setRoom = function(room, index) {
 	this.room = room;
 	this.index = index;
+	this.send(Message.SET_ROOM, {r: room ? room.getClientInfo() : null});
 }
 
 // send(type, object message)
