@@ -102,6 +102,26 @@ function Game(name, port) {
 		self.send({t:Message.START});
 	});
 	
+	$('#lobby ul').delegate('a', 'click', function() {
+		for(var pp in self.players) {
+			var p = self.players[pp];
+			p.container.remove();
+			delete self.players[pp];
+		}
+		self.updatePlayers();
+		self.send({t: Message.SET_ROOM, r: $(this).text()});
+		$('#lobby').hide();
+		$('#ingame').show();
+		return false;
+	});
+	
+	$('#leave_room').click(function() {
+		self.send({t: Message.SET_ROOM, r: ''});
+		$('#lobby').show();
+		$('#ingame').hide();
+		return false;
+	});
+	
 	$('#chatbox form').submit(function() {
 		var msg = $('#message').val();
 		$('#message').val('');
@@ -270,6 +290,24 @@ function Game(name, port) {
 	$('#filtersettings_cancel').click($.BW.catbox.close);
 	
 	initFilters();
+	
+	// Create room
+	
+	$('#createroom_show').click(function() {
+		$('#createroom_popup').catbox('Create room');
+		return false;
+	});
+	$('#createroom_popup form').submit(function(){
+		var data = $(this).serializeArray();
+		var obj = {};
+		for(var p in data)
+			obj[data[p].name] = data[p].value;
+		obj.t = Message.CREATE_ROOM;
+		self.send(obj);
+		$.BW.catbox.close();
+		return false;
+	});
+	$('#createroom_popup .cancel').click($.BW.catbox.close);
 }
 
 Game.LOG_LINES = 'log-lines';
@@ -621,18 +659,6 @@ Game.prototype.handleMessage = function(msg) {
 			var $rooms = $('#lobby ul').empty();
 			for(var i=0; i < msg.r.length; ++i)
 				$rooms.append('<li><a href="#">'+msg.r[i].n + '</a> (' + msg.r[i].p + ')</li>');
-			$rooms.delegate('a', 'click', function() {
-				for(var pp in self.players) {
-					var p = self.players[pp];
-					p.container.remove();
-					delete self.players[pp];
-				}
-				self.updatePlayers();
-				self.send({t: Message.SET_ROOM, r: $(this).text()});
-				$('#lobby').hide();
-				$('#ingame').show();
-				return false;
-			});
 			break;
 			
 		case Message.OPTIONS:

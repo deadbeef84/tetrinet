@@ -154,6 +154,30 @@ $(document).ready(function() {
         </p>
       </form>
     </div>
+    <div id="createroom_popup">
+      <form>
+        <p>
+          <label for="createroom_name">Name</label>
+          <input id="createroom_name" type="text" name="name" />
+        </p>
+        <p>
+          <label for="createroom_width">Width</label>
+          <input id="createroom_width" type="text" name="width" value="12" />
+        </p>
+        <p>
+          <label for="createroom_height">Height</label>
+          <input id="createroom_height" type="text" name="height" value="24" />
+        </p>
+        <p>
+          <label for="createroom_specials">Specials</label>
+          <input id="createroom_specials" type="checkbox" name="specials" />
+        </p>
+        <p>
+          <input type="button" class="cancel" value="Cancel" />
+          <input type="submit" value="Create" />
+        </p>
+      </form>
+    </div>
   </div>
   
   <div id="container">
@@ -202,12 +226,14 @@ $(document).ready(function() {
 
     <div id="lobby" style="display:none">
       <h2>Rooms</h2>
+      <a href="" id="createroom_show">Create room</a>
       <ul>
         <li>Loading...</li>
       </ul>
     </div>
 
     <div id="ingame" style="display:none">
+      <a href="" id="leave_room">Leave room</a>
       <div id="startbtn">
         <button>Start Game</button>
       </div>

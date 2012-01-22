@@ -1,16 +1,14 @@
 var util = require('util'),
 	Message = require('./message'),
-	Player = require('./player'),
-	Config = require('./config');
+	Player = require('./player');
 
 // class Room extends EventEmitter
-var Room = function(game, name, options) {
-	this.game = game;
+var Room = function(name, options) {
 	this.name = name;
 	this.players = [];
 	this.options = options;
 	this.suddenDeathTimer = null;
-	this.state = 0; // 0 = not started, 1 = about to start, 2 = started
+	this.state = Room.STATE_STOPPED;
 	
 	this.winner = null;
 	this.startTime = null;
@@ -18,6 +16,17 @@ var Room = function(game, name, options) {
 	this.playerStats = {};
 }
 util.inherits(Room, process.EventEmitter);
+
+// Events
+Room.EVENT_JOIN = 'room-join';
+Room.EVENT_PART = 'room-part';
+Room.EVENT_START = 'room-start';
+Room.EVENT_GAMEOVER = 'room-gameover';
+
+// Game states
+Room.STATE_STOPPED = 0;
+Room.STATE_STARTING = 1;
+Room.STATE_STARTED = 2;
 
 // addPlayer(Player player)
 Room.prototype.addPlayer = function(player) {
@@ -48,6 +57,7 @@ Room.prototype.addPlayer = function(player) {
 		player.send(Message.SET_PLAYER, {p: this.players[i].getClientInfo(), self: (this.players[i] == player)});
 	}
 	
+	this.emit(Room.EVENT_JOIN);
 }
 
 // removePlayer(Player player)
@@ -55,9 +65,10 @@ Room.prototype.removePlayer = function(player) {
 	console.log('removing player...');
 	var pos = this.players.indexOf(player);
 	if(pos != -1) {
-		//var p = this.players.splice(pos, 1)[0];
+		player.setRoom(null, 0);
 		this.players[pos] = null;
 		this.broadcast(Message.REMOVE_PLAYER, {id: pos});
+		this.emit(Room.EVENT_PART);
 	} else {
 		console.log('warning, player not found: ' + player.name);
 	}
@@ -78,9 +89,7 @@ Room.prototype.playerDied = function(player, s) {
 	
 	var numIsPlaying = 0;
 	for(var i=0; i<this.players.length; ++i) {
-		if(!this.players[i])
-			continue;
-		if(this.players[i].isPlaying)
+		if(this.players[i] && this.players[i].isPlaying)
 			++numIsPlaying;
 	}
 	
@@ -99,37 +108,10 @@ Room.prototype.playerWon = function(player, s) {
 		return;
 	}
 	
-	this.state = 0; // not playing
+	this.state = Room.STATE_STOPPED;
 	this.playerStats[player.index].s = s; // set stats
 	
-	if(this.name == 'TEST') {
-		console.log('Skipping logging of test room.');
-		return;
-	}
-	
-	var results = this.playerStats;
-	var actions = this.actions;
-	var self = this;
-	
-    if (Config.MYSQL_ENABLED) {
-		self.game.mysql.query('INSERT INTO game (date) VALUES(NOW())', function(err, info) {
-			if(err) {
-				console.log('failed to create game in database');
-				return false;
-			}
-			var game_id = info.insertId;
-			for(var index in results) {
-				var r = results[index];
-				self.game.mysql.query('INSERT INTO game_result (game_id,player_id,place,num_keys,num_blocks,num_lines,num_lines_sent,time) VALUES(?,?,?,?,?,?,?,?)',
-					[game_id, r.identity, r.place, r.s.keys, r.s.blocks, r.s.lines, r.s.lines_sent, r.time]);
-			}
-			for(var i = 0; i < actions.length; ++i) {
-				var a = actions[i];
-				self.game.mysql.query('INSERT INTO game_action (game_id,player_id,target_player_id,type,time) VALUES(?,?,?,?,?)',
-					[game_id, a.from, a.to, a.s, a.time]);
-			}
-		});
-	}
+	this.emit(Room.EVENT_GAMEOVER, this.playerStats, this.actions);
 }
 
 // checkGameState()
@@ -138,7 +120,7 @@ Room.prototype.checkGameState = function() {
 	var numIsPlaying = 0;
 	var winner;
 	
-	if(this.state != 2)
+	if(this.state != Room.STATE_STARTED)
 		return;
 	
 	for(var i=0; i<this.players.length; ++i) {
@@ -172,7 +154,7 @@ Room.prototype.checkGameState = function() {
 			}, 3000);
 		}
 	} else if(numIsPlaying == 0) {
-		this.state = 0;
+		this.state = Room.STATE_STOPPED;
 	}
 }
 
@@ -185,8 +167,8 @@ Room.prototype.sendSpecial = function(p)
 }
 
 Room.prototype.startGame = function() {
-	if(this.state == 0) {
-		this.state = 1;
+	if(this.state == Room.STATE_STOPPED) {
+		this.state = Room.STATE_STARTING;
 		this.broadcast(Message.CHAT, {text: 'Game is about to start!', id: null});
 		
 		var self = this;
@@ -202,7 +184,7 @@ Room.prototype.startGame = function() {
 	}
 }
 
-// startGame()
+// doStartGame()
 Room.prototype.doStartGame = function() {
 	if(this.suddenDeathTimer) {
 		clearInterval(this.suddenDeathTimer);
@@ -220,11 +202,13 @@ Room.prototype.doStartGame = function() {
 	}
 	this.broadcast(Message.CHAT, {text: 'Go!!!', id: null});
 	
-	this.state = 2;
+	this.state = Room.STATE_STARTED;
 	this.winner = null;
 	this.startTime = Date.now();
 	this.actions = [];
 	this.playerStats = {};
+	
+	this.emit(Room.EVENT_START);
 }
 
 // broadcast(int type, object message, int except)

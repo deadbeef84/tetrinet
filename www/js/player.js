@@ -1,6 +1,7 @@
 function Player(target) {
 	Board.call(this, target);
 	this.reset();
+	this.specials = true;
 	
 	var self = this;
 	
@@ -175,7 +176,6 @@ Player.prototype.reset = function(seed) {
 	this.isPlaying = false;
 	this.rickroll = 0;
 	this.nukeTimer = null;
-	this.specials = true;
 	this.sBlocks = false;
 }
 

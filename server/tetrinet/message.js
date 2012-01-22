@@ -14,6 +14,7 @@ var messages =
     ,'SPECIAL'
     ,'WINNER'
     ,'ROOMS'
+    ,'CREATE_ROOM'
     ,'SET_ROOM'
     ,'OPTIONS'
     ,'NAME'
