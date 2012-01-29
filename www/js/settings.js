@@ -9,7 +9,7 @@ Settings = {
 	log: {
 		buffer_size: 100,
 		selected_filter: 0,
-		filters: [ { title: 'All', classes: ['log-you', 'log-status', 'log-lines', 'log-specials'], closeButton: false } ]
+		filters: [ { title: 'All', classes: ['log-status', 'log-lines', 'log-special'], closeButton: false } ]
 	},
 	keymap: {
 		'left': 37,
