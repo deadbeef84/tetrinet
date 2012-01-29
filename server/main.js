@@ -1,2 +1,2 @@
 var tetrinet = require('./tetrinet');
-tetrinet.createGame(7000);
+tetrinet.createGame();

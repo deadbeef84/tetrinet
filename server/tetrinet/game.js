@@ -19,10 +19,10 @@ if (Config.OPENID_ENABLED) {
 }
 
 // class Game extends EventEmitter
-var Game = function(port) {
+var Game = function() {
 	this.rooms = {};
 	
-	var io = require('socket.io').listen(port, {timeout: 5000});
+	var io = require('socket.io').listen(Config.PORT, {timeout: 5000});
 	io.configure(function(){
 		io.set('transports', [
 			'websocket'
@@ -44,8 +44,6 @@ var Game = function(port) {
 					callback(null, result.authenticated);
 				});
 			} else {
-				// make sure we disable stats i guess?
-				Config.ENABLE_MYSQL = false;
 				callback(null, true);
 			}
 		});
@@ -57,12 +55,10 @@ var Game = function(port) {
 	}
 		
 	// Setup rooms
-	var room = new Room(this, "Cookies", {width:12, height:24, specials: true});
-	this.rooms["Cookies"] = room;
-	this.rooms["Pure"] = new Room(this, "Pure", {width:12, height:24, specials: false});
-	this.rooms["Short"] = new Room(this, "Short", {width:12, height:12, specials: true});
-	this.rooms["Long"] = new Room(this, "Long", {width:12, height:35, specials: true});
-	this.rooms["H4CKN1GHT"] = new Room(this, "H4CKN1GHT", {width:12, height:24, specials: true});
+	this.addRoom(new Room("Cookies", {persistent: true, width:12, height:24, specials: true}));
+	this.addRoom(new Room("Pure", {persistent: true, width:12, height:24, specials: false}));
+	this.addRoom(new Room("Short", {persistent: true, width:12, height:12, specials: true}));
+	this.addRoom(new Room("Long", {persistent: true, width:12, height:35, specials: true}));
     
     var self = this;
     this.io.sockets.on('connection', function(client) {
@@ -76,6 +72,58 @@ var Game = function(port) {
 }
 util.inherits(Game, process.EventEmitter);
 
+Game.prototype.addRoom = function(room) {
+	if(this.rooms[room.name])
+		return null;
+		
+	// Add room
+	var self = this;
+	this.rooms[room.name] = room;
+	this.broadcast(Message.ROOMS, {r: this.getRoomInfo()});
+	
+	room.on(Room.EVENT_JOIN, function() {
+		self.broadcast(Message.ROOMS, {r: self.getRoomInfo()});
+	});
+	
+	room.on(Room.EVENT_PART, function() {
+		if(!room.numPlayers() && !room.options.persistent) {
+			room.removeAllListeners();
+			delete self.rooms[room.name];
+		}
+		self.broadcast(Message.ROOMS, {r: self.getRoomInfo()});
+	});
+	
+	// Add statistics when game is over
+	room.on(Room.EVENT_GAMEOVER, function(results, actions) {
+		if(room.name == 'TEST') {
+			console.log('Skipping logging of test room.');
+			return;
+		}
+		
+	    if (Config.MYSQL_ENABLED) {
+			self.mysql.query('INSERT INTO game (date, room) VALUES(NOW(), ?)', [room.name], function(err, info) {
+				if(err) {
+					console.log('failed to create game in database');
+					return false;
+				}
+				var game_id = info.insertId;
+				for(var index in results) {
+					var r = results[index];
+					self.mysql.query('INSERT INTO game_result (game_id,player_id,team,place,num_keys,num_blocks,num_lines,num_lines_sent,time) VALUES(?,?,?,?,?,?,?,?,?)',
+						[game_id, r.identity, r.team, r.place, r.s.keys, r.s.blocks, r.s.lines, r.s.lines_sent, r.time]);
+				}
+				for(var i = 0; i < actions.length; ++i) {
+					var a = actions[i];
+					self.mysql.query('INSERT INTO game_action (game_id,player_id,target_player_id,type,time) VALUES(?,?,?,?,?)',
+						[game_id, a.from, a.to, a.s, a.time]);
+				}
+			});
+		}
+	});
+	
+	return room;
+}
+
 // getRoomInfo()
 Game.prototype.getRoomInfo = function() {
 	var r = [];
@@ -85,10 +133,10 @@ Game.prototype.getRoomInfo = function() {
 	return r;
 }
 
-// broadcast(int type, object message, int|array except)
-Game.prototype.broadcast = function(type, message, except) {
+// broadcast(int type, object message)
+Game.prototype.broadcast = function(type, message) {
 	message.t = type;
-	this.socket.broadcast(JSON.stringify(message), except);
+	this.io.sockets.send(JSON.stringify(message));
 }
 
 // Export this class
