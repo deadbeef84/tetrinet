@@ -49,7 +49,7 @@ function Game(name, port) {
 	
 		// this is a single player game
 		
-		this.handleMessage({ t:Message.OPTIONS, o:{height:24, width:12, specials: false} });
+		this.handleMessage({ t:Message.SET_ROOM, r: {name: 'singleplayer', options:{height:24, width:12, specials: false} } });
 		this.handleMessage({ t:Message.SET_PLAYER, self:true, p:{index:0, name:"You"} });
 	}
 	
