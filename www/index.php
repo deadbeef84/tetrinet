@@ -66,6 +66,7 @@ function filewithmtime($file) {
   <script src="<?=filewithmtime('js/eventemitter.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/timer.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/prng.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/specials.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/block.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/board.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/player.js')?>" type="text/javascript"></script>

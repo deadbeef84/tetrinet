@@ -318,51 +318,51 @@ em.self { /* your name */
 
 .cell.block-10 { background-image: none; background-color: rgba(127,127,127,0.3); }
 
-.self .cell.special-1 { background-position: -80px 0; } /* add */
-.self .cell.special-2 { background-position: -96px 0; } /* clear */
-.self .cell.special-3 { background-position: -112px 0; } /* nuke */
-.self .cell.special-4 { background-position: -128px 0; } /* quake */
-.self .cell.special-5 { background-position: -144px 0; } /* random */
-.self .cell.special-6 { background-position: -160px 0; } /* clear specials */
-.self .cell.special-7 { background-position: -176px 0; } /* gravity */
-.self .cell.special-8 { background-position: -192px 0; } /* bomb */
-.self .cell.special-9 { background-position: -208px 0; } /* switch */
-.self .cell.special-10 { background-position: -224px 0; } /* left gravity */
-.self .cell.special-11 { background-position: -240px 0; } /* zebra */
-.self .cell.special-12 { background-position: -256px 0; } /* flip */
-.self .cell.special-13 { background-position: -272px 0; } /* invisibility */
-.self .cell.special-14 { background-position: -288px 0; } /* reflective shield */
-.self .cell.special-15 { background-position: -304px 0; } /* game of life */
-.self .cell.special-16 { background-position: -320px 0; } /* glue */
-.self .cell.special-17 { background-position: -336px 0; } /* rickroll */
-.self .cell.special-18 { background-position: -352px 0; } /* moses */
-.self .cell.special-19 { background-position: -368px 0; } /* invert */
-.self .cell.special-20 { background-position: -384px 0; } /* speed */
-.self .cell.special-21 { background-position: -400px 0; } /* surprise */
-.self .cell.special-22 { background-position: -416px 0; } /* s-block */
+.self .cell.special-a { background-position: -80px 0; } /* add */
+.self .cell.special-c { background-position: -96px 0; } /* clear */
+.self .cell.special-n { background-position: -112px 0; } /* nuke */
+.self .cell.special-q { background-position: -128px 0; } /* quake */
+.self .cell.special-r { background-position: -144px 0; } /* random */
+.self .cell.special-s { background-position: -160px 0; } /* clear specials */
+.self .cell.special-g { background-position: -176px 0; } /* gravity */
+.self .cell.special-b { background-position: -192px 0; } /* bomb */
+.self .cell.special-w { background-position: -208px 0; } /* switch */
+.self .cell.special-l { background-position: -224px 0; } /* left gravity */
+.self .cell.special-z { background-position: -240px 0; } /* zebra */
+.self .cell.special-f { background-position: -256px 0; } /* flip */
+.self .cell.special-i { background-position: -272px 0; } /* invisibility */
+.self .cell.special-x { background-position: -288px 0; } /* reflective shield */
+.self .cell.special-o { background-position: -304px 0; } /* game of life */
+.self .cell.special-u { background-position: -320px 0; } /* glue */
+.self .cell.special-d { background-position: -336px 0; } /* rickroll */
+.self .cell.special-m { background-position: -352px 0; } /* moses */
+.self .cell.special-v { background-position: -368px 0; } /* invert */
+.self .cell.special-p { background-position: -384px 0; } /* speed */
+.self .cell.special-y { background-position: -400px 0; } /* surprise */
+.self .cell.special-k { background-position: -416px 0; } /* s-block */
 
-.cell.special-1 { background-position: -40px -16px; } /* add */
-.cell.special-2 { background-position: -48px -16px; } /* clear */
-.cell.special-3 { background-position: -56px -16px; } /* nuke */
-.cell.special-4 { background-position: -64px -16px; } /* quake */
-.cell.special-5 { background-position: -72px -16px; } /* random */
-.cell.special-6 { background-position: -80px -16px; } /* clear specials */
-.cell.special-7 { background-position: -88px -16px; } /* gravity */
-.cell.special-8 { background-position: -96px -16px; } /* bomb */
-.cell.special-9 { background-position: -104px -16px; } /* switch */
-.cell.special-10 { background-position: -112px -16px; } /* left gravity */
-.cell.special-11 { background-position: -120px -16px; } /* zebra */
-.cell.special-12 { background-position: -128px -16px; } /* flip */
-.cell.special-13 { background-position: -136px -16px; } /* invisibility */
-.cell.special-14 { background-position: -144px -16px; } /* reflective shield */
-.cell.special-15 { background-position: -152px -16px; } /* game of life */
-.cell.special-16 { background-position: -160px -16px; } /* glue */
-.cell.special-17 { background-position: -168px -16px; } /* rickroll */
-.cell.special-18 { background-position: -176px -16px; } /* moses */
-.cell.special-19 { background-position: -184px -16px; } /* invert */
-.cell.special-20 { background-position: -192px -16px; } /* speed */
-.cell.special-21 { background-position: -200px -16px; } /* surprise */
-.cell.special-21 { background-position: -208px -16px; } /* s-block */
+.cell.special-a { background-position: -40px -16px; } /* add */
+.cell.special-c { background-position: -48px -16px; } /* clear */
+.cell.special-n { background-position: -56px -16px; } /* nuke */
+.cell.special-q { background-position: -64px -16px; } /* quake */
+.cell.special-r { background-position: -72px -16px; } /* random */
+.cell.special-s { background-position: -80px -16px; } /* clear specials */
+.cell.special-g { background-position: -88px -16px; } /* gravity */
+.cell.special-b { background-position: -96px -16px; } /* bomb */
+.cell.special-w { background-position: -104px -16px; } /* switch */
+.cell.special-l { background-position: -112px -16px; } /* left gravity */
+.cell.special-z { background-position: -120px -16px; } /* zebra */
+.cell.special-f { background-position: -128px -16px; } /* flip */
+.cell.special-u { background-position: -136px -16px; } /* invisibility */
+.cell.special-x { background-position: -144px -16px; } /* reflective shield */
+.cell.special-o { background-position: -152px -16px; } /* game of life */
+.cell.special-u { background-position: -160px -16px; } /* glue */
+.cell.special-d { background-position: -168px -16px; } /* rickroll */
+.cell.special-m { background-position: -176px -16px; } /* moses */
+.cell.special-v { background-position: -184px -16px; } /* invert */
+.cell.special-p { background-position: -192px -16px; } /* speed */
+.cell.special-y { background-position: -200px -16px; } /* surprise */
+.cell.special-k { background-position: -208px -16px; } /* s-block */
 
 /* flip */
 .flip {
@@ -393,7 +393,7 @@ em.self { /* your name */
 	opacity: 0.5;
 	background: url(../images/rickroll.gif);
 }
-.rickroll-3::after {
+.rickroll-3 #gamearea::after {
 	content: ' ';
 	position: absolute;
 	top:0; right:0; bottom:0; left:0;

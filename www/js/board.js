@@ -98,7 +98,7 @@ Board.prototype.render = function() {
 		html += '<div class="row">';
 		for(x = 0; x < this.width; ++x) {
 			b = this.at(x,y);
-			html += '<div class="cell '+(b ? (b < 0 ? 'special special-'+(-b) : 'block block-'+b) : 'empty')+'"> </div>';
+			html += '<div class="cell '+(b !== 0 ? (typeof b === 'string' ? 'special special-'+b : 'block block-'+b) : 'empty')+'"> </div>';
 		}
 		html += '</div>';
 	}
