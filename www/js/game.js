@@ -644,7 +644,7 @@ Game.prototype.handleMessage = function(msg) {
 						}
 					} else {
 						if (Settings.misc.attack_notifications) {
-							var $msg = $('<p class="attack">' + sourcePlayer.name + ' ' + (msg.reflect ? 'reflected' : 'used') + ' special ' + Special.getSpecial(msg.s).name + '</p>');
+							var $msg = $('<p class="attack"><em>' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <em>' + Special.getSpecial(msg.s).name + '</em></p>');
 							var offset = 0;
 							for (var i = 0; this.attackNotifierSlots[i]; i++, offset++) ;
 							this.attackNotifierSlots[offset] = true;

@@ -41,12 +41,12 @@ Bot.prototype.syncBoard = function() {
 	}
 }
 
-Bot.prototype.getBoardHeight = function() {
+Bot.prototype.getBoardHeight = function(player) {
 	var maxHeight = 0;
-	for(var y = this.game.player.height-1; y >= 0; --y) {
-		for(var x = 0; x < this.game.player.width; ++x) {
-			if(this.game.player.data[y * this.game.player.width + x]) {
-				maxHeight = this.game.player.height - y;
+	for(var y = player.height-1; y >= 0; --y) {
+		for(var x = 0; x < player.width; ++x) {
+			if(player.data[y * player.width + x]) {
+				maxHeight = player.height - y;
 				break;
 			}
 		}
@@ -66,12 +66,12 @@ Bot.prototype.moveBlock = function(target) {
 				break;
 			case Player.SPECIAL_NUKE:
 			case Player.SPECIAL_GRAVITY:
-				if (this.getBoardHeight() >= this.game.player.height*(2/3))
+				if (this.getBoardHeight(this.game.player) >= this.game.player.height*(2/3))
 					this.game.use(this.game.player.id);
 				break;
 			case Player.SPECIAL_LGRAVITY:
 			case Player.SPECIAL_MOSES:
-				if (this.getBoardHeight() >= this.game.player.height/2)
+				if (this.getBoardHeight(this.game.player) >= this.game.player.height/2)
 					this.game.use(this.game.player.id);
 				break;
 			// bad
