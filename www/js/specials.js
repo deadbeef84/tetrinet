@@ -508,10 +508,9 @@ Special.registerSpecial(
 	"S-blocks",
 	"Only generate S and Z blocks for a limited amount of time.",
 	function(player, msg) {
-		player.sBlocks = true;
-		player.sTimer.addDelay(Player.TIME_SBLOCKS);
-		player.sTimer.start();
-		return false;
+		for(var i = 0; i < 8; ++i)
+			player.nextBlocks.unshift(new Block(Math.random() < 0.5 ? 5 : 6, 0));
+		return true;
 	}
 );
 

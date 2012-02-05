@@ -174,6 +174,13 @@ $(document).ready(function() {
           <input id="createroom_specials" type="checkbox" name="specials" />
         </p>
         <p>
+          <label for="createroom_generator">Generator</label>
+          <select id="createroom_generator" name="generator">
+            <option value="1">7 Bag</option>
+            <option value="0">Random</option>
+          </select>
+        </p>
+        <p>
           <input type="button" class="cancel" value="Cancel" />
           <input type="submit" value="Create" />
         </p>

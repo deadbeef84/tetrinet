@@ -524,7 +524,7 @@ Game.prototype.handleMessage = function(msg) {
 						self.send({t: Message.LINES, n: linesToAdd});
 					}
 				});
-				p.specials = this.options.specials;
+				p.setOptions(this.options);
 			} else {
 				p = new Board(container);
 			}
@@ -674,6 +674,7 @@ Game.prototype.handleMessage = function(msg) {
 			// clear players
 			for(var pp in this.players) {
 				var p = this.players[pp];
+				p.removeAllListeners();
 				p.container.remove();
 			}
 			this.players = {};
