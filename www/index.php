@@ -170,6 +170,10 @@ $(document).ready(function() {
           <input id="createroom_height" type="text" name="height" value="24" />
         </p>
         <p>
+          <label for="createroom_entrydelay">Entry delay</label>
+          <input id="createroom_entrydelay" type="text" name="entrydelay" value="500" />
+        </p>
+        <p>
           <label for="createroom_specials">Specials</label>
           <input id="createroom_specials" type="checkbox" name="specials" />
         </p>

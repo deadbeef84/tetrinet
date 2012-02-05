@@ -104,6 +104,7 @@ Player.prototype.handleMessage = function(p) {
 			this.game.addRoom(new Room(p.name, {
 				width: parseInt(p.width),
 				height: parseInt(p.height),
+				entrydelay: parseInt(p.entrydelay),
 				specials: p.specials ? true : false,
 				generator: parseInt(p.generator)
 			}));

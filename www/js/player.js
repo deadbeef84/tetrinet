@@ -63,6 +63,7 @@ Player.prototype.reset = function(seed) {
 
 Player.prototype.setOptions = function(options) {
 	this.options = options;
+	this.newBlockTimer.delay = options.entrydelay;
 }
 
 Player.prototype.start = function(seed) {
