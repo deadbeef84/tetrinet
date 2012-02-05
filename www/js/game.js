@@ -49,7 +49,7 @@ function Game(name, port) {
 	
 		// this is a single player game
 		
-		this.handleMessage({ t:Message.OPTIONS, o:{height:24, width:12, specials: false} });
+		this.handleMessage({ t:Message.SET_ROOM, r: {name: 'singleplayer', options:{height:24, width:12, specials: false} } });
 		this.handleMessage({ t:Message.SET_PLAYER, self:true, p:{index:0, name:"You"} });
 	}
 	
@@ -423,9 +423,9 @@ Game.prototype.use = function(id) {
 			if (id == this.player.id)
 				logClass.push(Game.LOG_SPECIAL_RECIEVED);
 			var s = this.player.inventory.shift();
-			this.gameLog('<em>'+htmlspecialchars(this.player.name)+'</em> used special <strong>' + Player.special[s].name + '</strong> on <em>' + htmlspecialchars(p.name) + '</em>', logClass);
+			this.gameLog('<em>'+htmlspecialchars(this.player.name)+'</em> used special <strong>' + Special.getSpecial(s).name + '</strong> on <em>' + htmlspecialchars(p.name) + '</em>', logClass);
 			var msg = {t: Message.SPECIAL, 's': s, id: p.id};
-			if(s == Player.SPECIAL_SWITCH) {
+			if(s == Special.SWITCH) {
 				// switch needs some manual work
 				if(p !== this.player) {
 					msg.data = this.player.data;
@@ -631,7 +631,7 @@ Game.prototype.handleMessage = function(msg) {
 					logClass.push(Game.LOG_SPECIAL_SENT);
 				if (msg.id == this.player.id)
 					logClass.push(Game.LOG_SPECIAL_RECIEVED);
-				this.gameLog('<em class="'+(msg.sid==this.player.id?'self':'other')+'">' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <strong>' + Player.special[msg.s].name + '</strong> on <em class="'+(msg.id==this.player.id?'self':'other')+'">' + targetPlayer.name + '</em>', logClass);
+				this.gameLog('<em class="'+(msg.sid==this.player.id?'self':'other')+'">' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <strong>' + Special.getSpecial(msg.s).name + '</strong> on <em class="'+(msg.id==this.player.id?'self':'other')+'">' + targetPlayer.name + '</em>', logClass);
 				if(targetPlayer.id == this.player.id) {
 					if(this.player.reflect) {
 						if (msg.reflect) {
@@ -644,7 +644,7 @@ Game.prototype.handleMessage = function(msg) {
 						}
 					} else {
 						if (Settings.misc.attack_notifications) {
-							var $msg = $('<p class="attack"><em>' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <em>' + Player.special[msg.s].name + '</em></p>');
+							var $msg = $('<p class="attack"><em>' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <em>' + Special.getSpecial(msg.s).name + '</em></p>');
 							var offset = 0;
 							for (var i = 0; this.attackNotifierSlots[i]; i++, offset++) ;
 							this.attackNotifierSlots[offset] = true;
