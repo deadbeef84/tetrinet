@@ -110,8 +110,11 @@ Player.prototype.at = function(x,y) {
 // override addLines-function
 Player.prototype.addLines = function(numLines) {
 	Board.prototype.addLines.call(this, numLines);
-	if(this.currentBlock)
-		this.currentBlock.y = Math.max(0, this.currentBlock.y - numLines);
+	if(this.currentBlock) {
+		var bb = this.currentBlock.getBoundingBox(),
+			blockHeight = Math.abs(bb.maxy - bb.miny);
+		this.currentBlock.y = Math.max(-blockHeight, this.currentBlock.y - numLines);
+	}
 	this.emit(Board.EVENT_CHANGE);
 }
 
@@ -290,8 +293,10 @@ Player.prototype.falldown = function(put) {
 Player.prototype.moveUpIfBlocked = function() {
 	if(!this.currentBlock)
 		return;
+	var bb = this.currentBlock.getBoundingBox(),
+		blockHeight = Math.abs(bb.maxy - bb.miny);
 	while(this.collide(this.currentBlock)) {
-		if(this.currentBlock.y <= 0) {
+		if(this.currentBlock.y <= -blockHeight) {
 			this.putBlock(this.currentBlock);
 			this.createNewBlock();
 			break;
