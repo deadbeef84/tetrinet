@@ -10,6 +10,9 @@ Bw.extend(Board, Bw.EventEmitter);
 Board.EVENT_UPDATE = "update";
 Board.EVENT_CHANGE = "change";
 Board.EVENT_LINES = "lines";
+Board.NO_COLLISION = 0;
+Board.COLLISION_BLOCKS = 1;
+Board.COLLISION_BOUNDS = 2;
 
 Board.prototype.setSize = function(w, h) {
 	this.width = w;
@@ -76,17 +79,17 @@ Board.prototype.collide = function(block) {
 	for(i = 0; i < block.data.length; ++i) {
 		bx = block.x + block.data[i][0];
 		by = block.y + block.data[i][1];
-		if(bx < 0 || bx >= this.width || by >= this.height)// || by < 0)
-			return -1;
+		if(bx < 0 || bx >= this.width || by >= this.height)
+			return Board.COLLISION_BOUNDS;
 	}
 	// check collision
 	for(i = 0; i < block.data.length; ++i) {
 		bx = block.x + block.data[i][0];
 		by = block.y + block.data[i][1];
 		if(this.data[by * this.width + bx])
-			return 1;
+			return Board.COLLISION_BLOCKS;
 	}
-	return 0;
+	return Board.NO_COLLISION;
 }
 
 Board.prototype.render = function() {

@@ -125,9 +125,9 @@ $(document).ready(function() {
         <div id="settings_keys">
 	      <p><label for="settings_km_left">Left</label><input id="settings_km_left" class="keycode_listener" type="text" name="left" /></p>
 	      <p><label for="settings_km_right">Right</label><input id="settings_km_right" class="keycode_listener" type="text" name="right" /></p>
-	      <p><label for="settings_km_down">Down</label><input id="settings_km_down" class="keycode_listener" type="text" name="down" /></p>
-	      <p><label for="settings_km_drop">Drop</label><input id="settings_km_drop" class="keycode_listener" type="text" name="drop" /></p>
-	      <p><label for="settings_km_softdrop">Soft drop</label><input id="settings_km_softdrop" class="keycode_listener" type="text" name="soft_drop" /></p>
+	      <p><label for="settings_km_down">Soft drop</label><input id="settings_km_down" class="keycode_listener" type="text" name="down" /></p>
+	      <p><label for="settings_km_drop">Hard drop</label><input id="settings_km_drop" class="keycode_listener" type="text" name="drop" /></p>
+	      <p><label for="settings_km_softdrop">Sonic drop</label><input id="settings_km_softdrop" class="keycode_listener" type="text" name="soft_drop" /></p>
 	      <p><label for="settings_km_rotatecw">Rotate CW</label><input id="settings_km_rotatecw" class="keycode_listener" type="text" name="rotate_cw" /></p>
 	      <p><label for="settings_km_rotateccw">Rotate CCW</label><input id="settings_km_rotateccw" class="keycode_listener" type="text" name="rotate_ccw" /></p>
 	      <p><label for="settings_km_self">Self</label><input id="settings_km_self" class="keycode_listener" type="text" name="inventory_self" /></p>
