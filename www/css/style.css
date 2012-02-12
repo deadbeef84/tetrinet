@@ -36,6 +36,7 @@ em.self { /* your name */
 	width: 100%;
 	left: 0;
 	bottom:10px;
+	z-index: 1;
 }
 #chatbox {
 	text-align: left;
