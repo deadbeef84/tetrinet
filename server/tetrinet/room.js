@@ -161,7 +161,7 @@ Room.prototype.checkGameState = function() {
 			clearInterval(this.suddenDeathTimer);
 			this.suddenDeathTimer = null;
 		}
-	} else if(activePlayers.length == 2) {
+	} else if(activePlayers.length == 2 && this.players.length > 2) {
 		// start sudden death timer
 		if(!this.suddenDeathTimer) {
 			this.broadcast(Message.CHAT, {text: '*** STARTING SUDDEN DEATH ***', id: null});
@@ -225,7 +225,8 @@ Room.prototype.doStartGame = function() {
 	this.playerStats = {};
 	
 	this.emit(Room.EVENT_START);
-	this.checkGameState();
+	if(this.players.length > 1)
+		this.checkGameState();
 }
 
 Room.prototype.getClientInfo = function() {

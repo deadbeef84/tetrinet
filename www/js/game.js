@@ -98,6 +98,63 @@ function Game(name, port) {
 		}
 	});
 	
+	// touch controls
+	var startTime = Date.now();
+	var startPos = {x:0,y:0};
+	var relPos = {x:0,y:0};
+	var mx = 0;
+	$(document).on('touchstart touchend', function(e) {
+		var event = e.originalEvent;
+		if (event.targetTouches.length == 1) {
+			startTime = Date.now();
+			var touch = event.targetTouches[0];
+			relPos.x = startPos.x = touch.screenX;
+			relPos.y = startPos.y = touch.screenY;
+			mx = 0;
+		}
+		if(self.player && self.player.isPlaying) {
+			if(e.type === 'touchend') {
+				if (event.targetTouches.length == 0 && event.changedTouches.length == 1) {
+					var touch = event.changedTouches[0];
+					var dt = (Date.now() - startTime) / 1000.0;
+					var dx = touch.screenX - startPos.x;
+					var dy = touch.screenY - startPos.y;
+					var vx = dx / dt;
+					var vy = dy / dt;
+					if(dy > 50 && vy > 300) {
+						self.player.move(-mx, 0, 0, false);
+						self.player.falldown(true);
+					} else if(dt < 0.2 && dx < 20 && dy < 20) {
+						self.player.move(0, 0, 1, false);
+					}
+				}
+			}
+			return false;
+		}
+	});
+	$(document).on('touchmove', function(e) {
+		var event = e.originalEvent;
+		if (event.targetTouches.length == 1) {
+			var touch = event.targetTouches[0];
+			var sensitivity = 20;
+			if (self.player && self.player.isPlaying) {
+				var dx = Math.floor((touch.screenX - relPos.x) / sensitivity);
+				var dy = Math.floor((touch.screenY - relPos.y) / sensitivity);
+				if(dx) {
+					while(dx && self.player.move(dx, 0, 0, false))
+						dx += dx > 0 ? -1 : 1;
+					mx += dx;
+					relPos.x += dx * sensitivity;
+				}
+				if(dy > 0) {
+					self.player.move(0, dy, 0, false);
+					relPos.y += dx * sensitivity;
+				}
+				return false;
+			}
+		}
+	});
+	
 	$('#startbtn button').click(function() {
 		self.send({t:Message.START});
 	});
@@ -524,7 +581,7 @@ Game.prototype.handleMessage = function(msg) {
 						self.send({t: Message.LINES, n: linesToAdd});
 					}
 				});
-				p.specials = this.options.specials;
+				p.setOptions(this.options);
 			} else {
 				p = new Board(container);
 			}
@@ -674,6 +731,7 @@ Game.prototype.handleMessage = function(msg) {
 			// clear players
 			for(var pp in this.players) {
 				var p = this.players[pp];
+				p.removeAllListeners();
 				p.container.remove();
 			}
 			this.players = {};

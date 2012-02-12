@@ -170,8 +170,26 @@ $(document).ready(function() {
           <input id="createroom_height" type="text" name="height" value="24" />
         </p>
         <p>
+          <label for="createroom_entrydelay">Entry delay</label>
+          <input id="createroom_entrydelay" type="text" name="entrydelay" value="500" />
+        </p>
+        <p>
           <label for="createroom_specials">Specials</label>
           <input id="createroom_specials" type="checkbox" name="specials" />
+        </p>
+        <p>
+          <label for="createroom_generator">Generator</label>
+          <select id="createroom_generator" name="generator">
+            <option value="1">7 Bag</option>
+            <option value="0">Random</option>
+          </select>
+        </p>
+        <p>
+          <label for="createroom_rotationsystem">Rotation system</label>
+          <select id="createroom_rotationsystem" name="rotationsystem">
+            <option value="1">SRS</option>
+            <option value="0">Classic</option>
+          </select>
         </p>
         <p>
           <input type="button" class="cancel" value="Cancel" />

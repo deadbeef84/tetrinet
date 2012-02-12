@@ -1,7 +1,6 @@
 function Player(target) {
 	Board.call(this, target);
 	this.reset();
-	this.specials = true;
 	
 	var self = this;
 	
@@ -22,9 +21,6 @@ function Player(target) {
 	
 	this.speedTimer = new Timer(Player.TIME_SPEED, 1);
 	this.speedTimer.on(Timer.EVENT_TIMER, function() { self.speed = false; });
-	
-	this.sTimer = new Timer(Player.TIME_SBLOCKS, 1);
-	this.sTimer.on(Timer.EVENT_TIMER, function() { self.sBlocks = false; });
 }
 // Extend Board
 Bw.extend(Player, Board);
@@ -33,7 +29,6 @@ Player.TIME_FLIP = 10000;
 Player.TIME_INVISIBLE = 10000;
 Player.TIME_REFLECT = 10000;
 Player.TIME_SPEED = 15000;
-Player.TIME_SBLOCKS = 8000;
 
 Player.INVENTORY_MAX = 18;
 Player.DROP_DELAY = 1000;
@@ -43,12 +38,15 @@ Player.EVENT_GAMEOVER = "gameover";
 Player.EVENT_INVENTORY = "inventory";
 Player.EVENT_NEW_BLOCK = "new_block";
 
-Player.ROTATION_SYSTEM_CLASSIC = "classic";
-Player.ROTATION_SYSTEM_SRS = "srs";
+Player.ROTATION_SYSTEM_CLASSIC = 0;
+Player.ROTATION_SYSTEM_SRS = 1;
+
+Player.BLOCK_GENERATOR_RANDOM = 0;
+Player.BLOCK_GENERATOR_7BAG = 1;
 
 Player.prototype.reset = function(seed) {
 	this.currentBlock = null;
-	this.nextBlock = null;
+	this.nextBlocks = [];
 	this.ghostBlock = null;
 	this.numLines = 0;
 	this.numBlocks = 0;
@@ -64,7 +62,11 @@ Player.prototype.reset = function(seed) {
 	this.isPlaying = false;
 	this.rickroll = 0;
 	this.nukeTimer = null;
-	this.sBlocks = false;
+}
+
+Player.prototype.setOptions = function(options) {
+	this.options = options;
+	this.newBlockTimer.delay = options.entrydelay;
 }
 
 Player.prototype.start = function(seed) {
@@ -111,8 +113,11 @@ Player.prototype.at = function(x,y) {
 // override addLines-function
 Player.prototype.addLines = function(numLines) {
 	Board.prototype.addLines.call(this, numLines);
-	if(this.currentBlock)
-		this.currentBlock.y = Math.max(0, this.currentBlock.y - numLines);
+	if(this.currentBlock) {
+		var bb = this.currentBlock.getBoundingBox(),
+			blockHeight = Math.abs(bb.maxy - bb.miny);
+		this.currentBlock.y = Math.max(-blockHeight, this.currentBlock.y - numLines);
+	}
 	this.emit(Board.EVENT_CHANGE);
 }
 
@@ -120,7 +125,7 @@ Player.prototype.onRemoveLines = function(lines, data) {
 	this.numLines += lines;
 	Board.prototype.onRemoveLines.call(this, lines, data);
 	
-	if(!this.specials)
+	if(!this.options.specials)
 		return;
 	
 	var i, l;
@@ -162,12 +167,18 @@ Player.prototype.initDrop = function() {
 		this.dropTimer.delay = Math.max(50, 750 - this.numLines * 5);
 	this.dropTimer.start();
 }
-Player.prototype.getRandomBlock = function() {
-	var rndType = this.random.uint32();
-	var rndRot = 0;//this.random.uint32();
-	if(this.sBlocks)
-		return new Block(rndType % 2 ? 5 : 6, rndRot);
-	return new Block(rndType, rndRot);
+Player.prototype.generateBlocks = function() {
+	while(this.nextBlocks.length < 3) {
+		if(this.options.generator === Player.BLOCK_GENERATOR_RANDOM) {
+			this.nextBlocks.push(new Block(this.random.uint32(), 0));
+		} else {
+			var i, blocks = [];
+			for(i = 0; i < Block.blockData.length; ++i)
+				blocks.push(i);
+			while(blocks.length)
+				this.nextBlocks.push(new Block(blocks.splice(this.random.uint32() % blocks.length, 1)[0], 0));
+		}
+	}
 }
 
 Player.prototype.createNewBlock = function() {
@@ -180,8 +191,8 @@ Player.prototype.createNewBlock = function() {
 Player.prototype.doCreateNewBlock = function() {
 	this.numBlocks++;
 	this.dropStick = 0;
-	this.currentBlock = this.nextBlock ? this.nextBlock : this.getRandomBlock();
-	this.nextBlock = this.getRandomBlock();
+	this.generateBlocks();
+	this.currentBlock = this.nextBlocks.shift();
 	this.currentBlock.x = Math.floor(this.width / 2) - 1;
 	this.currentBlock.y = -this.currentBlock.getBoundingBox().miny;
 	this.emit(Board.EVENT_UPDATE);
@@ -212,7 +223,7 @@ Player.prototype.move = function(x,y,r,stick) {
 	if (c != Board.NO_COLLISION) {
 		var rotationSucceeded = true;
 		if (x == 0 && y == 0 && r && !stick) {
-			switch (this.rotationSystem) {
+			switch (this.options.rotationsystem) {
 				case Player.ROTATION_SYSTEM_CLASSIC:
 					rotationSucceeded = this.handleCollisionClassic(c);
 					break;
@@ -332,8 +343,10 @@ Player.prototype.falldown = function(put) {
 Player.prototype.moveUpIfBlocked = function() {
 	if(!this.currentBlock)
 		return;
+	var bb = this.currentBlock.getBoundingBox(),
+		blockHeight = Math.abs(bb.maxy - bb.miny);
 	while(this.collide(this.currentBlock)) {
-		if(this.currentBlock.y <= 0) {
+		if(this.currentBlock.y <= -blockHeight) {
 			this.putBlock(this.currentBlock);
 			this.createNewBlock();
 			break;
@@ -356,14 +369,15 @@ Player.prototype.render = function() {
 	
 	Board.prototype.render.call(this);
 	var html = '';
-	if(this.nextBlock) {
+	if(this.nextBlocks && this.nextBlocks.length) {
 		if(!this.target)
 			return;
 		
+		var nextBlock = this.nextBlocks[0];
 		var x, y, b;
 		var bp = {};
-		for(x = 0; x < this.nextBlock.data.length; ++x)
-			bp[this.nextBlock.data[x][0]+'_'+this.nextBlock.data[x][1]] = this.nextBlock.type + 1;
+		for(x = 0; x < nextBlock.data.length; ++x)
+			bp[nextBlock.data[x][0]+'_'+nextBlock.data[x][1]] = nextBlock.type + 1;
 		for(y = 0; y < 4; ++y) {
 			html += '<div class="row">';
 			for(x = 0; x < 4; ++x) {

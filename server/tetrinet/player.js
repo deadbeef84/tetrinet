@@ -102,9 +102,12 @@ Player.prototype.handleMessage = function(p) {
 			if(this.room)
 				this.room.removePlayer(this);
 			this.game.addRoom(new Room(p.name, {
-				width: p.width,
-				height: p.height,
-				specials: p.specials || false
+				width: parseInt(p.width),
+				height: parseInt(p.height),
+				entrydelay: parseInt(p.entrydelay),
+				specials: p.specials ? true : false,
+				generator: parseInt(p.generator),
+				rotationsystem: parseInt(p.rotationsystem)
 			}));
 			break;
 			
