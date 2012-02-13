@@ -4,12 +4,14 @@ Settings = {
 	name: '',
 	misc: {
 		ghost_block: true,
-		attack_notifications: true
+		attack_notifications: true,
+		keypress_repeat_delay: 300,
+		keypress_repeat_interval: 50
 	},
 	log: {
 		buffer_size: 100,
 		selected_filter: 0,
-		filters: [ { title: 'All', classes: ['log-status', 'log-lines', 'log-special'], closeButton: false } ]
+		custom_filters: []
 	},
 	keymap: {
 		'left': 37,
@@ -44,9 +46,5 @@ if ($ && $.cookies) {
 		'keymap': $.cookies.get('settings_keymap')
 	};
 	
-	for (key in Settings) {
-		if (SavedSettings[key] != null) {
-			Settings[key] = SavedSettings[key];
-		}
-	}
+	$.extend(true, Settings, SavedSettings);
 }

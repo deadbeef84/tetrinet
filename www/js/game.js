@@ -12,6 +12,7 @@ function Game(name, port) {
 	this.target = 0;
 	this.targetList = [];
 	this.attackNotifierSlots = [];
+	this.keypressTimers = [];
 	
 	var self = this;
 	
@@ -52,13 +53,13 @@ function Game(name, port) {
 		this.handleMessage({ t:Message.SET_ROOM, r: {name: 'singleplayer', options:{height:24, width:12, specials: false} } });
 		this.handleMessage({ t:Message.SET_PLAYER, self:true, p:{index:0, name:"You"} });
 	}
-	
-	$(document).keydown(function(e) {
+
+	var keydownHandler = function(e, internal) {
 		
 		if (document.activeElement && $(document.activeElement).filter(':text').length)
 			return;
 		
-		if (self.player && self.player.isPlaying) {
+		if (self.player && self.player.isPlaying && (!self.keypressTimers[e.which] || internal)) {
 			
 			switch (e.which) {
 				case Settings.keymap.left:			self.player.move(-1,0,0,false); break;
@@ -94,7 +95,21 @@ function Game(name, port) {
 					return;
 			}
 			++self.keyCount;
+			if (!internal) {
+				self.keypressTimers[e.which] = setTimeout(function(){
+					self.keypressTimers[e.which] = setInterval(function(){ keydownHandler(e, true); }, Settings.misc.keypress_repeat_interval);
+					keydownHandler(e, true);
+				}, Settings.misc.keypress_repeat_delay);
+			}
 			return false;
+		}
+	};
+	
+	$(document).keydown(keydownHandler);
+	$(document).keyup(function(e){
+		if (self.keypressTimers[e.which]) {
+			clearTimeout(self.keypressTimers[e.which]);
+			self.keypressTimers[e.which] = null;
 		}
 	});
 	
@@ -203,6 +218,8 @@ function Game(name, port) {
 	var initSettings = function() {
 		$('#settings_name').val(Settings.name);
 		$('#settings_buffersize').val(Settings.log.buffer_size);
+		$('#settings_keyrepeatdelay').val(Settings.misc.keypress_repeat_delay);
+		$('#settings_keyrepeatinterval').val(Settings.misc.keypress_repeat_interval);
 		if (Settings.misc.ghost_block)
 			$('#settings_ghostblock').attr('checked', 'checked');
 		else
@@ -236,6 +253,8 @@ function Game(name, port) {
 		}
 		Settings.misc.ghost_block = $('#settings_ghostblock').is(':checked');
 		Settings.misc.attack_notifications = $('#settings_attacknotifications').is(':checked');
+		Settings.misc.keypress_repeat_delay = Math.max(1, parseInt($('#settings_keyrepeatdelay').val()));
+		Settings.misc.keypress_repeat_interval = Math.max(1, parseInt($('#settings_keyrepeatinterval').val()));
 		Settings.log.buffer_size = Math.max(1, parseInt($('#settings_buffersize').val()));
 		self.setCookie('settings_name', Settings.name);
 		self.setCookie('settings_misc', Settings.misc);
@@ -267,14 +286,20 @@ function Game(name, port) {
 	};
 	
 	var initFilters = function() {
-		$.each(Settings.log.filters, addFilter);
-		$('#gamelogfilters > li:not(#gamelogfilters_add):eq(' + Settings.log.selected_filter + ')').click();
+		var filters = [];
+		$.merge(filters, Game.LOG_DEFAULT_FILTER_TABS);
+		$.merge(filters, Settings.log.custom_filters);
+		$.each(filters, addFilter);
+		var selected = $('#gamelogfilters > li:eq(' + Settings.log.selected_filter + '):not(#gamelogfilters_add)');
+		if (!selected.length)
+			selected = $('#gamelogfilters > li:first:not(#gamelogfilters_add)');
+		selected.click();
 	};
 	
 	var initFilterSettings = function(index) {
 		
-		var name = Settings.log.filters[index] ? Settings.log.filters[index].name : "New filter";
-		var selectedFilters = Settings.log.filters[index] ? Settings.log.filters[index].classes : Game.LOG_FILTERS;
+		var name = Settings.log.custom_filters[index] ? Settings.log.custom_filters[index].name : "New filter";
+		var selectedFilters = Settings.log.custom_filters[index] ? Settings.log.custom_filters[index].classes : Game.LOG_FILTERS;
 		
 		$('#filtersettings_name').val(name);
 		$('#filtersettings_filters').empty();
@@ -294,7 +319,7 @@ function Game(name, port) {
 		
 		tabItem.remove();
 		$('#gamelog > div:eq(' + tabIndex + ')').remove();
-		Settings.log.filters.splice(tabIndex, 1);
+		Settings.log.custom_filters.splice(tabIndex - Game.LOG_DEFAULT_FILTER_TABS.length, 1);
 		self.setCookie('settings_log', Settings.log);
 		
 		var tabs = $('#gamelogfilters > li:not(#gamelogfilters_add)');
@@ -332,9 +357,9 @@ function Game(name, port) {
 			'classes': selectedFilters,
 			'closeButton': true
 		};
-		Settings.log.filters.push(newFilter);
+		Settings.log.custom_filters.push(newFilter);
 		self.setCookie('settings_log', Settings.log);
-		addFilter(Settings.log.filters.length - 1, newFilter).click();
+		addFilter(Settings.log.custom_filters.length - 1 + Game.LOG_DEFAULT_FILTER_TABS.length, newFilter).click();
 		$.BW.catbox.close();
 		return false;
 	});
@@ -374,6 +399,11 @@ Game.LOG_FILTERS = {
 	'Specials sent': Game.LOG_SPECIAL_SENT,
 	'Specials recieved': Game.LOG_SPECIAL_RECIEVED
 };
+Game.LOG_DEFAULT_FILTER_TABS = [{
+	title: 'All',
+	classes: ['log-status', 'log-lines', 'log-special'],
+	closeButton: false
+}];
 
 Game.prototype.setCookie = function(name, data) {
 	var date = new Date();
