@@ -10,6 +10,7 @@ Bw.extend(Board, Bw.EventEmitter);
 Board.EVENT_UPDATE = "update";
 Board.EVENT_CHANGE = "change";
 Board.EVENT_LINES = "lines";
+Board.EVENT_PUT_BLOCK = "put_block";
 Board.NO_COLLISION = 0;
 Board.COLLISION_BLOCKS = 1;
 Board.COLLISION_BOUNDS = 2;
@@ -70,6 +71,7 @@ Board.prototype.putBlock = function(block) {
 		if (y >= 0)
 			this.data[y * this.width + x] = block.type + 1;
 	}
+	this.emit(Board.EVENT_PUT_BLOCK, block);
 	this.checklines(true);
 }
 

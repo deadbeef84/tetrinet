@@ -13,6 +13,7 @@ function Game(name, port) {
 	this.targetList = [];
 	this.attackNotifierSlots = [];
 	this.keypressTimers = [];
+	this.lastMoveRotate = false;
 	
 	var self = this;
 	
@@ -61,14 +62,14 @@ function Game(name, port) {
 		
 		if (self.player && self.player.isPlaying && (!self.keypressTimers[e.which] || internal)) {
 			
+			this.lastMoveRotate = false;
+			
 			switch (e.which) {
 				case Settings.keymap.left:			self.player.move(-1,0,0,false); break;
 				case Settings.keymap.right:			self.player.move(1,0,0,false); break;
 				case Settings.keymap.down:			self.player.move(0,1,0,false); break;
 				case Settings.keymap.drop:			self.player.falldown(true); break;
 				case Settings.keymap.soft_drop:		self.player.falldown(false); break;
-				case Settings.keymap.rotate_cw:		self.player.move(0,0,1,false); break;
-				case Settings.keymap.rotate_ccw:	self.player.move(0,0,-1,false); break;
 				case Settings.keymap.inventory_1:	self.use(0); break;
 				case Settings.keymap.inventory_2:	self.use(1); break;
 				case Settings.keymap.inventory_3:	self.use(2); break;
@@ -89,6 +90,14 @@ function Game(name, port) {
 					break;
 				case Settings.keymap.inventory_target_send:
 					self.use(self.target);
+					break;
+				case Settings.keymap.rotate_cw:
+					self.player.move(0,0,1,false);
+					self.lastMoveRotate = true;
+					break;
+				case Settings.keymap.rotate_ccw:
+					self.player.move(0,0,-1,false);
+					self.lastMoveRotate = true;
 					break;
 				default:
 					// unrecognized key
@@ -610,6 +619,16 @@ Game.prototype.handleMessage = function(msg) {
 						self.gameLog('<em>' + htmlspecialchars(self.player.name) + '</em> added <strong>' + linesToAdd + '</strong> lines to all', [ Game.LOG_LINES ]);
 						self.send({t: Message.LINES, n: linesToAdd});
 					}
+				});
+				p.on(Player.EVENT_DROP, function() { self.lastMoveRotate = false; });
+				p.on(Board.EVENT_PUT_BLOCK, function(b) {
+					var surrounded = 0;
+					var c = [[-1,-1],[1,-1],[-1,1],[1,1]];
+					for (var i = 0; i < c.length; i++)
+						surrounded += (p.data[(b.y + 1 + c[i][1]) * p.width + b.x + 1 + c[i][0]] ? 1 : 0);
+					console.log(b, self.lastMoveRotate, surrounded);
+					if (b.type == 2 && self.lastMoveRotate && surrounded >= 3)
+						console.log("T-SPIN!");
 				});
 				p.setOptions(this.options);
 			} else {

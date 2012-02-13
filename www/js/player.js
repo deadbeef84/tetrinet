@@ -37,6 +37,7 @@ Player.NEWBLOCK_DELAY = 150;
 Player.EVENT_GAMEOVER = "gameover";
 Player.EVENT_INVENTORY = "inventory";
 Player.EVENT_NEW_BLOCK = "new_block";
+Player.EVENT_DROP = "drop";
 
 Player.ROTATION_SYSTEM_CLASSIC = 0;
 Player.ROTATION_SYSTEM_SRS = 1;
@@ -161,6 +162,8 @@ Player.prototype.drop = function() {
 	if(this.move(0,1,0,this.dropStick == 5)) {
 		++this.dropStick;
 	}
+	else
+		this.emit(Player.EVENT_DROP);
 }
 Player.prototype.initDrop = function() {
 	if(!this.speed)
