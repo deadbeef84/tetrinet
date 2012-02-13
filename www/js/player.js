@@ -221,7 +221,7 @@ Player.prototype.move = function(x,y,r,stick) {
 	}
 	var c = this.collide(this.currentBlock);
 	if (c != Board.NO_COLLISION) {
-		var rotationSucceeded = true;
+		var rotationSucceeded = false;
 		if (x == 0 && y == 0 && r && !stick) {
 			switch (this.options.rotationsystem) {
 				case Player.ROTATION_SYSTEM_CLASSIC:
@@ -286,33 +286,31 @@ Player.prototype.handleCollisionClassic = function(c) {
 }
 
 Player.prototype.handleCollisionSRS = function(initialRotation, r) {
-		
+	
 	var TEST_OFFSETS_JLSTZ = [
 		[ [-1, 0], [-1,-1], [ 0, 2], [-1, 2] ],	// 0 -> R / 0 -> 1
-		[ [ 1, 0], [ 1,-1], [ 0, 2], [ 1, 2] ],	// 0 -> L / 0 -> 3
 		[ [ 1, 0], [ 1, 1], [ 0,-2], [ 1,-2] ],	// R -> 2 / 1 -> 2
-		[ [ 1, 0], [ 1, 1], [ 0,-2], [ 1,-2] ],	// R -> 0 / 1 -> 0
 		[ [ 1, 0], [ 1,-1], [ 0, 2], [ 1, 2] ],	// 2 -> L / 2 -> 3
-		[ [-1, 0], [-1,-1], [ 0, 2], [-1, 2] ],	// 2 -> R / 2 -> 1
 		[ [-1, 0], [-1, 1], [ 0,-2], [-1,-2] ],	// L -> 0 / 3 -> 0
+		[ [ 1, 0], [ 1,-1], [ 0, 2], [ 1, 2] ],	// 0 -> L / 0 -> 3
+		[ [ 1, 0], [ 1, 1], [ 0,-2], [ 1,-2] ],	// R -> 0 / 1 -> 0
+		[ [-1, 0], [-1,-1], [ 0, 2], [-1, 2] ],	// 2 -> R / 2 -> 1
 		[ [-1, 0], [-1, 1], [ 0,-2], [-1,-2] ] 	// L -> 2 / 3 -> 2
 	];
 	var TEST_OFFSETS_I = [
 		[ [-2, 0], [ 1, 0], [-2, 1], [ 1,-2] ],	// 0 -> R / 0 -> 1
-		[ [-1, 0], [ 2, 0], [-1,-2], [ 2, 1] ],	// 0 -> L / 0 -> 3
 		[ [-1, 0], [ 2, 0], [-1,-2], [ 2, 1] ],	// R -> 2 / 1 -> 2
-		[ [ 2, 0], [-1, 0], [ 2,-1], [-1, 2] ],	// R -> 0 / 1 -> 0
 		[ [ 2, 0], [-1, 0], [ 2,-1], [-1, 2] ],	// 2 -> L / 2 -> 3
-		[ [ 1, 0], [-2, 0], [ 1, 2], [-2,-1] ],	// 2 -> R / 2 -> 1
 		[ [ 1, 0], [-2, 0], [ 1, 2], [-2,-1] ],	// L -> 0 / 3 -> 0
+		[ [-1, 0], [ 2, 0], [-1,-2], [ 2, 1] ],	// 0 -> L / 0 -> 3
+		[ [ 2, 0], [-1, 0], [ 2,-1], [-1, 2] ],	// R -> 0 / 1 -> 0
+		[ [ 1, 0], [-2, 0], [ 1, 2], [-2,-1] ],	// 2 -> R / 2 -> 1
 		[ [-2, 0], [ 1, 0], [-2, 1], [ 1,-2] ] 	// L -> 2 / 3 -> 2
 	];
-	var TEST_INDEX = [ [1,0,0], [3,0,2], [4,0,5], [6,0,7] ];
-	
 	var ox = this.currentBlock.x,
 		oy = this.currentBlock.y,
 		offsets = this.currentBlock.type != 1 ? TEST_OFFSETS_JLSTZ : TEST_OFFSETS_I;
-		t = TEST_INDEX[initialRotation][r+1];
+		t = initialRotation + Math.max(0, -r*4);
 	for (var i = 0; i < 4; i++) {
 		this.currentBlock.x = ox + offsets[t][i][0];
 		this.currentBlock.y = oy + offsets[t][i][1];
