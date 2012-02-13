@@ -155,19 +155,20 @@ Special.registerSpecial(
 		}
 		var count = 20;
 		var board = player.target.find('.board');
-		var shakeCenter = player.target.css('margin-left');
 		var shakeFunction = function(){
 			if (count--) {
 				board.css({
-					'margin-left': Math.round((Math.random()-0.5)*50),
-					'-webkit-transform': 'rotate(' + Math.round((Math.random()-0.5)*40) + 'deg)'
+					'margin-left': Math.round(Math.random()*(count&1?-1:1)*40),
+					'margin-top': Math.round((Math.random()-0.5)*40)
+					//'-webkit-transform': 'rotate(' + Math.round((Math.random()-0.5)*40) + 'deg)'
 				});
-				setTimeout(shakeFunction, 25);
+				setTimeout(shakeFunction, 100);
 			}
 			else {
 				board.css({
 					'margin-left': 0,
-					'-webkit-transform': 'rotate(0deg)'
+					'margin-top': 0
+					//'-webkit-transform': 'rotate(0deg)'
 				});
 			}
 		};

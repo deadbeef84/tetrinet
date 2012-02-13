@@ -768,6 +768,7 @@ Game.prototype.handleMessage = function(msg) {
 			this.updatePlayers();
 			this.team = '';
 			$('#team').val(this.team);
+			$('#gamelog > div').empty();
 			if(msg.r) {
 				// joined room
 				this.options = msg.r.options;
