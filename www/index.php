@@ -180,6 +180,10 @@ $(document).ready(function() {
           <input id="createroom_specials" type="checkbox" name="specials" />
         </p>
         <p>
+          <label for="createroom_tspin">T-spin</label>
+          <input id="createroom_tspin" type="checkbox" name="tspin" />
+        </p>
+        <p>
           <label for="createroom_generator">Generator</label>
           <select id="createroom_generator" name="generator">
             <option value="1">7 Bag</option>

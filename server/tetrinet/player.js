@@ -107,7 +107,8 @@ Player.prototype.handleMessage = function(p) {
 				entrydelay: parseInt(p.entrydelay),
 				specials: p.specials ? true : false,
 				generator: parseInt(p.generator),
-				rotationsystem: parseInt(p.rotationsystem)
+				rotationsystem: parseInt(p.rotationsystem),
+				tspin: p.tspin ? true : false
 			}));
 			break;
 			

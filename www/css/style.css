@@ -224,6 +224,7 @@ em.self { /* your name */
 		clear: both;
 		margin: 5px -100px 0 0;
 		text-align: left;
+		width: 100%;
 	}
 
 /* game states */
