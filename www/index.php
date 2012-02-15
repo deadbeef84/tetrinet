@@ -121,13 +121,15 @@ $(document).ready(function() {
         <p><label for="settings_buffersize">Log buffer size</label><input id="settings_buffersize" type="text" name="buffersize" /></p>
         <p><label for="settings_ghostblock">Ghost block</label><input id="settings_ghostblock" type="checkbox" name="ghostblock" /></p>
         <p><label for="settings_attacknotifications">Attack notifications</label><input id="settings_attacknotifications" type="checkbox" name="attacknotifications" /></p>
+        <p><label for="settings_keyrepeatdelay">Key repeat delay</label><input id="settings_keyrepeatdelay" type="text" name="keyrepeatdelay" /></p>
+        <p><label for="settings_keyrepeatinterval">Key repeat interval</label><input id="settings_keyrepeatinterval" type="text" name="keyrepeatinterval" /></p>
         <h3>Keys</h3>
         <div id="settings_keys">
 	      <p><label for="settings_km_left">Left</label><input id="settings_km_left" class="keycode_listener" type="text" name="left" /></p>
 	      <p><label for="settings_km_right">Right</label><input id="settings_km_right" class="keycode_listener" type="text" name="right" /></p>
-	      <p><label for="settings_km_down">Down</label><input id="settings_km_down" class="keycode_listener" type="text" name="down" /></p>
-	      <p><label for="settings_km_drop">Drop</label><input id="settings_km_drop" class="keycode_listener" type="text" name="drop" /></p>
-	      <p><label for="settings_km_softdrop">Soft drop</label><input id="settings_km_softdrop" class="keycode_listener" type="text" name="soft_drop" /></p>
+	      <p><label for="settings_km_down">Soft drop</label><input id="settings_km_down" class="keycode_listener" type="text" name="down" /></p>
+	      <p><label for="settings_km_drop">Hard drop</label><input id="settings_km_drop" class="keycode_listener" type="text" name="drop" /></p>
+	      <p><label for="settings_km_softdrop">Sonic drop</label><input id="settings_km_softdrop" class="keycode_listener" type="text" name="soft_drop" /></p>
 	      <p><label for="settings_km_rotatecw">Rotate CW</label><input id="settings_km_rotatecw" class="keycode_listener" type="text" name="rotate_cw" /></p>
 	      <p><label for="settings_km_rotateccw">Rotate CCW</label><input id="settings_km_rotateccw" class="keycode_listener" type="text" name="rotate_ccw" /></p>
 	      <p><label for="settings_km_self">Self</label><input id="settings_km_self" class="keycode_listener" type="text" name="inventory_self" /></p>
@@ -178,10 +180,21 @@ $(document).ready(function() {
           <input id="createroom_specials" type="checkbox" name="specials" />
         </p>
         <p>
+          <label for="createroom_tspin">T-spin</label>
+          <input id="createroom_tspin" type="checkbox" name="tspin" />
+        </p>
+        <p>
           <label for="createroom_generator">Generator</label>
           <select id="createroom_generator" name="generator">
             <option value="1">7 Bag</option>
             <option value="0">Random</option>
+          </select>
+        </p>
+        <p>
+          <label for="createroom_rotationsystem">Rotation system</label>
+          <select id="createroom_rotationsystem" name="rotationsystem">
+            <option value="1">SRS</option>
+            <option value="0">Classic</option>
           </select>
         </p>
         <p>

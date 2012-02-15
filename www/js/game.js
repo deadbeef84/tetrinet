@@ -12,6 +12,10 @@ function Game(name, port) {
 	this.target = 0;
 	this.targetList = [];
 	this.attackNotifierSlots = [];
+	this.keypressTimers = [];
+	this.lastMoveRotate = false;
+	this.backToBack = false;
+	this.clearLineCombo = 0;
 	
 	var self = this;
 	
@@ -53,48 +57,130 @@ function Game(name, port) {
 		this.handleMessage({ t:Message.SET_PLAYER, self:true, p:{index:0, name:"You"} });
 	}
 	
-	$(document).keydown(function(e) {
+	var keydownAction = function(keycode) {
+		
+		self.keyCount++;
+	
+		switch (keycode) {
+			case Settings.keymap.left:			self.player.move(-1,0,0,false); break;
+			case Settings.keymap.right:			self.player.move(1,0,0,false); break;
+			case Settings.keymap.down:			self.player.move(0,1,0,false); break;
+			case Settings.keymap.drop:			self.player.falldown(true); break;
+			case Settings.keymap.soft_drop:		self.player.falldown(false); break;
+			case Settings.keymap.rotate_cw:		self.player.move(0,0,1,false); break;
+			case Settings.keymap.rotate_ccw:	self.player.move(0,0,-1,false); break;
+			case Settings.keymap.inventory_1:	self.use(0); break;
+			case Settings.keymap.inventory_2:	self.use(1); break;
+			case Settings.keymap.inventory_3:	self.use(2); break;
+			case Settings.keymap.inventory_4:	self.use(3); break;
+			case Settings.keymap.inventory_5:	self.use(4); break;
+			case Settings.keymap.inventory_6:	self.use(5); break;
+			case Settings.keymap.inventory_7:	self.use(6); break;
+			case Settings.keymap.inventory_8:	self.use(7); break;
+			case Settings.keymap.inventory_9:	self.use(8); break;
+			case Settings.keymap.inventory_self:
+				self.use(self.player.id);
+				break;
+			case Settings.keymap.inventory_target_left:
+				self.cycleTarget(-1);
+				break;
+			case Settings.keymap.inventory_target_right:
+				self.cycleTarget(1);
+				break;
+			case Settings.keymap.inventory_target_send:
+				self.use(self.target);
+				break;
+			default:
+				// unrecognized key
+				return;
+		}
+		if (keycode == Settings.keymap.left || keycode == Settings.keymap.right)
+			self.lastMoveRotate = false;
+		if (keycode == Settings.keymap.rotate_cw || keycode ==  Settings.keymap.rotate_ccw)
+			self.lastMoveRotate = true;
+	}
+	
+	var keydownHandler = function(e) {
 		
 		if (document.activeElement && $(document.activeElement).filter(':text').length)
 			return;
 		
-		if (self.player && self.player.isPlaying) {
+		if (self.player && self.player.isPlaying && !self.keypressTimers[e.which]) {
 			
-			switch (e.which) {
-				case Settings.keymap.left:			self.player.move(-1,0,0,false); break;
-				case Settings.keymap.right:			self.player.move(1,0,0,false); break;
-				case Settings.keymap.down:			self.player.move(0,1,0,false); break;
-				case Settings.keymap.drop:			self.player.falldown(true); break;
-				case Settings.keymap.soft_drop:		self.player.falldown(false); break;
-				case Settings.keymap.rotate_cw:		self.player.move(0,0,1,false); break;
-				case Settings.keymap.rotate_ccw:	self.player.move(0,0,-1,false); break;
-				case Settings.keymap.inventory_1:	self.use(0); break;
-				case Settings.keymap.inventory_2:	self.use(1); break;
-				case Settings.keymap.inventory_3:	self.use(2); break;
-				case Settings.keymap.inventory_4:	self.use(3); break;
-				case Settings.keymap.inventory_5:	self.use(4); break;
-				case Settings.keymap.inventory_6:	self.use(5); break;
-				case Settings.keymap.inventory_7:	self.use(6); break;
-				case Settings.keymap.inventory_8:	self.use(7); break;
-				case Settings.keymap.inventory_9:	self.use(8); break;
-				case Settings.keymap.inventory_self:
-					self.use(self.player.id);
-					break;
-				case Settings.keymap.inventory_target_left:
-					self.cycleTarget(-1);
-					break;
-				case Settings.keymap.inventory_target_right:
-					self.cycleTarget(1);
-					break;
-				case Settings.keymap.inventory_target_send:
-					self.use(self.target);
-					break;
-				default:
-					// unrecognized key
-					return;
-			}
-			++self.keyCount;
+			keydownAction(e.which);
+			self.keypressTimers[e.which] = setTimeout(function() {
+				keydownAction(e.which);
+				self.keypressTimers[e.which] = setInterval(function() {
+					keydownAction(e.which);
+				}, Settings.misc.keypress_repeat_interval);
+			}, Settings.misc.keypress_repeat_delay);
+			
 			return false;
+		}
+	};
+	
+	$(document).keydown(keydownHandler);
+	$(document).keyup(function(e){
+		if (self.keypressTimers[e.which]) {
+			clearTimeout(self.keypressTimers[e.which]);
+			self.keypressTimers[e.which] = null;
+		}
+	});
+	
+	// touch controls
+	var startTime = Date.now();
+	var startPos = {x:0,y:0};
+	var relPos = {x:0,y:0};
+	var mx = 0;
+	$(document).on('touchstart touchend', function(e) {
+		var event = e.originalEvent;
+		if (event.targetTouches.length == 1) {
+			startTime = Date.now();
+			var touch = event.targetTouches[0];
+			relPos.x = startPos.x = touch.screenX;
+			relPos.y = startPos.y = touch.screenY;
+			mx = 0;
+		}
+		if(self.player && self.player.isPlaying) {
+			if(e.type === 'touchend') {
+				if (event.targetTouches.length == 0 && event.changedTouches.length == 1) {
+					var touch = event.changedTouches[0];
+					var dt = (Date.now() - startTime) / 1000.0;
+					var dx = touch.screenX - startPos.x;
+					var dy = touch.screenY - startPos.y;
+					var vx = dx / dt;
+					var vy = dy / dt;
+					if(dy > 50 && vy > 300) {
+						self.player.move(-mx, 0, 0, false);
+						self.player.falldown(true);
+					} else if(dt < 0.2 && dx < 20 && dy < 20) {
+						self.player.move(0, 0, 1, false);
+					}
+				}
+			}
+			return false;
+		}
+	});
+	$(document).on('touchmove', function(e) {
+		var event = e.originalEvent;
+		if (event.targetTouches.length == 1) {
+			var touch = event.targetTouches[0];
+			var sensitivity = 20;
+			if (self.player && self.player.isPlaying) {
+				var dx = Math.floor((touch.screenX - relPos.x) / sensitivity);
+				var dy = Math.floor((touch.screenY - relPos.y) / sensitivity);
+				if(dx) {
+					while(dx && self.player.move(dx, 0, 0, false))
+						dx += dx > 0 ? -1 : 1;
+					mx += dx;
+					relPos.x += dx * sensitivity;
+				}
+				if(dy > 0) {
+					self.player.move(0, dy, 0, false);
+					relPos.y += dx * sensitivity;
+				}
+				return false;
+			}
 		}
 	});
 	
@@ -203,6 +289,8 @@ function Game(name, port) {
 	var initSettings = function() {
 		$('#settings_name').val(Settings.name);
 		$('#settings_buffersize').val(Settings.log.buffer_size);
+		$('#settings_keyrepeatdelay').val(Settings.misc.keypress_repeat_delay);
+		$('#settings_keyrepeatinterval').val(Settings.misc.keypress_repeat_interval);
 		if (Settings.misc.ghost_block)
 			$('#settings_ghostblock').attr('checked', 'checked');
 		else
@@ -236,6 +324,8 @@ function Game(name, port) {
 		}
 		Settings.misc.ghost_block = $('#settings_ghostblock').is(':checked');
 		Settings.misc.attack_notifications = $('#settings_attacknotifications').is(':checked');
+		Settings.misc.keypress_repeat_delay = Math.max(1, parseInt($('#settings_keyrepeatdelay').val()));
+		Settings.misc.keypress_repeat_interval = Math.max(1, parseInt($('#settings_keyrepeatinterval').val()));
 		Settings.log.buffer_size = Math.max(1, parseInt($('#settings_buffersize').val()));
 		self.setCookie('settings_name', Settings.name);
 		self.setCookie('settings_misc', Settings.misc);
@@ -267,14 +357,20 @@ function Game(name, port) {
 	};
 	
 	var initFilters = function() {
-		$.each(Settings.log.filters, addFilter);
-		$('#gamelogfilters > li:not(#gamelogfilters_add):eq(' + Settings.log.selected_filter + ')').click();
+		var filters = [];
+		$.merge(filters, Game.LOG_DEFAULT_FILTER_TABS);
+		$.merge(filters, Settings.log.custom_filters);
+		$.each(filters, addFilter);
+		var selected = $('#gamelogfilters > li:eq(' + Settings.log.selected_filter + '):not(#gamelogfilters_add)');
+		if (!selected.length)
+			selected = $('#gamelogfilters > li:first:not(#gamelogfilters_add)');
+		selected.click();
 	};
 	
 	var initFilterSettings = function(index) {
 		
-		var name = Settings.log.filters[index] ? Settings.log.filters[index].name : "New filter";
-		var selectedFilters = Settings.log.filters[index] ? Settings.log.filters[index].classes : Game.LOG_FILTERS;
+		var name = Settings.log.custom_filters[index] ? Settings.log.custom_filters[index].name : "New filter";
+		var selectedFilters = Settings.log.custom_filters[index] ? Settings.log.custom_filters[index].classes : Game.LOG_FILTERS;
 		
 		$('#filtersettings_name').val(name);
 		$('#filtersettings_filters').empty();
@@ -294,7 +390,7 @@ function Game(name, port) {
 		
 		tabItem.remove();
 		$('#gamelog > div:eq(' + tabIndex + ')').remove();
-		Settings.log.filters.splice(tabIndex, 1);
+		Settings.log.custom_filters.splice(tabIndex - Game.LOG_DEFAULT_FILTER_TABS.length, 1);
 		self.setCookie('settings_log', Settings.log);
 		
 		var tabs = $('#gamelogfilters > li:not(#gamelogfilters_add)');
@@ -332,9 +428,9 @@ function Game(name, port) {
 			'classes': selectedFilters,
 			'closeButton': true
 		};
-		Settings.log.filters.push(newFilter);
+		Settings.log.custom_filters.push(newFilter);
 		self.setCookie('settings_log', Settings.log);
-		addFilter(Settings.log.filters.length - 1, newFilter).click();
+		addFilter(Settings.log.custom_filters.length - 1 + Game.LOG_DEFAULT_FILTER_TABS.length, newFilter).click();
 		$.BW.catbox.close();
 		return false;
 	});
@@ -374,6 +470,11 @@ Game.LOG_FILTERS = {
 	'Specials sent': Game.LOG_SPECIAL_SENT,
 	'Specials recieved': Game.LOG_SPECIAL_RECIEVED
 };
+Game.LOG_DEFAULT_FILTER_TABS = [{
+	title: 'All',
+	classes: ['log-status', 'log-lines', 'log-special'],
+	closeButton: false
+}];
 
 Game.prototype.setCookie = function(name, data) {
 	var date = new Date();
@@ -573,13 +674,46 @@ Game.prototype.handleMessage = function(msg) {
 					$('.player').removeClass('target');
 				});
 				p.on(Board.EVENT_LINES, function(l) {
-					self.linesRemoved += l;
-					if(l > 1) {
-						var linesToAdd = (l == 4 ? l : (l-1));
-						self.linesSent += linesToAdd;
-						self.gameLog('<em>' + htmlspecialchars(self.player.name) + '</em> added <strong>' + linesToAdd + '</strong> lines to all', [ Game.LOG_LINES ]);
-						self.send({t: Message.LINES, n: linesToAdd});
+					var backToBackMove = false;
+					if (l > 0) {
+						var linesToAdd = l - 1;
+						var b = self.player.currentBlock;
+						// tetris
+						if (b.type == 1 && l == 4) {
+							linesToAdd = l;
+						}
+						// t-spin
+						if (b.type == 2 && self.options.tspin) {
+							var surrounded = 0;
+							var c = [[-1,-1],[1,-1],[-1,1],[1,1]];
+							for (var i = 0; i < c.length; i++)
+								surrounded += (self.player.data[(b.y + 1 + c[i][1]) * self.player.width + b.x + 1 + c[i][0]] ? 1 : 0);
+							if (self.lastMoveRotate && surrounded >= 3) {
+								linesToAdd = l * 2;
+								backToBackMove = true;
+							}
+						}
+						if (linesToAdd > 0 && self.backToBack)
+							linesToAdd++;
+						if (linesToAdd) {
+							self.linesSent += linesToAdd;
+							self.gameLog('<em>' + htmlspecialchars(self.player.name) + '</em> added <strong>' + linesToAdd + '</strong> lines to all', [ Game.LOG_LINES ]);
+							self.send({t: Message.LINES, n: linesToAdd});
+						}
+						self.linesRemoved += l;
+						self.clearLineCombo++;
+					} else {
+						self.clearLineCombo = 0;
 					}
+					self.backToBack = backToBackMove;
+					// clear all keypress timers
+					$.each(self.keypressTimers, function(i, obj) {
+						clearTimeout(obj);
+						self.keypressTimers[i] = null;
+					});
+				});
+				p.on(Player.EVENT_DROP, function() {
+					self.lastMoveRotate = false;
 				});
 				p.setOptions(this.options);
 			} else {
@@ -738,6 +872,7 @@ Game.prototype.handleMessage = function(msg) {
 			this.updatePlayers();
 			this.team = '';
 			$('#team').val(this.team);
+			$('#gamelog > div').empty();
 			if(msg.r) {
 				// joined room
 				this.options = msg.r.options;

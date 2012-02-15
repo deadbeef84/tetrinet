@@ -37,6 +37,13 @@ Player.NEWBLOCK_DELAY = 150;
 Player.EVENT_GAMEOVER = "gameover";
 Player.EVENT_INVENTORY = "inventory";
 Player.EVENT_NEW_BLOCK = "new_block";
+Player.EVENT_DROP = "drop";
+
+Player.ROTATION_SYSTEM_CLASSIC = 0;
+Player.ROTATION_SYSTEM_SRS = 1;
+
+Player.BLOCK_GENERATOR_RANDOM = 0;
+Player.BLOCK_GENERATOR_7BAG = 1;
 
 Player.BLOCK_GENERATOR_RANDOM = 0;
 Player.BLOCK_GENERATOR_7BAG = 1;
@@ -155,8 +162,11 @@ Player.prototype.onRemoveLines = function(lines, data) {
 }
 
 Player.prototype.drop = function() {
-	if(this.move(0,1,0,this.dropStick == 5))
+	if(this.move(0,1,0,this.dropStick == 5)) {
 		++this.dropStick;
+	}
+	else
+		this.emit(Player.EVENT_DROP);
 }
 Player.prototype.initDrop = function() {
 	if(!this.speed)
@@ -205,72 +215,116 @@ Player.prototype.doCreateNewBlock = function() {
 }
 
 Player.prototype.move = function(x,y,r,stick) {
-	if(!this.currentBlock)
+	if (!this.currentBlock)
 		return;
-	if(this.flip)
+	if (this.flip)
 		x *= -1;
+	var initialRotation = this.currentBlock.rotation;
 	this.currentBlock.x += x;
 	this.currentBlock.y += y;
-	var verticalDisplacement = 0;
 	if (r) {
 		this.currentBlock.rotate(r);
-		// make sure the block is never invisible
-		while (this.currentBlock.y + (this.currentBlock.getBoundingBox()).maxy < 0) {
-			this.currentBlock.y++;
-			verticalDisplacement++;
-		}
 	}
 	var c = this.collide(this.currentBlock);
-	if(c) {
-		if(c == -1 && x == 0 && y == 0 && r && !stick) {
-			var bb = this.currentBlock.getBoundingBox(),
-				ox = this.currentBlock.x,
-				oy = this.currentBlock.y;
-			// collided with wall when rotating?
-			this.currentBlock.x = (this.currentBlock.x < (this.width/2)) ? -bb.minx : this.width - bb.maxx - 1;
-			if (this.collide(this.currentBlock)) {
-				this.currentBlock.x = ox;
-			} else {
-				this.emit(Board.EVENT_UPDATE);
-				return false; // no collision
-			}
-			// collided with floor when rotating?
-			for (var i = 0; i < Math.abs(bb.maxy - bb.miny) && this.collide(this.currentBlock); i++) {
-				this.currentBlock.y--;
-			}
-			if (this.collide(this.currentBlock)) {
-				this.currentBlock.y = oy;
-			} else {
-				this.emit(Board.EVENT_UPDATE);
-				return false; // no collision
+	if (c != Board.NO_COLLISION) {
+		var rotationSucceeded = false;
+		if (x == 0 && y == 0 && r && !stick) {
+			switch (this.options.rotationsystem) {
+				case Player.ROTATION_SYSTEM_CLASSIC:
+					rotationSucceeded = this.handleCollisionClassic(c);
+					break;
+				default:
+				case Player.ROTATION_SYSTEM_SRS:
+					rotationSucceeded = this.handleCollisionSRS(initialRotation, r);
+					break;
 			}
 		}
-		if (c == 1 && x == 0 && y == 0 && r && !stick) {
-			var bb = this.currentBlock.getBoundingBox(),
-				oy = this.currentBlock.y;
-			// collided with floor when rotating?
-			for (var i = 0; i < Math.abs(bb.maxy - bb.miny) && this.collide(this.currentBlock); i++) {
-				this.currentBlock.y--;
+		if (x == 0 && y == 0 && !stick && rotationSucceeded) {
+			this.emit(Board.EVENT_UPDATE);
+			return false;
+		} else {
+			// revert position
+			this.currentBlock.x -= x;
+			this.currentBlock.y -= y;
+			if(r)
+				this.currentBlock.rotate(-r);
+			if(stick) {
+				this.putBlock(this.currentBlock);
+				this.createNewBlock();
 			}
-			if (this.collide(this.currentBlock)) {
-				this.currentBlock.y = oy;
-			} else {
-				this.emit(Board.EVENT_UPDATE);
-				return false; // no collision
-			}
+			return true;
 		}
-		// revert position
-		this.currentBlock.x -= x;
-		this.currentBlock.y -= (y + verticalDisplacement);
-		if(r)
-			this.currentBlock.rotate(-r);
-		if(stick) {
-			this.putBlock(this.currentBlock);
-			this.createNewBlock();
-		}
-		return true;
 	}
 	this.emit(Board.EVENT_UPDATE);
+	return false;
+}
+
+Player.prototype.handleCollisionClassic = function(c) {
+	
+	var bb = this.currentBlock.getBoundingBox(),
+		ox = this.currentBlock.x,
+		oy = this.currentBlock.y;
+
+	switch (c) {
+		case Board.COLLISION_BOUNDS:
+			// collided with floor when rotating?
+			for (var i = 0; i < Math.abs(bb.maxy - bb.miny); i++) {
+				this.currentBlock.y--;
+				if (this.collide(this.currentBlock) == Board.NO_COLLISION)
+					return true;
+			}
+			// collided with wall when rotating?
+			this.currentBlock.x = (this.currentBlock.x < (this.width/2)) ? -bb.minx : this.width - bb.maxx - 1;
+			if (this.collide(this.currentBlock) == Board.NO_COLLISION)
+				return true;
+			break;
+		case Board.COLLISION_BLOCKS:
+			// collided with floor when rotating?
+			for (var i = 0; i < Math.abs(bb.maxy - bb.miny) && this.collide(this.currentBlock); i++)
+				this.currentBlock.y--;
+			if (this.collide(this.currentBlock) == Board.NO_COLLISION)
+				return true;
+			break;
+	}
+	this.currentBlock.x = ox;
+	this.currentBlock.y = oy;
+	return false;
+}
+
+Player.prototype.handleCollisionSRS = function(initialRotation, r) {
+	
+	var TEST_OFFSETS_JLSTZ = [
+		[ [-1, 0], [-1,-1], [ 0, 2], [-1, 2] ],	// 0 -> R / 0 -> 1
+		[ [ 1, 0], [ 1, 1], [ 0,-2], [ 1,-2] ],	// R -> 2 / 1 -> 2
+		[ [ 1, 0], [ 1,-1], [ 0, 2], [ 1, 2] ],	// 2 -> L / 2 -> 3
+		[ [-1, 0], [-1, 1], [ 0,-2], [-1,-2] ],	// L -> 0 / 3 -> 0
+		[ [ 1, 0], [ 1,-1], [ 0, 2], [ 1, 2] ],	// 0 -> L / 0 -> 3
+		[ [ 1, 0], [ 1, 1], [ 0,-2], [ 1,-2] ],	// R -> 0 / 1 -> 0
+		[ [-1, 0], [-1,-1], [ 0, 2], [-1, 2] ],	// 2 -> R / 2 -> 1
+		[ [-1, 0], [-1, 1], [ 0,-2], [-1,-2] ] 	// L -> 2 / 3 -> 2
+	];
+	var TEST_OFFSETS_I = [
+		[ [-2, 0], [ 1, 0], [-2, 1], [ 1,-2] ],	// 0 -> R / 0 -> 1
+		[ [-1, 0], [ 2, 0], [-1,-2], [ 2, 1] ],	// R -> 2 / 1 -> 2
+		[ [ 2, 0], [-1, 0], [ 2,-1], [-1, 2] ],	// 2 -> L / 2 -> 3
+		[ [ 1, 0], [-2, 0], [ 1, 2], [-2,-1] ],	// L -> 0 / 3 -> 0
+		[ [-1, 0], [ 2, 0], [-1,-2], [ 2, 1] ],	// 0 -> L / 0 -> 3
+		[ [ 2, 0], [-1, 0], [ 2,-1], [-1, 2] ],	// R -> 0 / 1 -> 0
+		[ [ 1, 0], [-2, 0], [ 1, 2], [-2,-1] ],	// 2 -> R / 2 -> 1
+		[ [-2, 0], [ 1, 0], [-2, 1], [ 1,-2] ] 	// L -> 2 / 3 -> 2
+	];
+	var ox = this.currentBlock.x,
+		oy = this.currentBlock.y,
+		offsets = this.currentBlock.type != 1 ? TEST_OFFSETS_JLSTZ : TEST_OFFSETS_I;
+		t = initialRotation + Math.max(0, -r*4);
+	for (var i = 0; i < 4; i++) {
+		this.currentBlock.x = ox + offsets[t][i][0];
+		this.currentBlock.y = oy + offsets[t][i][1];
+		if (this.collide(this.currentBlock) == Board.NO_COLLISION)
+			return true;
+	}
+	this.currentBlock.x = ox;
+	this.currentBlock.y = oy;
 	return false;
 }
 

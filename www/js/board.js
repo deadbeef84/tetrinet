@@ -10,6 +10,9 @@ Bw.extend(Board, Bw.EventEmitter);
 Board.EVENT_UPDATE = "update";
 Board.EVENT_CHANGE = "change";
 Board.EVENT_LINES = "lines";
+Board.NO_COLLISION = 0;
+Board.COLLISION_BLOCKS = 1;
+Board.COLLISION_BOUNDS = 2;
 
 Board.prototype.setSize = function(w, h) {
 	this.width = w;
@@ -29,24 +32,25 @@ Board.prototype.at = function(x,y) {
 }
 
 Board.prototype.checklines = function(action) {
-	var l = 0, t, x, y, removed = [];
+	var l = 0, t, x, y, removed = [], board = this.data.slice();
 	for(y = this.height - 1; y >= 0; --y) {
 		t = true;
 		for(x = 0; x < this.width; ++x)
-			t = t && this.data[y * this.width + x];
+			t = t && board[y * this.width + x];
 		if(t) {
 			++l;
-			removed = removed.concat(this.data.splice(y * this.width, this.width));
+			removed = removed.concat(board.splice(y * this.width, this.width));
 			for(x=0; x < this.width; ++x) // add empty line to the top
-				this.data.unshift(0);
+				board.unshift(0);
 			++y;
 		}
 	}
-	if(l && action)
-		this.onRemoveLines(l, removed);
+	if(action)
+		this.onRemoveLines(l, removed, board);
+	this.data = board;
 }
 
-Board.prototype.onRemoveLines = function(lines, data) {
+Board.prototype.onRemoveLines = function(lines, removed, board) {
 	this.emit(Board.EVENT_LINES, lines);
 }
 
@@ -76,17 +80,17 @@ Board.prototype.collide = function(block) {
 	for(i = 0; i < block.data.length; ++i) {
 		bx = block.x + block.data[i][0];
 		by = block.y + block.data[i][1];
-		if(bx < 0 || bx >= this.width || by >= this.height)// || by < 0)
-			return -1;
+		if(bx < 0 || bx >= this.width || by >= this.height)
+			return Board.COLLISION_BOUNDS;
 	}
 	// check collision
 	for(i = 0; i < block.data.length; ++i) {
 		bx = block.x + block.data[i][0];
 		by = block.y + block.data[i][1];
 		if(this.data[by * this.width + bx])
-			return 1;
+			return Board.COLLISION_BLOCKS;
 	}
-	return 0;
+	return Board.NO_COLLISION;
 }
 
 Board.prototype.render = function() {
