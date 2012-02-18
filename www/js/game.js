@@ -13,6 +13,7 @@ function Game(name, port) {
 	this.targetList = [];
 	this.attackNotifierSlots = [];
 	this.keypressTimers = [];
+	this.keypressActive = [];
 	this.lastMoveRotate = false;
 	this.backToBack = false;
 	this.clearLineCombo = 0;
@@ -96,7 +97,7 @@ function Game(name, port) {
 		}
 		if (keycode == Settings.keymap.left || keycode == Settings.keymap.right)
 			self.lastMoveRotate = false;
-		if (keycode == Settings.keymap.rotate_cw || keycode ==  Settings.keymap.rotate_ccw)
+		if (keycode == Settings.keymap.rotate_cw || keycode == Settings.keymap.rotate_ccw)
 			self.lastMoveRotate = true;
 	}
 	
@@ -105,25 +106,35 @@ function Game(name, port) {
 		if (document.activeElement && $(document.activeElement).filter(':text').length)
 			return;
 		
-		if (self.player && self.player.isPlaying && !self.keypressTimers[e.which]) {
+		var repeatedKeys = [
+			Settings.keymap.left,
+			Settings.keymap.right,
+			Settings.keymap.down
+		];
+
+		if (self.player && self.player.isPlaying && !self.keypressActive[e.which]) {
 			
 			keydownAction(e.which);
-			self.keypressTimers[e.which] = setTimeout(function() {
-				keydownAction(e.which);
-				self.keypressTimers[e.which] = setInterval(function() {
-					keydownAction(e.which);
-				}, Settings.misc.keypress_repeat_interval);
-			}, Settings.misc.keypress_repeat_delay);
+			self.keypressActive[e.which] = true;
 			
+			if (repeatedKeys.indexOf(e.which) != -1) {
+				self.keypressTimers[e.which] = setTimeout(function() {
+					keydownAction(e.which);
+					self.keypressTimers[e.which] = setInterval(function() {
+						keydownAction(e.which);
+					}, Settings.misc.keypress_repeat_interval);
+				}, Settings.misc.keypress_repeat_delay);
+			}
 			return false;
 		}
 	};
 	
 	$(document).keydown(keydownHandler);
 	$(document).keyup(function(e){
+		self.keypressActive[e.which] = false;
 		if (self.keypressTimers[e.which]) {
 			clearTimeout(self.keypressTimers[e.which]);
-			self.keypressTimers[e.which] = null;
+			delete self.keypressTimers[e.which];
 		}
 	});
 	
@@ -595,7 +606,13 @@ Game.prototype.handleMessage = function(msg) {
 	switch(msg.t) {
 		case Message.SET_PLAYER:
 			var p;
-			var container = $('<div class="player"><h2>Player</h2><div class="board"></div><div class="nextpiece"></div><div class="inventory"></div></div>').appendTo('#gamearea');
+			var container = $(
+				'<div class="player">'+
+					'<h2>Player</h2>'+
+					'<div class="board"></div>'+
+					'<div class="nextpiece"></div>'+
+					'<div class="inventory"></div>'+
+				'</div>').appendTo('#gamearea');
 			if (msg.self) {
 				container.prependTo('#gamearea');
 				container.addClass('self');

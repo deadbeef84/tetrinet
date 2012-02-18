@@ -45,13 +45,12 @@ Board.prototype.checklines = function(action) {
 			++y;
 		}
 	}
-	if(action)
-		this.onRemoveLines(l, removed, board);
-	this.data = board;
+	this.data = action ? this.onRemoveLines(l, removed, board) : board;
 }
 
 Board.prototype.onRemoveLines = function(lines, removed, board) {
 	this.emit(Board.EVENT_LINES, lines);
+	return board;
 }
 
 Board.prototype.addLines = function(numLines) {

@@ -122,7 +122,7 @@ Player.prototype.addLines = function(numLines) {
 	this.emit(Board.EVENT_CHANGE);
 }
 
-Player.prototype.onRemoveLines = function(lines, data) {
+Player.prototype.onRemoveLines = function(lines, data, board) {
 	this.numLines += lines;
 	Board.prototype.onRemoveLines.call(this, lines, data);
 	
@@ -142,20 +142,21 @@ Player.prototype.onRemoveLines = function(lines, data) {
 	
 	// attempt to add new specials
 	var b = []; // b contains occupied blocks
-	for(i = 0; i < this.data.length; ++i) {
-		if(this.data[i] > 0)
+	for(i = 0; i < board.length; ++i) {
+		if(board[i] > 0)
 			b.push(i);
 	}
 	
 	l = lines;
 	while(b.length && l) {
 		i = Math.floor(b.length * Math.random());
-		this.data[b[i]] = Special.getRandomSpecial();
+		board[b[i]] = Special.getRandomSpecial();
 		b.splice(i,1);
 		l--;
 	}
 	
 	this.emit(Board.EVENT_INVENTORY);
+	return board;
 }
 
 Player.prototype.drop = function() {
