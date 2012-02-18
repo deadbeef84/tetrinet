@@ -129,7 +129,8 @@ $(document).ready(function() {
 	      <p><label for="settings_km_right">Right</label><input id="settings_km_right" class="keycode_listener" type="text" name="right" /></p>
 	      <p><label for="settings_km_down">Soft drop</label><input id="settings_km_down" class="keycode_listener" type="text" name="down" /></p>
 	      <p><label for="settings_km_drop">Hard drop</label><input id="settings_km_drop" class="keycode_listener" type="text" name="drop" /></p>
-	      <p><label for="settings_km_softdrop">Sonic drop</label><input id="settings_km_softdrop" class="keycode_listener" type="text" name="soft_drop" /></p>
+        <p><label for="settings_km_softdrop">Sonic drop</label><input id="settings_km_softdrop" class="keycode_listener" type="text" name="soft_drop" /></p>
+        <p><label for="settings_km_hold">Hold piece</label><input id="settings_km_hold" class="keycode_listener" type="text" name="hold" /></p>
 	      <p><label for="settings_km_rotatecw">Rotate CW</label><input id="settings_km_rotatecw" class="keycode_listener" type="text" name="rotate_cw" /></p>
 	      <p><label for="settings_km_rotateccw">Rotate CCW</label><input id="settings_km_rotateccw" class="keycode_listener" type="text" name="rotate_ccw" /></p>
 	      <p><label for="settings_km_self">Self</label><input id="settings_km_self" class="keycode_listener" type="text" name="inventory_self" /></p>
@@ -182,6 +183,10 @@ $(document).ready(function() {
         <p>
           <label for="createroom_tspin">T-spin</label>
           <input id="createroom_tspin" type="checkbox" name="tspin" />
+        </p>
+        <p>
+          <label for="createroom_holdpiece">Hold piece</label>
+          <input id="createroom_holdpiece" type="checkbox" name="holdpiece" />
         </p>
         <p>
           <label for="createroom_generator">Generator</label>

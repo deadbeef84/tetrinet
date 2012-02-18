@@ -53,10 +53,14 @@ Block.blockData = [
 ];
 
 Block.prototype.rotate = function(r) {
+	this.setRotation(this.rotation + r);
+}
+
+Block.prototype.setRotation = function(r) {
 	var numRotations = Block.blockData[this.type].length;
-	if(r < 0)
+	if (r < 0)
 		r = numRotations + r;
-	this.rotation = (this.rotation + r) % numRotations;
+	this.rotation = r % numRotations;
 	this.data = Block.blockData[this.type][this.rotation];
 }
 

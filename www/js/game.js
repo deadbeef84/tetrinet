@@ -15,6 +15,7 @@ function Game(name, port) {
 	this.keypressTimers = [];
 	this.keypressActive = [];
 	this.lastMoveRotate = false;
+	this.lastDropTspin = false;
 	this.backToBack = false;
 	this.clearLineCombo = 0;
 	
@@ -91,6 +92,10 @@ function Game(name, port) {
 			case Settings.keymap.inventory_target_send:
 				self.use(self.target);
 				break;
+			case Settings.keymap.hold:
+				if (self.options.holdpiece)
+					self.player.hold();
+				break;
 			default:
 				// unrecognized key
 				return;
@@ -116,7 +121,7 @@ function Game(name, port) {
 			
 			keydownAction(e.which);
 			self.keypressActive[e.which] = true;
-			
+
 			if (repeatedKeys.indexOf(e.which) != -1) {
 				self.keypressTimers[e.which] = setTimeout(function() {
 					keydownAction(e.which);
@@ -611,6 +616,7 @@ Game.prototype.handleMessage = function(msg) {
 					'<h2>Player</h2>'+
 					'<div class="board"></div>'+
 					'<div class="nextpiece"></div>'+
+					'<div class="holdpiece"></div>'+
 					'<div class="inventory"></div>'+
 				'</div>').appendTo('#gamearea');
 			if (msg.self) {
@@ -633,8 +639,26 @@ Game.prototype.handleMessage = function(msg) {
 					p.container.addClass('gameover');
 					$('.player').removeClass('target');
 				});
+				p.on(Board.PUT_BLOCK, function() {
+					// check for t-spin
+					self.lastDropTspin = false;
+					var b = self.player.currentBlock;
+					if (b.type == 2) {
+						var surrounded = 0;
+						var c = [[-1,-1],[1,-1],[-1,1],[1,1]];
+						for (var i = 0; i < c.length; i++)
+							surrounded += (self.player.data[(b.y + 1 + c[i][1]) * self.player.width + b.x + 1 + c[i][0]] ? 1 : 0);
+						if (self.lastMoveRotate && surrounded >= 3) {
+							self.lastDropTspin = true;
+						}
+					}
+					// clear all keypress timers
+					$.each(self.keypressTimers, function(i, obj) {
+						clearTimeout(obj);
+						delete self.keypressTimers[i];
+					});
+				});
 				p.on(Board.EVENT_LINES, function(l) {
-					var backToBackMove = false;
 					if (l > 0) {
 						var linesToAdd = l - 1;
 						var b = self.player.currentBlock;
@@ -643,15 +667,8 @@ Game.prototype.handleMessage = function(msg) {
 							linesToAdd = l;
 						}
 						// t-spin
-						if (b.type == 2 && self.options.tspin) {
-							var surrounded = 0;
-							var c = [[-1,-1],[1,-1],[-1,1],[1,1]];
-							for (var i = 0; i < c.length; i++)
-								surrounded += (self.player.data[(b.y + 1 + c[i][1]) * self.player.width + b.x + 1 + c[i][0]] ? 1 : 0);
-							if (self.lastMoveRotate && surrounded >= 3) {
-								linesToAdd = l * 2;
-								backToBackMove = true;
-							}
+						if (self.lastDropTspin && self.options.tspin) {
+							linesToAdd = l * 2;
 						}
 						if (linesToAdd > 0 && self.backToBack)
 							linesToAdd++;
@@ -665,12 +682,7 @@ Game.prototype.handleMessage = function(msg) {
 					} else {
 						self.clearLineCombo = 0;
 					}
-					self.backToBack = backToBackMove;
-					// clear all keypress timers
-					$.each(self.keypressTimers, function(i, obj) {
-						clearTimeout(obj);
-						self.keypressTimers[i] = null;
-					});
+					self.backToBack = self.lastDropTspin;
 				});
 				p.on(Player.EVENT_DROP, function() {
 					self.lastMoveRotate = false;

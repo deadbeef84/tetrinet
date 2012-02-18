@@ -47,6 +47,7 @@ Player.BLOCK_GENERATOR_7BAG = 1;
 
 Player.prototype.reset = function(seed) {
 	this.currentBlock = null;
+	this.holdBlock = null;
 	this.nextBlocks = [];
 	this.ghostBlock = null;
 	this.numLines = 0;
@@ -63,6 +64,7 @@ Player.prototype.reset = function(seed) {
 	this.isPlaying = false;
 	this.rickroll = 0;
 	this.nukeTimer = null;
+	this.holdPossible = true;
 }
 
 Player.prototype.setOptions = function(options) {
@@ -122,7 +124,12 @@ Player.prototype.addLines = function(numLines) {
 	this.emit(Board.EVENT_CHANGE);
 }
 
-Player.prototype.onRemoveLines = function(lines, data, board) {
+Player.prototype.putBlock = function(block) {
+	this.holdPossible = true;
+	Board.prototype.putBlock.call(this, block);
+}
+
+Player.prototype.onRemoveLines = function(lines, data) {
 	this.numLines += lines;
 	Board.prototype.onRemoveLines.call(this, lines, data);
 	
@@ -142,21 +149,20 @@ Player.prototype.onRemoveLines = function(lines, data, board) {
 	
 	// attempt to add new specials
 	var b = []; // b contains occupied blocks
-	for(i = 0; i < board.length; ++i) {
-		if(board[i] > 0)
+	for(i = 0; i < this.data.length; ++i) {
+		if(this.data[i] > 0)
 			b.push(i);
 	}
 	
 	l = lines;
 	while(b.length && l) {
 		i = Math.floor(b.length * Math.random());
-		board[b[i]] = Special.getRandomSpecial();
+		this.data[b[i]] = Special.getRandomSpecial();
 		b.splice(i,1);
 		l--;
 	}
 	
 	this.emit(Board.EVENT_INVENTORY);
-	return board;
 }
 
 Player.prototype.drop = function() {
@@ -370,11 +376,12 @@ Player.prototype.render = function() {
 	}
 	
 	Board.prototype.render.call(this);
-	var html = '';
+
+	if(!this.target)
+		return;
+	
 	if(this.nextBlocks && this.nextBlocks.length) {
-		if(!this.target)
-			return;
-		
+		var html = '';
 		var nextBlock = this.nextBlocks[0];
 		var x, y, b;
 		var bp = {};
@@ -390,6 +397,25 @@ Player.prototype.render = function() {
 		}
 		this.target.find('.nextpiece').html('<div>'+html+'</div>');
 	}
+	if (this.holdBlock) {
+		var html = '';
+		var x, y, b;
+		var bp = {};
+		for(x = 0; x < this.holdBlock.data.length; ++x)
+			bp[this.holdBlock.data[x][0]+'_'+this.holdBlock.data[x][1]] = this.holdBlock.type + 1;
+		for(y = 0; y < 2; ++y) {
+			html += '<div class="row">';
+			for(x = 0; x < 4; ++x) {
+				b = bp[x+'_'+y];
+				html += '<div class="cell '+(b ? 'block block-'+b : 'empty')+'"> </div>';
+			}
+			html += '</div>';
+		}
+		this.target.find('.holdpiece').html('<div>'+html+'</div>');
+	} else {
+		this.target.find('.holdpiece').empty();
+	}
+
 }
 
 Player.prototype.renderInventory = function() {
@@ -411,6 +437,41 @@ Player.prototype.use = function(msg) {
 	if(change) {
 		this.moveUpIfBlocked();
 		this.emit(Board.EVENT_CHANGE);
+	}
+}
+
+Player.prototype.hold = function() {
+
+	if (this.holdPossible) {
+		this.holdPossible = false;
+
+		if (this.holdBlock) {
+			
+			var newBlock = this.holdBlock;
+
+			this.holdBlock = this.currentBlock;
+			this.holdBlock.setRotation(0);
+			this.currentBlock = newBlock;
+			this.currentBlock.x = Math.floor(this.width / 2) - 1;
+			this.currentBlock.y = -this.currentBlock.getBoundingBox().miny;
+			this.emit(Board.EVENT_UPDATE);
+			if (this.collide(this.currentBlock)) {
+				this.putBlock(this.currentBlock);
+				this.currentBlock = null;
+				this.isPlaying = false;
+				this.emit(Board.EVENT_CHANGE);
+				this.emit(Player.EVENT_GAMEOVER);
+			} else {
+				this.initDrop();
+			}
+			this.emit(Player.EVENT_NEW_BLOCK);
+
+		} else {
+
+			this.holdBlock = this.currentBlock;
+			this.holdBlock.setRotation(0);
+			this.createNewBlock();
+		}
 	}
 }
 
