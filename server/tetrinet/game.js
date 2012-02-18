@@ -55,10 +55,10 @@ var Game = function() {
 	}
 		
 	// Setup rooms
-	this.addRoom(new Room("Cookies", {persistent: true, width:12, height:24, specials: true, generator: 1, entrydelay: 150, rotationsystem: 1, tspin: false}));
-	this.addRoom(new Room("Pure", {persistent: true, width:12, height:24, specials: false, generator: 1, entrydelay: 0, rotationsystem: 1, tspin: true}));
-	this.addRoom(new Room("Short", {persistent: true, width:12, height:12, specials: true, generator: 1, entrydelay: 150, rotationsystem: 1, tspin: false}));
-	this.addRoom(new Room("Long", {persistent: true, width:12, height:35, specials: true, generator: 1, entrydelay: 150, rotationsystem: 1, tspin: false}));
+	this.addRoom(new Room("Cookies", {persistent: true, width:12, height:24, specials: true, generator: 1, entrydelay: 150, rotationsystem: 1, tspin: false, holdpiece: false, nextpiece: 1}));
+	this.addRoom(new Room("Pure", {persistent: true, width:12, height:24, specials: false, generator: 1, entrydelay: 0, rotationsystem: 1, tspin: true, holdpiece: true, nextpiece: 3}));
+	this.addRoom(new Room("Short", {persistent: true, width:12, height:12, specials: true, generator: 1, entrydelay: 150, rotationsystem: 1, tspin: false, holdpiece: false, nextpiece: 1}));
+	this.addRoom(new Room("Long", {persistent: true, width:12, height:35, specials: true, generator: 1, entrydelay: 150, rotationsystem: 1, tspin: false, holdpiece: false, nextpiece: 1}));
     
     var self = this;
     this.io.sockets.on('connection', function(client) {

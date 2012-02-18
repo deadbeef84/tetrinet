@@ -50,10 +50,12 @@ Player.BLOCK_GENERATOR_7BAG = 1;
 
 Player.prototype.reset = function(seed) {
 	this.currentBlock = null;
+	this.holdBlock = null;
 	this.nextBlocks = [];
 	this.ghostBlock = null;
 	this.numLines = 0;
 	this.numBlocks = 0;
+	this.combo = 0;
 	
 	this.dropStick = 0;
 	this.random = seed ? prng(seed) : prng();
@@ -66,6 +68,7 @@ Player.prototype.reset = function(seed) {
 	this.isPlaying = false;
 	this.rickroll = 0;
 	this.nukeTimer = null;
+	this.holdPossible = true;
 }
 
 Player.prototype.setOptions = function(options) {
@@ -81,6 +84,7 @@ Player.prototype.start = function(seed) {
 	// clear rickrolls
 	$('body').removeClass('rickroll-1 rickroll-2 rickroll-3');
 	
+	this.generateBlocks();
 	this.createNewBlock();
 	
 	this.emit(Board.EVENT_CHANGE);
@@ -125,8 +129,16 @@ Player.prototype.addLines = function(numLines) {
 	this.emit(Board.EVENT_CHANGE);
 }
 
+Player.prototype.putBlock = function(block) {
+	this.holdPossible = true;
+	Board.prototype.putBlock.call(this, block);
+}
+
 Player.prototype.onRemoveLines = function(lines, data) {
+
+	this.combo = lines > 0 ? this.combo + 1 : 0;
 	this.numLines += lines;
+	
 	Board.prototype.onRemoveLines.call(this, lines, data);
 	
 	if(!this.options.specials)
@@ -197,10 +209,10 @@ Player.prototype.createNewBlock = function() {
 Player.prototype.doCreateNewBlock = function() {
 	this.numBlocks++;
 	this.dropStick = 0;
-	this.generateBlocks();
 	this.currentBlock = this.nextBlocks.shift();
 	this.currentBlock.x = Math.floor(this.width / 2) - 1;
 	this.currentBlock.y = -this.currentBlock.getBoundingBox().miny;
+	this.generateBlocks();
 	this.emit(Board.EVENT_UPDATE);
 	if (this.collide(this.currentBlock)) {
 		this.putBlock(this.currentBlock);
@@ -372,17 +384,38 @@ Player.prototype.render = function() {
 	}
 	
 	Board.prototype.render.call(this);
-	var html = '';
+
+	if(!this.target)
+		return;
+	
 	if(this.nextBlocks && this.nextBlocks.length) {
-		if(!this.target)
-			return;
-		
-		var nextBlock = this.nextBlocks[0];
+		var html = '';
+		var x, y, b;
+		for(var i = 0; i < this.options.nextpiece; i++) {
+			var bp = {};
+			var nextBlock = this.nextBlocks[i];
+			for(x = 0; x < nextBlock.data.length; ++x)
+				bp[nextBlock.data[x][0]+'_'+nextBlock.data[x][1]] = nextBlock.type + 1;
+			for(y = 0; y < 2; ++y) {
+				html += '<div class="row">';
+				for(x = 0; x < 4; ++x) {
+					b = bp[x+'_'+y];
+					html += '<div class="cell '+(b ? 'block block-'+b : 'empty')+'"> </div>';
+				}
+				html += '</div>';
+			}
+			if (i < this.options.nextpiece - 1)
+				html += '<div class="row empty"/>';
+		}
+		this.target.find('.nextpiece').html('<div>'+html+'</div>');
+	}
+	if (this.holdBlock) {
+		var html = '';
 		var x, y, b;
 		var bp = {};
-		for(x = 0; x < nextBlock.data.length; ++x)
-			bp[nextBlock.data[x][0]+'_'+nextBlock.data[x][1]] = nextBlock.type + 1;
-		for(y = 0; y < 4; ++y) {
+		for(x = 0; x < this.holdBlock.data.length; ++x)
+			bp[this.holdBlock.data[x][0]+'_'+this.holdBlock.data[x][1]] = this.holdBlock.type + 1;
+		for(y = 0; y < 2; ++y) {
 			html += '<div class="row">';
 			for(x = 0; x < 4; ++x) {
 				b = bp[x+'_'+y];
@@ -390,8 +423,11 @@ Player.prototype.render = function() {
 			}
 			html += '</div>';
 		}
-		this.target.find('.nextpiece').html('<div>'+html+'</div>');
+		this.target.find('.holdpiece').html('<div>'+html+'</div>');
+	} else {
+		this.target.find('.holdpiece').empty();
 	}
+
 }
 
 Player.prototype.renderInventory = function() {
@@ -413,6 +449,41 @@ Player.prototype.use = function(msg) {
 	if(change) {
 		this.moveUpIfBlocked();
 		this.emit(Board.EVENT_CHANGE);
+	}
+}
+
+Player.prototype.hold = function() {
+
+	if (this.holdPossible) {
+		this.holdPossible = false;
+
+		if (this.holdBlock) {
+			
+			var newBlock = this.holdBlock;
+
+			this.holdBlock = this.currentBlock;
+			this.holdBlock.setRotation(0);
+			this.currentBlock = newBlock;
+			this.currentBlock.x = Math.floor(this.width / 2) - 1;
+			this.currentBlock.y = -this.currentBlock.getBoundingBox().miny;
+			this.emit(Board.EVENT_UPDATE);
+			if (this.collide(this.currentBlock)) {
+				this.putBlock(this.currentBlock);
+				this.currentBlock = null;
+				this.isPlaying = false;
+				this.emit(Board.EVENT_CHANGE);
+				this.emit(Player.EVENT_GAMEOVER);
+			} else {
+				this.initDrop();
+			}
+			this.emit(Player.EVENT_NEW_BLOCK);
+
+		} else {
+
+			this.holdBlock = this.currentBlock;
+			this.holdBlock.setRotation(0);
+			this.createNewBlock();
+		}
 	}
 }
 

@@ -19,6 +19,7 @@ Settings = {
 		'down': 40,
 		'drop': 32,
 		'soft_drop': 17,
+		'hold': 18,
 		'rotate_cw': 38,
 		'rotate_ccw': 90,
 		'inventory_1': 49,

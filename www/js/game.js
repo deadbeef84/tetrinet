@@ -13,9 +13,10 @@ function Game(name, port) {
 	this.targetList = [];
 	this.attackNotifierSlots = [];
 	this.keypressTimers = [];
+	this.keypressActive = [];
 	this.lastMoveRotate = false;
+	this.lastDropTspin = false;
 	this.backToBack = false;
-	this.clearLineCombo = 0;
 	
 	var self = this;
 	
@@ -90,13 +91,17 @@ function Game(name, port) {
 			case Settings.keymap.inventory_target_send:
 				self.use(self.target);
 				break;
+			case Settings.keymap.hold:
+				if (self.options.holdpiece)
+					self.player.hold();
+				break;
 			default:
 				// unrecognized key
 				return;
 		}
 		if (keycode == Settings.keymap.left || keycode == Settings.keymap.right)
 			self.lastMoveRotate = false;
-		if (keycode == Settings.keymap.rotate_cw || keycode ==  Settings.keymap.rotate_ccw)
+		if (keycode == Settings.keymap.rotate_cw || keycode == Settings.keymap.rotate_ccw)
 			self.lastMoveRotate = true;
 	}
 	
@@ -105,25 +110,35 @@ function Game(name, port) {
 		if (document.activeElement && $(document.activeElement).filter(':text').length)
 			return;
 		
-		if (self.player && self.player.isPlaying && !self.keypressTimers[e.which]) {
+		var repeatedKeys = [
+			Settings.keymap.left,
+			Settings.keymap.right,
+			Settings.keymap.down
+		];
+
+		if (self.player && self.player.isPlaying && !self.keypressActive[e.which]) {
 			
 			keydownAction(e.which);
-			self.keypressTimers[e.which] = setTimeout(function() {
-				keydownAction(e.which);
-				self.keypressTimers[e.which] = setInterval(function() {
+			self.keypressActive[e.which] = true;
+
+			if (repeatedKeys.indexOf(e.which) != -1) {
+				self.keypressTimers[e.which] = setTimeout(function() {
 					keydownAction(e.which);
-				}, Settings.misc.keypress_repeat_interval);
-			}, Settings.misc.keypress_repeat_delay);
-			
+					self.keypressTimers[e.which] = setInterval(function() {
+						keydownAction(e.which);
+					}, Settings.misc.keypress_repeat_interval);
+				}, Settings.misc.keypress_repeat_delay);
+			}
 			return false;
 		}
 	};
 	
 	$(document).keydown(keydownHandler);
 	$(document).keyup(function(e){
+		self.keypressActive[e.which] = false;
 		if (self.keypressTimers[e.which]) {
 			clearTimeout(self.keypressTimers[e.which]);
-			self.keypressTimers[e.which] = null;
+			delete self.keypressTimers[e.which];
 		}
 	});
 	
@@ -652,7 +667,14 @@ Game.prototype.handleMessage = function(msg) {
 	switch(msg.t) {
 		case Message.SET_PLAYER:
 			var p;
-			var container = $('<div class="player"><h2>Player</h2><div class="board"></div><div class="nextpiece"></div><div class="inventory"></div></div>').appendTo('#gamearea');
+			var container = $(
+				'<div class="player">'+
+					'<h2>Player</h2>'+
+					'<div class="board"></div>'+
+					'<div class="nextpiece"></div>'+
+					'<div class="holdpiece"></div>'+
+					'<div class="inventory"></div>'+
+				'</div>').appendTo('#gamearea');
 			if (msg.self) {
 				container.prependTo('#gamearea');
 				container.addClass('self');
@@ -673,44 +695,45 @@ Game.prototype.handleMessage = function(msg) {
 					p.container.addClass('gameover');
 					$('.player').removeClass('target');
 				});
-				p.on(Board.EVENT_LINES, function(l) {
-					var backToBackMove = false;
-					if (l > 0) {
-						var linesToAdd = l - 1;
-						var b = self.player.currentBlock;
-						// tetris
-						if (b.type == 1 && l == 4) {
-							linesToAdd = l;
+				p.on(Board.PUT_BLOCK, function() {
+					// check for t-spin
+					self.lastDropTspin = false;
+					var b = self.player.currentBlock;
+					if (b.type == 2) {
+						var surrounded = 0;
+						var c = [[-1,-1],[1,-1],[-1,1],[1,1]];
+						for (var i = 0; i < c.length; i++)
+							surrounded += (self.player.data[(b.y + 1 + c[i][1]) * self.player.width + b.x + 1 + c[i][0]] ? 1 : 0);
+						if (self.lastMoveRotate && surrounded >= 3) {
+							self.lastDropTspin = true;
 						}
-						// t-spin
-						if (b.type == 2 && self.options.tspin) {
-							var surrounded = 0;
-							var c = [[-1,-1],[1,-1],[-1,1],[1,1]];
-							for (var i = 0; i < c.length; i++)
-								surrounded += (self.player.data[(b.y + 1 + c[i][1]) * self.player.width + b.x + 1 + c[i][0]] ? 1 : 0);
-							if (self.lastMoveRotate && surrounded >= 3) {
-								linesToAdd = l * 2;
-								backToBackMove = true;
-							}
-						}
-						if (linesToAdd > 0 && self.backToBack)
-							linesToAdd++;
-						if (linesToAdd) {
-							self.linesSent += linesToAdd;
-							self.gameLog('<em>' + htmlspecialchars(self.player.name) + '</em> added <strong>' + linesToAdd + '</strong> lines to all', [ Game.LOG_LINES ]);
-							self.send({t: Message.LINES, n: linesToAdd});
-						}
-						self.linesRemoved += l;
-						self.clearLineCombo++;
-					} else {
-						self.clearLineCombo = 0;
 					}
-					self.backToBack = backToBackMove;
 					// clear all keypress timers
 					$.each(self.keypressTimers, function(i, obj) {
 						clearTimeout(obj);
-						self.keypressTimers[i] = null;
+						delete self.keypressTimers[i];
 					});
+				});
+				p.on(Board.EVENT_LINES, function(l) {
+					var linesToAdd = l - 1;
+					var b = self.player.currentBlock;
+					// tetris
+					if (b.type == 1 && l == 4) {
+						linesToAdd = l;
+					}
+					// t-spin
+					if (self.lastDropTspin && self.options.tspin) {
+						linesToAdd = l * 2;
+					}
+					if (linesToAdd > 0 && self.backToBack)
+						linesToAdd++;
+					if (linesToAdd > 0) {
+						self.linesSent += linesToAdd;
+						self.gameLog('<em>' + htmlspecialchars(self.player.name) + '</em> added <strong>' + linesToAdd + '</strong> lines to all', [ Game.LOG_LINES ]);
+						self.send({t: Message.LINES, n: linesToAdd});
+					}
+					self.linesRemoved += l;
+					self.backToBack = self.lastDropTspin;
 				});
 				p.on(Player.EVENT_DROP, function() {
 					self.lastMoveRotate = false;

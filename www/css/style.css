@@ -211,14 +211,19 @@ em.self { /* your name */
 	.player.self h2 {
 		font-size: 16px;
 	}
-	.player.self .nextpiece {
+	.player.self .nextpiece, .player.self .holdpiece {
 		position: absolute;
 		z-index: 1;
 		top: 25px;
 		left: 202px;
 		width: 64px;
 		background-color: #eee;
+		border: 2px solid #aaa;
 		padding: 5px;
+	}
+	.player.self .holdpiece {
+		border: 2px dashed #999;
+		left: -77px;
 	}
 	.player.self .inventory {
 		clear: both;
@@ -302,6 +307,9 @@ em.self { /* your name */
 	line-height: 8px;
 	font-size: 0;
 	background: url(../images/skin/original.png) no-repeat 0 0;
+}
+.self .row {
+	height: 16px;
 }
 .self .cell {
 	width: 16px;
