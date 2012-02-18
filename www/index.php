@@ -189,6 +189,14 @@ $(document).ready(function() {
           <input id="createroom_holdpiece" type="checkbox" name="holdpiece" />
         </p>
         <p>
+          <label for="createroom_nextpiece">Next pieces</label>
+          <select id="createroom_nextpiece" name="nextpiece">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </p>
+        <p>
           <label for="createroom_generator">Generator</label>
           <select id="createroom_generator" name="generator">
             <option value="1">7 Bag</option>

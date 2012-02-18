@@ -223,8 +223,7 @@ em.self { /* your name */
 	}
 	.player.self .holdpiece {
 		border: 2px dashed #999;
-		top: 105px;
-		width: 64px;
+		left: -77px;
 	}
 	.player.self .inventory {
 		clear: both;
@@ -308,6 +307,9 @@ em.self { /* your name */
 	line-height: 8px;
 	font-size: 0;
 	background: url(../images/skin/original.png) no-repeat 0 0;
+}
+.self .row {
+	height: 16px;
 }
 .self .cell {
 	width: 16px;

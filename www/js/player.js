@@ -52,6 +52,7 @@ Player.prototype.reset = function(seed) {
 	this.ghostBlock = null;
 	this.numLines = 0;
 	this.numBlocks = 0;
+	this.combo = 0;
 	
 	this.dropStick = 0;
 	this.random = seed ? prng(seed) : prng();
@@ -80,6 +81,7 @@ Player.prototype.start = function(seed) {
 	// clear rickrolls
 	$('body').removeClass('rickroll-1 rickroll-2 rickroll-3');
 	
+	this.generateBlocks();
 	this.createNewBlock();
 	
 	this.emit(Board.EVENT_CHANGE);
@@ -130,7 +132,10 @@ Player.prototype.putBlock = function(block) {
 }
 
 Player.prototype.onRemoveLines = function(lines, data) {
+
+	this.combo = lines > 0 ? this.combo + 1 : 0;
 	this.numLines += lines;
+	
 	Board.prototype.onRemoveLines.call(this, lines, data);
 	
 	if(!this.options.specials)
@@ -201,10 +206,10 @@ Player.prototype.createNewBlock = function() {
 Player.prototype.doCreateNewBlock = function() {
 	this.numBlocks++;
 	this.dropStick = 0;
-	this.generateBlocks();
 	this.currentBlock = this.nextBlocks.shift();
 	this.currentBlock.x = Math.floor(this.width / 2) - 1;
 	this.currentBlock.y = -this.currentBlock.getBoundingBox().miny;
+	this.generateBlocks();
 	this.emit(Board.EVENT_UPDATE);
 	if (this.collide(this.currentBlock)) {
 		this.putBlock(this.currentBlock);
@@ -382,18 +387,22 @@ Player.prototype.render = function() {
 	
 	if(this.nextBlocks && this.nextBlocks.length) {
 		var html = '';
-		var nextBlock = this.nextBlocks[0];
 		var x, y, b;
-		var bp = {};
-		for(x = 0; x < nextBlock.data.length; ++x)
-			bp[nextBlock.data[x][0]+'_'+nextBlock.data[x][1]] = nextBlock.type + 1;
-		for(y = 0; y < 4; ++y) {
-			html += '<div class="row">';
-			for(x = 0; x < 4; ++x) {
-				b = bp[x+'_'+y];
-				html += '<div class="cell '+(b ? 'block block-'+b : 'empty')+'"> </div>';
+		for(var i = 0; i < this.options.nextpiece; i++) {
+			var bp = {};
+			var nextBlock = this.nextBlocks[i];
+			for(x = 0; x < nextBlock.data.length; ++x)
+				bp[nextBlock.data[x][0]+'_'+nextBlock.data[x][1]] = nextBlock.type + 1;
+			for(y = 0; y < 2; ++y) {
+				html += '<div class="row">';
+				for(x = 0; x < 4; ++x) {
+					b = bp[x+'_'+y];
+					html += '<div class="cell '+(b ? 'block block-'+b : 'empty')+'"> </div>';
+				}
+				html += '</div>';
 			}
-			html += '</div>';
+			if (i < this.options.nextpiece - 1)
+				html += '<div class="row empty"/>';
 		}
 		this.target.find('.nextpiece').html('<div>'+html+'</div>');
 	}

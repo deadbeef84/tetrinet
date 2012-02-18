@@ -17,7 +17,6 @@ function Game(name, port) {
 	this.lastMoveRotate = false;
 	this.lastDropTspin = false;
 	this.backToBack = false;
-	this.clearLineCombo = 0;
 	
 	var self = this;
 	
@@ -659,29 +658,24 @@ Game.prototype.handleMessage = function(msg) {
 					});
 				});
 				p.on(Board.EVENT_LINES, function(l) {
-					if (l > 0) {
-						var linesToAdd = l - 1;
-						var b = self.player.currentBlock;
-						// tetris
-						if (b.type == 1 && l == 4) {
-							linesToAdd = l;
-						}
-						// t-spin
-						if (self.lastDropTspin && self.options.tspin) {
-							linesToAdd = l * 2;
-						}
-						if (linesToAdd > 0 && self.backToBack)
-							linesToAdd++;
-						if (linesToAdd) {
-							self.linesSent += linesToAdd;
-							self.gameLog('<em>' + htmlspecialchars(self.player.name) + '</em> added <strong>' + linesToAdd + '</strong> lines to all', [ Game.LOG_LINES ]);
-							self.send({t: Message.LINES, n: linesToAdd});
-						}
-						self.linesRemoved += l;
-						self.clearLineCombo++;
-					} else {
-						self.clearLineCombo = 0;
+					var linesToAdd = l - 1;
+					var b = self.player.currentBlock;
+					// tetris
+					if (b.type == 1 && l == 4) {
+						linesToAdd = l;
 					}
+					// t-spin
+					if (self.lastDropTspin && self.options.tspin) {
+						linesToAdd = l * 2;
+					}
+					if (linesToAdd > 0 && self.backToBack)
+						linesToAdd++;
+					if (linesToAdd > 0) {
+						self.linesSent += linesToAdd;
+						self.gameLog('<em>' + htmlspecialchars(self.player.name) + '</em> added <strong>' + linesToAdd + '</strong> lines to all', [ Game.LOG_LINES ]);
+						self.send({t: Message.LINES, n: linesToAdd});
+					}
+					self.linesRemoved += l;
 					self.backToBack = self.lastDropTspin;
 				});
 				p.on(Player.EVENT_DROP, function() {
