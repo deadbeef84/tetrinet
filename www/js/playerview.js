@@ -1,7 +1,8 @@
 function PlayerView(player) {
 	this.player = player;
 	this.isPlayer = (this.player instanceof Player);
-	
+	this.notifierSlots = [];
+
 	this.el = $(
 		'<div class="player">'+
 			'<h2>Player</h2>'+
@@ -31,8 +32,26 @@ function PlayerView(player) {
 			case Special.NUKE: self.specialNuke(); break;
 			case Special.QUAKE: self.specialQuake(); break;
 			case Special.BOMB: self.specialBomb(); break;
+			case Special.MOSES: self.specialMoses(); break;
 		}
 	});
+}
+
+PlayerView.prototype.notify = function(msg) {
+	var self = this;
+	var offset = 0;
+	var $msg = $(msg);
+	for (var i = 0; this.notifierSlots[i]; i++, offset++) ;
+	this.notifierSlots[offset] = true;
+	$msg.data('offset', offset);
+	$msg.css('top', offset * 50);
+	setTimeout(function(obj){
+		obj.animate({'opacity':0}, 500, function(){
+			self.notifierSlots[$(this).data('offset')] = false;
+			$(this).remove();
+		});
+	}, 2000, $msg);
+	this.el.append($msg);
 }
 
 PlayerView.prototype.render = function() {
@@ -69,7 +88,7 @@ PlayerView.prototype.render = function() {
 				html += '<div class="row">';
 				for(x = 0; x < 4; ++x) {
 					b = bp[x+'_'+y];
-					html += '<div class="cell '+(b ? 'block block-'+b : 'empty')+'"> </div>';
+					html += '<div class="cell '+(b ? 'block block-'+(i>0?'8':b) : 'empty')+'"> </div>';
 				}
 				html += '</div>';
 			}
@@ -172,4 +191,22 @@ PlayerView.prototype.specialBomb = function() {
 	});
 	if(nodes.length)
 		setTimeout(function(){ nodes.remove(); }, 2000);
+}
+
+PlayerView.prototype.specialMoses = function() {
+	var $rainbow = $('<div class="nyancat-rainbow" />');
+	var $nyancat = $('<div class="nyancat" />');
+	var centerOffset = this.el.find('.board .row:first > .cell:eq(' + Math.floor(this.player.width/2) + ')').offset();
+	var boardHeight = this.el.find('.board').height();
+	centerOffset.left -= 3;
+	$rainbow.appendTo('#container')
+		.offset(centerOffset)
+		.css({ height: 0 })
+		.animate({ height: boardHeight }, 1000, function(){
+			$(this).animate({ opacity: 0 }, 1000, function(){ $(this).remove(); });
+		});
+	$nyancat.appendTo('#container')
+		.offset(centerOffset)
+		.css({ top: centerOffset.top - 8 })
+		.animate({ top: '+='+boardHeight }, 1000, function(){ $(this).remove(); });
 }
