@@ -59,16 +59,27 @@ Bot.prototype.moveBlock = function(target) {
 	if (this.game.player.specials && this.game.player.inventory.length > 0) {
 		switch(this.game.player.inventory[0]) {
 			// good
+            case Player.SPECIAL_REFLECT:
+                this.game.use(this.game.player.id);
+                break;
 			case Player.SPECIAL_CLEAR_LINE:
-			case Player.SPECIAL_REFLECT:
+                if (this.getBoardHeight(this.game.player) > 1)
+                    this.game.use(this.game.player.id);
+                break;
 			case Player.SPECIAL_SWITCH:
-				this.game.use(this.game.player.id);
+                if (this.game.players.length == 1) {
+                    this.game.use(this.game.player.id);
+                    break;
+                }
+                var boardHeight = this.getBoardHeight(this.game.player);
+                for (i in this.game.players) {
+                    if (this.getBoardHeight(this.game.players[i]) < boardHeight) {
+                        this.game.use(this.game.players[i].id);
+                    }
+                }
 				break;
 			case Player.SPECIAL_NUKE:
 			case Player.SPECIAL_GRAVITY:
-				if (this.getBoardHeight(this.game.player) >= this.game.player.height*(2/3))
-					this.game.use(this.game.player.id);
-				break;
 			case Player.SPECIAL_LGRAVITY:
 			case Player.SPECIAL_MOSES:
 				if (this.getBoardHeight(this.game.player) >= this.game.player.height/2)
@@ -90,15 +101,14 @@ Bot.prototype.moveBlock = function(target) {
 			case Player.SPECIAL_RANDOM:
 			case Player.SPECIAL_SBLOCKS:
 			default:
-				if (Math.random() > 0.2)
+				if (Math.random() > 0.1)
 					break;
-				var numPlayers = 0;
-				for (var i in this.game.players)
-					numPlayers++;
-				var id = Math.floor(numPlayers * Math.random());
-				if (id == this.game.player.id)
-					id = (id + 1) % numPlayers;
-				this.game.use(id);
+				var playerIds = [];
+				for (var i in this.game.players) {
+                    if (this.game.players[i].id != this.game.player.id)
+    					playerIds.push(this.game.players[i].id);
+                }
+				this.game.use(playerIds[Math.floor(playerIds.length * Math.random())]);
 				break;
 		}
 		this.syncBoard();
@@ -462,255 +472,35 @@ function GetWellSums(board, num_columns) {
  */
 var PIECES = new Array();
 
-/**
- * 'O' piece
- * Orientations:
- *
- * OO
- * OO
- */
-PIECES[0] = [
-    {
-      orientation: [
-          parse('11'),
-          parse('11')
-      ],
-      width: 2,
-      height: 2,
-      offset: 0
-    },
-];
-
-/* 'I' piece:
-  Orientations:
-
-  X
-  X       XXXXX
-  X
-  X
-  */
-PIECES[1] = [
-    {
-      orientation: [parse('1111')],
-      width: 4,
-      height: 1,
-      offset: 0
-    },
-    {
-      orientation: [1, 1, 1, 1],
-      width: 1,
-      height: 4,
-      offset: 1
-    },
-];
-
-/**
- * 'T' piece
- * Orientations:
- *
- *  O     O      O    OOO
- * OOO    OO    OO     O
- *        O      O
- */
-PIECES[2] = [
-    {
-      orientation: [
-          parse('010'),
-          parse('111')
-      ].reverse(),
-      width: 3,
-      height: 2,
-      offset: 0
-    },
-    {
-      orientation: [
-          parse('10'),
-          parse('11'),
-          parse('10')
-      ].reverse(),
-      width: 2,
-      height: 3,
-      offset: 1
-    }, 
-    {
-      orientation: [
-          parse('111'),
-          parse('010')
-      ].reverse(),
-      width: 3,
-      height: 2,
-      offset: 0
-    },
-    {
-      orientation: [
-          parse('01'),
-          parse('11'),
-          parse('01')
-      ].reverse(),
-      width: 2,
-      height: 3,
-      offset: 0
-    },
-];
-
-/**
- * 'L' piece
- * Orientations:
- *
- *   O    OO    OOO    O
- * OOO     O    O      O
- *         O           OO
- */
-PIECES[3] = [
-    {
-      orientation: [
-          parse('001'),
-          parse('111')
-      ].reverse(),
-      width: 3,
-      height: 2,
-      offset: 0
-    },
-    {
-      orientation: [
-          parse('10'),
-          parse('10'),
-          parse('11')
-      ].reverse(),
-      width: 2,
-      height: 3,
-      offset: 0
-    },
-    {
-      orientation: [
-          parse('111'),
-          parse('100'),
-      ].reverse(),
-      width: 3,
-      height: 2,
-      offset: 0
-    },
-    {
-      orientation: [
-          parse('11'),
-          parse('01'),
-          parse('01')
-      ].reverse(),
-      width: 2,
-      height: 3,
-      offset: 0
-    },
-    
-];
-
-/**
- * 'J' piece
- * Orientations:
- *
- * O      OO    OOO    O
- * OOO    O       O    O
- *        O           OO
- */
-PIECES[4] = [
-    {
-      orientation: [
-          parse('100'),
-          parse('111')
-      ].reverse(),
-      width: 3,
-      height: 2,
-      offset: 0
-    },
-    {
-      orientation: [
-          parse('11'),
-          parse('10'),
-          parse('10')
-      ].reverse(),
-      width: 2,
-      height: 3,
-      offset: 0
-    },
-    {
-      orientation: [
-          parse('111'),
-          parse('001'),
-      ].reverse(),
-      width: 3,
-      height: 2,
-      offset: 0
-    },
-    {
-      orientation: [
-          parse('01'),
-          parse('01'),
-          parse('11')
-      ].reverse(),
-      width: 2,
-      height: 3,
-      offset: 0
-    },
-];
-
-/**
- * 'Z' piece
- * Orientations:
- *
- * OO      O
- *  OO    OO
- *        O
- */
-PIECES[5] = [
-    {
-      orientation: [
-          parse('110'),
-          parse('011')
-      ].reverse(),
-      width: 3,
-      height: 2,
-      offset: 0
-    },
-    {
-      orientation: [
-          parse('01'),
-          parse('11'),
-          parse('10')
-      ].reverse(),
-      width: 2,
-      height: 3,
-      offset: 0
-    },
-];
-
-/**
- * 'S' piece
- * Orientations:
- *
- *  OO    O
- * OO     OO
- *         O
- */
-PIECES[6] = [
-    {
-      orientation: [
-          parse('011'),
-          parse('110')
-      ].reverse(),
-      width: 3,
-      height: 2,
-      offset: 0
-    },
-    {
-      orientation: [
-          parse('10'),
-          parse('11'),
-          parse('01')
-      ].reverse(),
-      width: 2,
-      height: 3,
-      offset: 0
-    },
-];
+for (i in Block.blockData) {
+    PIECES[i] = [];
+    for (j in Block.blockData[i]) {
+        var block = new Block(i, j);
+        var bb = block.getBoundingBox();
+        var piece = {
+            width: bb.maxx - bb.minx + 1,
+            height: bb.maxy - bb.miny + 1,
+            offset: bb.minx
+        };
+        var orientation = [];
+        for (var y = 0; y < piece.height; y++) {
+            orientation.push("");
+            for (var x = 0; x < piece.width; x++) {
+                orientation[y] += "0";
+            }
+        }
+        for (k in Block.blockData[i][j]) {
+            var x = Block.blockData[i][j][k][0] - bb.minx;
+            var y = Block.blockData[i][j][k][1] - bb.miny;
+            orientation[y] = orientation[y].substr(0, x) + "1" + orientation[y].substr(x + 1);
+        }
+        for (var y = 0; y < piece.height; y++) {
+            orientation[y] = parse(orientation[y]);
+        }
+        piece.orientation = orientation.reverse();
+        PIECES[i].push(piece);
+    }
+}
 
 function parse(x) {
   return parseInt(x.split("").reverse().join(""), 2);
