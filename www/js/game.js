@@ -9,7 +9,6 @@ function Game(name, port) {
 	this.linesRemoved = 0;
 	this.linesSent = 0;
 	this.options = {};
-	this.attackNotifierSlots = [];
 	this.lastMoveRotate = false;
 	this.lastDropTspin = false;
 	this.backToBack = false;
@@ -94,7 +93,7 @@ Game.prototype.rotateClockwise = function() {
 }
 Game.prototype.rotateCounterClockwise = function() {
 	if(this.player) {
-		this.player.move(0,0,1,false);
+		this.player.move(0,0,-1,false);
 		this.lastMoveRotate = true;
 	}
 }
@@ -303,6 +302,9 @@ Game.prototype.handleMessage = function(msg) {
 						boardCleared = boardCleared && !self.player.data[i];
 					}
 					self.linesRemoved += l;
+					if (self.lastDropTspin) {
+						self.player.view.notify('<p class="message">T-spin' + (self.backToBack?' back-to-back! WOW!':'! Nice job!') + '</p>');
+					}
 					self.backToBack = self.lastDropTspin;
 				});
 				p.on(Player.EVENT_DROP, function() {
@@ -433,19 +435,7 @@ Game.prototype.handleMessage = function(msg) {
 						}
 					} else {
 						if (Settings.misc.attack_notifications) {
-							var $msg = $('<p class="attack"><em>' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <em>' + Special.getSpecial(msg.s).name + '</em></p>');
-							var offset = 0;
-							for (var i = 0; this.attackNotifierSlots[i]; i++, offset++) ;
-							this.attackNotifierSlots[offset] = true;
-							$msg.data('offset', offset);
-							$msg.css('top', offset * 50);
-							setTimeout(function(obj){
-								obj.animate({'opacity':0}, 500, function(){
-									self.attackNotifierSlots[$(this).data('offset')] = false;
-									$(this).remove();
-								});
-							}, 2000, $msg);
-							this.player.view.el.append($msg);
+							this.player.view.notify('<p class="attack"><em>' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <em>' + Special.getSpecial(msg.s).name + '</em></p>');
 						}
 						this.player.use(msg);
 					}
