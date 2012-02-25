@@ -31,6 +31,7 @@ function PlayerView(player) {
 			case Special.NUKE: self.specialNuke(); break;
 			case Special.QUAKE: self.specialQuake(); break;
 			case Special.BOMB: self.specialBomb(); break;
+			case Special.MOSES: self.specialMoses(); break;
 		}
 	});
 }
@@ -69,7 +70,7 @@ PlayerView.prototype.render = function() {
 				html += '<div class="row">';
 				for(x = 0; x < 4; ++x) {
 					b = bp[x+'_'+y];
-					html += '<div class="cell '+(b ? 'block block-'+b : 'empty')+'"> </div>';
+					html += '<div class="cell '+(b ? 'block block-'+(i>0?'8':b) : 'empty')+'"> </div>';
 				}
 				html += '</div>';
 			}
@@ -172,4 +173,22 @@ PlayerView.prototype.specialBomb = function() {
 	});
 	if(nodes.length)
 		setTimeout(function(){ nodes.remove(); }, 2000);
+}
+
+PlayerView.prototype.specialMoses = function() {
+	var $rainbow = $('<div class="nyancat-rainbow" />');
+	var $nyancat = $('<div class="nyancat" />');
+	var centerOffset = this.el.find('.board .row:first > .cell:eq(' + Math.floor(this.player.width/2) + ')').offset();
+	var boardHeight = this.el.find('.board').height();
+	centerOffset.left -= 3;
+	$rainbow.appendTo('#container')
+		.offset(centerOffset)
+		.css({ height: 0 })
+		.animate({ height: boardHeight }, 1000, function(){
+			$(this).fadeOut('slow', function(){ $(this).remove(); });
+		});
+	$nyancat.appendTo('#container')
+		.offset(centerOffset)
+		.css({ top: centerOffset.top - 8 })
+		.animate({ top: '+='+boardHeight }, 1000, function(){ $(this).remove(); });
 }

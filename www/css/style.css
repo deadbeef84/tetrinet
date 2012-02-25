@@ -418,6 +418,20 @@ em.self { /* your name */
 	opacity: 0.5;
 	background: url(../images/rickroll.gif);
 }
+/* nyancat */
+.nyancat {
+	background: url(../images/nyancat-vert.gif);
+	position: absolute;
+	display: block;
+	height: 34px;
+	width: 21px;
+}
+.nyancat-rainbow {
+	background: url(../images/nyancat-rainbow-vert.gif);
+	position: absolute;
+	display: block;
+	width: 21px;
+}
 #settings_show {
 	position: absolute;
 	display: none;
