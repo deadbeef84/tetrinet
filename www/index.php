@@ -66,12 +66,14 @@ function filewithmtime($file) {
   <script src="<?=filewithmtime('js/eventemitter.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/timer.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/prng.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/message.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/specials.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/block.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/board.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/player.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/message.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/playerview.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/game.js')?>" type="text/javascript"></script>
+  <script src="<?=filewithmtime('js/gameview.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/settings.js')?>" type="text/javascript"></script>
   <script src="<?=filewithmtime('js/bot.js')?>" type="text/javascript"></script>
   <script type="text/javascript" src="openid-selector/js/openid-jquery.js"></script>

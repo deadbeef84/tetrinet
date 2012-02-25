@@ -1,5 +1,5 @@
-function Player(target) {
-	Board.call(this, target);
+function Player() {
+	Board.call(this);
 	this.reset();
 	
 	var self = this;
@@ -38,9 +38,13 @@ Player.EVENT_GAMEOVER = "gameover";
 Player.EVENT_INVENTORY = "inventory";
 Player.EVENT_NEW_BLOCK = "new_block";
 Player.EVENT_DROP = "drop";
+Player.EVENT_SPECIAL = "SPECIAL";
 
 Player.ROTATION_SYSTEM_CLASSIC = 0;
 Player.ROTATION_SYSTEM_SRS = 1;
+
+Player.BLOCK_GENERATOR_RANDOM = 0;
+Player.BLOCK_GENERATOR_7BAG = 1;
 
 Player.BLOCK_GENERATOR_RANDOM = 0;
 Player.BLOCK_GENERATOR_7BAG = 1;
@@ -64,7 +68,6 @@ Player.prototype.reset = function(seed) {
 	this.speed = false;
 	this.isPlaying = false;
 	this.rickroll = 0;
-	this.nukeTimer = null;
 	this.holdPossible = true;
 }
 
@@ -82,7 +85,7 @@ Player.prototype.start = function(seed) {
 	this.createNewBlock();
 	
 	this.emit(Board.EVENT_CHANGE);
-	this.emit(Board.EVENT_INVENTORY);
+	this.emit(Player.EVENT_INVENTORY);
 }
 
 Player.prototype.stop = function() {
@@ -91,6 +94,18 @@ Player.prototype.stop = function() {
 	this.emit(Board.EVENT_UPDATE);
 	// clear rickrolls
 	$('body').removeClass('rickroll-1 rickroll-2 rickroll-3');
+}
+
+Player.prototype.updateGhostBlock = function() {
+	this.ghostBlock = null;
+	if(this.currentBlock) {
+		this.ghostBlock = new Block(0,0);
+		for(var key in this.currentBlock)
+			this.ghostBlock[key] = this.currentBlock[key];
+		while(!this.collide(this.ghostBlock))
+			++this.ghostBlock.y;
+		--this.ghostBlock.y;
+	}
 }
 
 // override at-function
@@ -166,7 +181,7 @@ Player.prototype.onRemoveLines = function(lines, data) {
 		l--;
 	}
 	
-	this.emit(Board.EVENT_INVENTORY);
+	this.emit(Player.EVENT_INVENTORY);
 }
 
 Player.prototype.drop = function() {
@@ -465,6 +480,7 @@ Player.prototype.renderInventory = function() {
 
 Player.prototype.use = function(msg) {
 	var special = Special.getSpecial(msg.s);
+	this.emit(Player.EVENT_SPECIAL, msg);
 	var change = special.apply(this, msg);
 	this.checklines(false);
 	if(change) {
