@@ -42,9 +42,9 @@ if ($ && $.cookies) {
 
 	var SavedSettings = {
 		'name': $.cookies.get('settings_name'),
-		'misc': $.cookies.get('settings_misc'),
-		'log': $.cookies.get('settings_log'),
-		'keymap': $.cookies.get('settings_keymap')
+		'misc': $.cookies.get('settings_misc') || {},
+		'log': $.cookies.get('settings_log') || {},
+		'keymap': $.cookies.get('settings_keymap') || {}
 	};
 	
 	$.extend(true, Settings, SavedSettings);

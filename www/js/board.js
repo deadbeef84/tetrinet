@@ -1,15 +1,14 @@
-function Board(target) {
+function Board() {
 	this.width = 12;
 	this.height = 24;
 	this.data = [];
-	this.target = target;
 	this.clear();
-	this.render();
 }
 Bw.extend(Board, Bw.EventEmitter);
 Board.EVENT_UPDATE = "update";
 Board.EVENT_CHANGE = "change";
 Board.EVENT_LINES = "lines";
+Board.EVENT_REMOVE_LINE = "remove line";
 Board.PUT_BLOCK = "putblock";
 Board.NO_COLLISION = 0;
 Board.COLLISION_BLOCKS = 1;
@@ -20,7 +19,6 @@ Board.prototype.setSize = function(w, h) {
 	this.height = h;
 	this.data = [];
 	this.clear();
-	this.render();
 }
 
 Board.prototype.clear = function() {
@@ -39,10 +37,11 @@ Board.prototype.checklines = function(action) {
 		for(x = 0; x < this.width; ++x)
 			t = t && this.data[y * this.width + x];
 		if(t) {
-			++l;
+			this.emit(Board.EVENT_REMOVE_LINE, y - l);
 			removed = removed.concat(this.data.splice(y * this.width, this.width));
 			for(x=0; x < this.width; ++x) // add empty line to the top
 				this.data.unshift(0);
+			++l;
 			++y;
 		}
 	}
@@ -92,20 +91,4 @@ Board.prototype.collide = function(block) {
 			return Board.COLLISION_BLOCKS;
 	}
 	return Board.NO_COLLISION;
-}
-
-Board.prototype.render = function() {
-	if(!this.target)
-		return;
-	var html = '';
-	var x, y, b;
-	for(y = 0; y < this.height; ++y) {
-		html += '<div class="row">';
-		for(x = 0; x < this.width; ++x) {
-			b = this.at(x,y);
-			html += '<div class="cell '+(b !== 0 ? (typeof b === 'string' ? 'special special-'+b : 'block block-'+b) : 'empty')+'"> </div>';
-		}
-		html += '</div>';
-	}
-	this.target.find('.board').html('<div class="board-wrapper">'+html+'</div>');
 }

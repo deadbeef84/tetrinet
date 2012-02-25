@@ -1,5 +1,5 @@
-function Player(target) {
-	Board.call(this, target);
+function Player() {
+	Board.call(this);
 	this.reset();
 	
 	var self = this;
@@ -38,6 +38,7 @@ Player.EVENT_GAMEOVER = "gameover";
 Player.EVENT_INVENTORY = "inventory";
 Player.EVENT_NEW_BLOCK = "new_block";
 Player.EVENT_DROP = "drop";
+Player.EVENT_SPECIAL = "SPECIAL";
 
 Player.ROTATION_SYSTEM_CLASSIC = 0;
 Player.ROTATION_SYSTEM_SRS = 1;
@@ -59,7 +60,7 @@ Player.prototype.reset = function(seed) {
 	
 	this.dropStick = 0;
 	this.random = seed ? prng(seed) : prng();
-	this.inventory = [];
+	this.inventory = ['b','b','n','n','n','q','q','q','q'];
 	this.zebra = false;
 	this.flip = false;
 	this.reflect = false;
@@ -67,7 +68,6 @@ Player.prototype.reset = function(seed) {
 	this.speed = false;
 	this.isPlaying = false;
 	this.rickroll = 0;
-	this.nukeTimer = null;
 	this.holdPossible = true;
 }
 
@@ -88,13 +88,25 @@ Player.prototype.start = function(seed) {
 	this.createNewBlock();
 	
 	this.emit(Board.EVENT_CHANGE);
-	this.emit(Board.EVENT_INVENTORY);
+	this.emit(Player.EVENT_INVENTORY);
 }
 
 Player.prototype.stop = function() {
 	this.dropTimer.stop();
 	this.newBlockTimer.stop();
 	this.emit(Board.EVENT_UPDATE);
+}
+
+Player.prototype.updateGhostBlock = function() {
+	this.ghostBlock = null;
+	if(this.currentBlock) {
+		this.ghostBlock = new Block(0,0);
+		for(var key in this.currentBlock)
+			this.ghostBlock[key] = this.currentBlock[key];
+		while(!this.collide(this.ghostBlock))
+			++this.ghostBlock.y;
+		--this.ghostBlock.y;
+	}
 }
 
 // override at-function
@@ -170,7 +182,7 @@ Player.prototype.onRemoveLines = function(lines, data) {
 		l--;
 	}
 	
-	this.emit(Board.EVENT_INVENTORY);
+	this.emit(Player.EVENT_INVENTORY);
 }
 
 Player.prototype.drop = function() {
@@ -371,79 +383,9 @@ Player.prototype.moveUpIfBlocked = function() {
 	}
 }
 
-Player.prototype.render = function() {
-	// update ghost block
-	this.ghostBlock = null;
-	if(this.currentBlock) {
-		this.ghostBlock = new Block(0,0);
-		for(var key in this.currentBlock)
-			this.ghostBlock[key] = this.currentBlock[key];
-		while(!this.collide(this.ghostBlock))
-			++this.ghostBlock.y;
-		--this.ghostBlock.y;
-	}
-	
-	Board.prototype.render.call(this);
-
-	if(!this.target)
-		return;
-	
-	if(this.nextBlocks && this.nextBlocks.length) {
-		var html = '';
-		var x, y, b;
-		for(var i = 0; i < this.options.nextpiece; i++) {
-			var bp = {};
-			var nextBlock = this.nextBlocks[i];
-			for(x = 0; x < nextBlock.data.length; ++x)
-				bp[nextBlock.data[x][0]+'_'+nextBlock.data[x][1]] = nextBlock.type + 1;
-			for(y = 0; y < 2; ++y) {
-				html += '<div class="row">';
-				for(x = 0; x < 4; ++x) {
-					b = bp[x+'_'+y];
-					html += '<div class="cell '+(b ? 'block block-'+b : 'empty')+'"> </div>';
-				}
-				html += '</div>';
-			}
-			if (i < this.options.nextpiece - 1)
-				html += '<div class="row empty"/>';
-		}
-		this.target.find('.nextpiece').html('<div>'+html+'</div>');
-	}
-	if (this.holdBlock) {
-		var html = '';
-		var x, y, b;
-		var bp = {};
-		for(x = 0; x < this.holdBlock.data.length; ++x)
-			bp[this.holdBlock.data[x][0]+'_'+this.holdBlock.data[x][1]] = this.holdBlock.type + 1;
-		for(y = 0; y < 2; ++y) {
-			html += '<div class="row">';
-			for(x = 0; x < 4; ++x) {
-				b = bp[x+'_'+y];
-				html += '<div class="cell '+(b ? 'block block-'+b : 'empty')+'"> </div>';
-			}
-			html += '</div>';
-		}
-		this.target.find('.holdpiece').html('<div>'+html+'</div>');
-	} else {
-		this.target.find('.holdpiece').empty();
-	}
-
-}
-
-Player.prototype.renderInventory = function() {
-	var html = '<div class="row">';
-	for(var i = 0; this.inventory && i < this.inventory.length; ++i) {
-		var b = this.inventory[i];
-		html += '<div class="cell '+(b !== 0 ? (typeof b === 'string' ? 'special special-'+b : 'block block-'+b) : 'empty')+'"> </div>';
-	}
-	html += '</div>';
-	if(this.inventory.length)
-		html += "<p>" + Special.getSpecial(this.inventory[0]).name + "</p>";
-	this.target.find('.inventory').html(html);
-}
-
 Player.prototype.use = function(msg) {
 	var special = Special.getSpecial(msg.s);
+	this.emit(Player.EVENT_SPECIAL, msg);
 	var change = special.apply(this, msg);
 	this.checklines(false);
 	if(change) {

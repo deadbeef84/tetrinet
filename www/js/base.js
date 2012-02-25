@@ -37,6 +37,12 @@ Bw.extend = function(ctor, superCtor) {
     });
 };
 
+Bw.setCookie = function(name, data) {
+	var date = new Date();
+	var options = { expiresAt: new Date(date.getFullYear()+1, date.getMonth(), date.getDay()) };
+	$.cookies.set(name, data, options);
+}
+
 function htmlspecialchars(str) {
 	return str.replace(/&/g, "&amp;")
 		.replace(/"/g, "&quot;")
