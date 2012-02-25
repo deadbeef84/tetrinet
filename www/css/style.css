@@ -278,6 +278,18 @@ em.self { /* your name */
 	padding: 0 16px;
 	line-height: 34px;
 }
+.player p.message {
+	text-align: center;
+	position: fixed;
+	top: 0;
+	left: 20px;
+	color: #060;
+	border: 3px solid #cfc;
+	background: #e8ffe8;
+	-webkit-border-radius: 8px;
+	padding: 0 16px;
+	line-height: 34px;
+}
 @media screen and (max-width: 1500px) {
 	.player p.attack {
 		left: auto;

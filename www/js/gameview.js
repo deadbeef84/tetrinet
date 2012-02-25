@@ -38,6 +38,12 @@ GameView.prototype.init = function() {
 				if (game.options.holdpiece)
 					game.player.hold();
 				break;
+			case Settings.keymap.talk:
+				$('#message').focus();
+				var onSubmit = function() { $('#message').blur(); };
+				$('#chatbox form').one('submit', onSubmit);
+				$('#message').on('blur', function(){ $('#chatbox form').off('submit', onSubmit); });
+				break;
 			default:
 				// unrecognized key
 				return;

@@ -1,7 +1,8 @@
 function PlayerView(player) {
 	this.player = player;
 	this.isPlayer = (this.player instanceof Player);
-	
+	this.notifierSlots = [];
+
 	this.el = $(
 		'<div class="player">'+
 			'<h2>Player</h2>'+
@@ -34,6 +35,23 @@ function PlayerView(player) {
 			case Special.MOSES: self.specialMoses(); break;
 		}
 	});
+}
+
+PlayerView.prototype.notify = function(msg) {
+	var self = this;
+	var offset = 0;
+	var $msg = $(msg);
+	for (var i = 0; this.notifierSlots[i]; i++, offset++) ;
+	this.notifierSlots[offset] = true;
+	$msg.data('offset', offset);
+	$msg.css('top', offset * 50);
+	setTimeout(function(obj){
+		obj.animate({'opacity':0}, 500, function(){
+			self.notifierSlots[$(this).data('offset')] = false;
+			$(this).remove();
+		});
+	}, 2000, $msg);
+	this.el.append($msg);
 }
 
 PlayerView.prototype.render = function() {
@@ -185,7 +203,7 @@ PlayerView.prototype.specialMoses = function() {
 		.offset(centerOffset)
 		.css({ height: 0 })
 		.animate({ height: boardHeight }, 1000, function(){
-			$(this).fadeOut('slow', function(){ $(this).remove(); });
+			$(this).animate({ opacity: 0 }, 1000, function(){ $(this).remove(); });
 		});
 	$nyancat.appendTo('#container')
 		.offset(centerOffset)
