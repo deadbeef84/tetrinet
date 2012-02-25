@@ -325,6 +325,7 @@ em.self { /* your name */
 .self .cell.block-5 { background-position: -32px 0; } /* green: L */
 .self .cell.block-4 { background-position: -48px 0; } /* purple: J */
 .self .cell.block-6 { background-position: -64px 0; } /* red: Z */
+.self .cell.block-8 { background-position: -432px 0; }
 
 .cell.block-2, .cell.block-7 { background-position: 0px -16px; }
 .cell.block-1, .cell.block-3 { background-position: -8px -16px; }
@@ -333,6 +334,7 @@ em.self { /* your name */
 .cell.block-6 { background-position: -32px -16px; }
 
 .cell.block-10 { background-image: none; background-color: rgba(127,127,127,0.3); }
+.cell.block-8 { background-position: -216px -16px; }
 
 .self .cell.special-a { background-position: -80px 0; } /* add */
 .self .cell.special-c { background-position: -96px 0; } /* clear */

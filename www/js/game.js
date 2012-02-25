@@ -37,7 +37,7 @@ function Game(name, port) {
 	
 		// this is a single player game
 		
-		this.handleMessage({ t:Message.SET_ROOM, r: {name: 'singleplayer', options:{height:24, width:12, specials: false} } });
+		this.handleMessage({ t:Message.SET_ROOM, r: {name: 'singleplayer', options:{height:24, width:12, specials: false, generator: 1, entrydelay: 0, rotationsystem: 1, tspin: true, holdpiece: true, nextpiece: 3}}});
 		this.handleMessage({ t:Message.SET_PLAYER, self:true, p:{index:0, name:"You"} });
 	}
 	
@@ -296,6 +296,11 @@ Game.prototype.handleMessage = function(msg) {
 						self.linesSent += linesToAdd;
 						self.gameLog('<em>' + htmlspecialchars(self.player.name) + '</em> added <strong>' + linesToAdd + '</strong> lines to all', [ Game.LOG_LINES ]);
 						self.send({t: Message.LINES, n: linesToAdd});
+					}
+					// clear board
+					var boardCleared = true;
+					for (var i = 0; i < self.player.data.length; i++) {
+						boardCleared = boardCleared && !self.player.data[i];
 					}
 					self.linesRemoved += l;
 					self.backToBack = self.lastDropTspin;
