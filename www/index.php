@@ -59,23 +59,23 @@ function filewithmtime($file) {
   <link type="text/css" rel="stylesheet" href="openid-selector/css/openid.css" />
   
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-  <script src="http://<?=$CONFIG['host'].':'.$CONFIG['port']?>/socket.io/socket.io.js" type="text/javascript"></script>
+  <script src="http://<?php echo $CONFIG['host'].':'.$CONFIG['port']?>/socket.io/socket.io.js" type="text/javascript"></script>
   <script src="js/jquery.cookies.2.2.0.min.js" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/jquery.bw.catbox.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/base.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/eventemitter.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/timer.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/prng.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/message.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/specials.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/block.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/board.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/player.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/playerview.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/game.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/gameview.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/settings.js')?>" type="text/javascript"></script>
-  <script src="<?=filewithmtime('js/bot.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/jquery.bw.catbox.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/base.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/eventemitter.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/timer.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/prng.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/message.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/specials.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/block.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/board.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/player.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/playerview.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/game.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/gameview.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/settings.js')?>" type="text/javascript"></script>
+  <script src="<?php echo filewithmtime('js/bot.js')?>" type="text/javascript"></script>
   <script type="text/javascript" src="openid-selector/js/openid-jquery.js"></script>
   <script type="text/javascript" src="openid-selector/js/openid-en.js"></script>
 
@@ -86,7 +86,7 @@ $(document).ready(function() {
 	
 	// Start game
 	function start(name) {
-		var g = new Game(name, <?=$CONFIG['port']?>);
+		var g = new Game(name, <?php echo $CONFIG['port']?>);
 		Object.seal(g);
 		<?php if ($CONFIG['autoplay_enabled']) { ?>
 		var b = new Bot(g);
