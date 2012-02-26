@@ -33,6 +33,7 @@ function PlayerView(player) {
 			case Special.QUAKE: self.specialQuake(); break;
 			case Special.BOMB: self.specialBomb(); break;
 			case Special.MOSES: self.specialMoses(); break;
+			case Special.ZEBRA: self.specialZebra(); break;
 		}
 	});
 }
@@ -214,5 +215,32 @@ PlayerView.prototype.specialMoses = function() {
 		$nyancat.add($rainbow).offset(centerOffset);
 		$nyancat.css({'-webkit-transform': 'scale(0.5)'});
 		$rainbow.css({'-webkit-transform': 'scaleX(0.5)'});
+	}
+}
+
+PlayerView.prototype.specialZebra = function() {
+	if (!this.isPlayer)
+		this.player.zebra = typeof this.player.zebra === 'undefined' ? false : !this.player.zebra;
+	var animationDir = this.player.zebra ? '-' : '+';
+	var animationLen = this.isPlayer ? 300 : 150;
+	var $rows = this.el.find('.board .row');
+	for (var x = (this.player.zebra ? 1 : 0), i = 0; x < this.player.width; x += 2, i++) {
+		var $column = $('<div class="column"/>');
+		for (var y = 0; y < this.player.height; y++) {
+			var b = this.player.data[y * this.player.width + x];
+			if (this.isPlayer && this.player.invisible) {
+				if (!this.player.inBlockVisinity(x, y))
+					b = 0;
+			}
+			var $cell = $('<div class="cell"/>');
+			$cell.addClass(b !== 0 ? (typeof b === 'string' ? 'special special-'+b : 'block block-'+b) : 'empty');
+			$column.append($cell);
+		}
+		$column.appendTo(this.el)
+			.css({position: 'absolute'})
+			.offset($rows.first().find('.cell').eq(x).offset());
+		setTimeout(function(obj){
+			obj.animate({top: animationDir+'='+animationLen+'px', opacity: 0}, 300, function(){ obj.remove(); });
+		}, i*100, $column);
 	}
 }

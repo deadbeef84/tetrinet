@@ -312,6 +312,10 @@ em.self { /* your name */
 	float: left;
 	width: 100%;
 }
+.column {
+	float: left;
+	width: 8px;
+}
 .cell {
 	float: left;
 	width: 8px;
@@ -322,6 +326,9 @@ em.self { /* your name */
 }
 .self .row {
 	height: 16px;
+}
+.self .column {
+	width: 16px;
 }
 .self .cell {
 	width: 16px;

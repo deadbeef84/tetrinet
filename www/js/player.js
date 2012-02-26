@@ -115,18 +115,24 @@ Player.prototype.at = function(x,y) {
 	if(this.ghostBlock && this.ghostBlock.hasPieceAt(x,y) && Settings.misc.ghost_block)
 		return 10;
 	if(this.invisible) {
-		if(this.currentBlock) {
-			var bx, by;
-			for(var i = 0; i < this.currentBlock.data.length; ++i) {
-				bx = this.currentBlock.x + this.currentBlock.data[i][0];
-				by = this.currentBlock.y + this.currentBlock.data[i][1];
-				if(Math.abs(x-bx) <= 4 && Math.abs(y-by) <= 4)
-					return this.data[y * this.width + x];
-			}
-		}
+		if(this.inBlockVisinity(x,y))
+			return this.data[y * this.width + x];
 		return 9;
 	}
 	return this.data[y * this.width + x];
+}
+
+Player.prototype.inBlockVisinity = function(x, y) {
+	if (this.currentBlock) {
+		var bx, by;
+		for (var i = 0; i < this.currentBlock.data.length; ++i) {
+			bx = this.currentBlock.x + this.currentBlock.data[i][0];
+			by = this.currentBlock.y + this.currentBlock.data[i][1];
+			if (Math.abs(x-bx) <= 4 && Math.abs(y-by) <= 4)
+				return true;
+		}
+	}
+	return false;
 }
 
 // override addLines-function
@@ -231,7 +237,7 @@ Player.prototype.setCurrentBlock = function(block) {
 	var bb = block.getBoundingBox();
 	var bw = bb.maxx - bb.minx + 1;
 	this.currentBlock = block;
-	this.currentBlock.x = Math.floor((this.width - bw) / 2);
+	this.currentBlock.x = -bb.minx + Math.floor((this.width - bw) / 2);
 	this.currentBlock.y = -bb.miny;
 	this.emit(Board.EVENT_UPDATE);
 	if (this.collide(this.currentBlock)) {
