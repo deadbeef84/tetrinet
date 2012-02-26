@@ -36,23 +36,21 @@ function PlayerView(player) {
 			case Special.ZEBRA: self.specialZebra(); break;
 		}
 	});
-}
-
-PlayerView.prototype.notify = function(msg) {
-	var self = this;
-	var offset = 0;
-	var $msg = $(msg);
-	for (var i = 0; this.notifierSlots[i]; i++, offset++) ;
-	this.notifierSlots[offset] = true;
-	$msg.data('offset', offset);
-	$msg.css('top', offset * 50);
-	setTimeout(function(obj){
-		obj.animate({'opacity':0}, 500, function(){
-			self.notifierSlots[$(this).data('offset')] = false;
-			$(this).remove();
-		});
-	}, 2000, $msg);
-	this.el.append($msg);
+	this.player.on(Player.EVENT_NOTIFY, function(msg) {
+		var offset = 0;
+		var $msg = $(msg);
+		for (var i = 0; self.notifierSlots[i]; i++, offset++) ;
+		self.notifierSlots[offset] = true;
+		$msg.data('offset', offset);
+		$msg.css('top', offset * 50);
+		setTimeout(function(obj){
+			obj.animate({'opacity':0}, 500, function(){
+				self.notifierSlots[obj.data('offset')] = false;
+				obj.remove();
+			});
+		}, 2000, $msg);
+		self.el.append($msg);
+	});
 }
 
 PlayerView.prototype.render = function() {

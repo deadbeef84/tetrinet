@@ -303,7 +303,7 @@ Game.prototype.handleMessage = function(msg) {
 					}
 					self.linesRemoved += l;
 					if (self.lastDropTspin) {
-						self.player.view.notify('<p class="message">T-spin' + (self.backToBack?' back-to-back! WOW!':'! Nice job!') + '</p>');
+						self.player.emit(Player.EVENT_NOTIFY, '<p class="notification message">T-spin' + (self.backToBack?' back-to-back! WOW!':'! Nice job!') + '</p>');
 					}
 					self.backToBack = self.lastDropTspin;
 				});
@@ -435,7 +435,7 @@ Game.prototype.handleMessage = function(msg) {
 						}
 					} else {
 						if (Settings.misc.attack_notifications) {
-							this.player.view.notify('<p class="attack"><em>' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <em>' + Special.getSpecial(msg.s).name + '</em></p>');
+							this.player.emit(Player.EVENT_NOTIFY, '<p class="notification attack"><em>' + sourcePlayer.name + '</em> ' + (msg.reflect ? 'reflected' : 'used') + ' special <em>' + Special.getSpecial(msg.s).name + '</em></p>');
 						}
 						this.player.use(msg);
 					}

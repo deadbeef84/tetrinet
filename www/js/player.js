@@ -38,7 +38,8 @@ Player.EVENT_GAMEOVER = "gameover";
 Player.EVENT_INVENTORY = "inventory";
 Player.EVENT_NEW_BLOCK = "new_block";
 Player.EVENT_DROP = "drop";
-Player.EVENT_SPECIAL = "SPECIAL";
+Player.EVENT_SPECIAL = "special";
+Player.EVENT_NOTIFY = "notify";
 
 Player.ROTATION_SYSTEM_CLASSIC = 0;
 Player.ROTATION_SYSTEM_SRS = 1;
