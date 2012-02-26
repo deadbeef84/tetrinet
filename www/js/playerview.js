@@ -196,7 +196,7 @@ PlayerView.prototype.specialBomb = function() {
 PlayerView.prototype.specialMoses = function() {
 	var $rainbow = $('<div class="nyancat-rainbow" />');
 	var $nyancat = $('<div class="nyancat" />');
-	var centerOffset = this.el.find('.board .row:first > .cell:eq(' + Math.floor(this.player.width/2) + ')').offset();
+	var centerOffset = this.el.find('.board .row:first .cell').eq(Math.floor(this.player.width/2)).offset();
 	var boardHeight = this.el.find('.board').height();
 	centerOffset.left -= 3;
 	$rainbow.appendTo('#container')
@@ -209,4 +209,10 @@ PlayerView.prototype.specialMoses = function() {
 		.offset(centerOffset)
 		.css({ top: centerOffset.top - 8 })
 		.animate({ top: '+='+boardHeight }, 1000, function(){ $(this).remove(); });
+	if (!this.isPlayer) {
+		centerOffset.left -= 5;
+		$nyancat.add($rainbow).offset(centerOffset);
+		$nyancat.css({'-webkit-transform': 'scale(0.5)'});
+		$rainbow.css({'-webkit-transform': 'scaleX(0.5)'});
+	}
 }
