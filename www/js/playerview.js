@@ -34,6 +34,7 @@ function PlayerView(player) {
 			case Special.BOMB: self.specialBomb(); break;
 			case Special.MOSES: self.specialMoses(); break;
 			case Special.ZEBRA: self.specialZebra(); break;
+			case Special.CLEAR_SPECIALS: self.specialClearSpecials(); break;
 		}
 	});
 	this.player.on(Player.EVENT_NOTIFY, function(msg) {
@@ -241,4 +242,20 @@ PlayerView.prototype.specialZebra = function() {
 			obj.animate({top: animationDir+'='+animationLen+'px', opacity: 0}, 300, function(){ obj.remove(); });
 		}, i*100, $column);
 	}
+}
+
+PlayerView.prototype.specialClearSpecials = function() {
+	var self = this;
+	//var nodes = $();
+	this.el.find('.board .special').each(function() {
+		var node = $('<div class="sparkle" />')
+			.offset($(this).offset())
+			.appendTo('#container')
+			.css({'background-image': "url('../images/sparkle.gif?" + Date.now() + "')"});
+		if (!self.isPlayer)
+			node.css({'-webkit-transform': 'scale(0.5)', margin: '-4px -4px'});
+		//nodes.add(node);
+		node.fadeOut(2000, function(){ node.remove(); });
+	});
+	//setTimeout(function(obj){ obj.fadeOut(500, function(){ obj.remove(); }); }, 500, nodes);
 }

@@ -415,6 +415,15 @@ em.self { /* your name */
 	position: absolute;
 	z-index: 10;
 }
+/* sparkle */
+.sparkle {
+	background-image: url('../images/sparkle.gif');
+	width: 32px;
+	height: 32px;
+	position: absolute;
+	margin: -8px -8px;
+	z-index: 10;
+}
 /* rickrolling */
 .rickroll-1 .player.self .board::after {
 	opacity: 0.5;
