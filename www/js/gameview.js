@@ -50,7 +50,7 @@ GameView.prototype.init = function() {
 		}
 	}
 	
-	var keydownHandler = function(e) {
+	$(document).keydown(function(e) {
 		
 		if (document.activeElement && $(document.activeElement).filter(':text').length)
 			return;
@@ -76,9 +76,8 @@ GameView.prototype.init = function() {
 			}
 			return false;
 		}
-	};
+	});
 	
-	$(document).keydown(keydownHandler);
 	$(document).keyup(function(e){
 		self.keypressActive[e.which] = false;
 		if (self.keypressTimers[e.which]) {

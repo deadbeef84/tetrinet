@@ -258,45 +258,42 @@ em.self { /* your name */
 }
 
 /* popup when someone attacks */
+.player p.notification {
+	text-align: center;
+	position: fixed;
+	top: 0;
+	left: 20px;
+	color: black;
+	border: 3px solid #ccc;
+	background: #e8e8e8;
+	-webkit-border-radius: 8px;
+	padding: 0 16px;
+	line-height: 34px;
+}
+.player p.notification.message {
+	color: #060;
+	border: 3px solid #cfc;
+	background: #e8ffe8;
+}
 @-webkit-keyframes attack-popup-blink {
 	0% { background: #ffe8e8; border-color: red; }
 	100% { background: #ffeeee; border-color: #fcc; }
 }
-.player p.attack {
-	text-align: center;
-	position: fixed;
-	top: 0;
-	left: 20px;
+.player p.notification.attack {
 	color: #600;
 	border: 3px solid #fcc;
 	background: #ffe8e8;
-	-webkit-border-radius: 8px;
 	-webkit-animation-name: attack-popup-blink;
 	-webkit-animation-direction: alternate;
 	-webkit-animation-duration: 0.5s;
 	-webkit-animation-iteration-count: infinite;
-	padding: 0 16px;
-	line-height: 34px;
-}
-.player p.message {
-	text-align: center;
-	position: fixed;
-	top: 0;
-	left: 20px;
-	color: #060;
-	border: 3px solid #cfc;
-	background: #e8ffe8;
-	-webkit-border-radius: 8px;
-	padding: 0 16px;
-	line-height: 34px;
 }
 @media screen and (max-width: 1500px) {
-	.player p.attack {
+	.player p.notification {
 		left: auto;
 		right: 20px;
 	}
 }
-
 
 /* the board */
 .board-wrapper {
@@ -312,6 +309,10 @@ em.self { /* your name */
 	float: left;
 	width: 100%;
 }
+.column {
+	float: left;
+	width: 8px;
+}
 .cell {
 	float: left;
 	width: 8px;
@@ -322,6 +323,9 @@ em.self { /* your name */
 }
 .self .row {
 	height: 16px;
+}
+.self .column {
+	width: 16px;
 }
 .self .cell {
 	width: 16px;
@@ -409,6 +413,15 @@ em.self { /* your name */
 	height: 100px;
 	margin: -42px -28px;
 	position: absolute;
+	z-index: 10;
+}
+/* sparkle */
+.sparkle {
+	background-image: url('../images/sparkle.gif');
+	width: 32px;
+	height: 32px;
+	position: absolute;
+	margin: -8px -8px;
 	z-index: 10;
 }
 /* rickrolling */
