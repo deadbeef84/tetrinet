@@ -113,20 +113,6 @@ Special.registerSpecial(
 	function(player, msg) {
 		for(var i = 0; i < player.width * player.height; ++i)
 			player.data[i] = 0;
-		
-		var $board = player.target.find('.board');
-		$board.addClass('nuke');
-		var xpos = Math.round((480 - $board.width()) * 0.5)-20;
-		$board.css({
-			'background': "black -"+xpos+"px bottom no-repeat url('../images/nuke.gif?" + Date.now() + "')"
-		});
-		clearTimeout(player.nukeTimer);
-		player.nukeTimer = setTimeout(function() {
-			$board.removeClass('nuke');
-			$board.css({
-				'background': 'transparent'
-			});
-		}, 2000);
 		return true;
 	}
 );
@@ -153,26 +139,6 @@ Special.registerSpecial(
 			for(var x = 0; x < player.width; ++x)
 				player.data.splice(i*player.width+x, 0, l[(x+amount+player.width) % player.width]);
 		}
-		var count = 20;
-		var board = player.target.find('.board');
-		var shakeFunction = function(){
-			if (count--) {
-				board.css({
-					'margin-left': Math.round(Math.random()*(count&1?-1:1)*40),
-					'margin-top': Math.round((Math.random()-0.5)*40)
-					//'-webkit-transform': 'rotate(' + Math.round((Math.random()-0.5)*40) + 'deg)'
-				});
-				setTimeout(shakeFunction, 100);
-			}
-			else {
-				board.css({
-					'margin-left': 0,
-					'margin-top': 0
-					//'-webkit-transform': 'rotate(0deg)'
-				});
-			}
-		};
-		shakeFunction();
 		return true;
 	}
 );
@@ -233,20 +199,6 @@ Special.registerSpecial(
 		for(var y = 0; y < player.height; ++y) {
 			for(var x = 0; x < player.width; ++x) {
 				if(player.data[y*player.width + x] == Special.BOMB) {
-					
-					// BOOOM!
-					var cell = player.target.find('.board-wrapper .row').eq(y).children().eq(x);
-					if(cell.length) {
-						var explosion = $('<div class="explosion" />');
-						explosion.css({
-							'top': cell.offset().top,
-							'left': cell.offset().left,
-							'background-image': "url('../images/explosion.gif?" + Date.now()  + "')"
-						});
-						$('#container').append(explosion);
-						setTimeout(function(obj){ obj.remove(); }, 2000, explosion);
-					}
-					
 					player.data[y*player.width + x] = 0;
 					var around = [];
 					for(var yy = y-1; yy <= y+1; ++yy) {
@@ -451,20 +403,27 @@ Special.registerSpecial(
 	"Invert",
 	"Turns the occupied blocks into empty blocks and vice versa.",
 	function(player, msg) {
-		var inv = false;
-		for(var y = player.height-1; y >= 0; --y) {
-			if(!inv) {
+		var y = player.height - 1;
+		function invertRow() {
+			var inv = false;
+			for(var yy = y; yy > 0; --yy) {
 				for(var x = 0; x < player.width; ++x) {
-					if(player.data[y * player.width + x])
+					if(player.data[y * player.width + x]) {
 						inv = true;
+						yy = 0;
+						break;
+					}
 				}
 			}
-			if(inv && y >= 6) {
-				for(var x = 0; x < player.width; ++x) {
+			if(inv) {
+				for(var x = 0; x < player.width; ++x)
 					player.data[y * player.width + x] = player.data[y * player.width + x] ? 0 : 1 + Math.floor(Math.random() * Block.blockData.length);
-				}
+				player.emit(Board.EVENT_CHANGE);
+				if(--y >= 6)
+					setTimeout(invertRow, 100);
 			}
 		}
+		invertRow();
 		return true;
 	}
 );
