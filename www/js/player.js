@@ -60,7 +60,7 @@ Player.prototype.reset = function(seed) {
 	
 	this.dropStick = 0;
 	this.random = seed ? prng(seed) : prng();
-	this.inventory = ['v','v','v','v','v','v'];
+	this.inventory = [];
 	this.zebra = false;
 	this.flip = false;
 	this.reflect = false;
