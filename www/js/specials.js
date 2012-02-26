@@ -81,7 +81,7 @@ Special.setOccurancy({
 	v: 2,
 	p: 4,
 	y: 3,
-	k: 6
+	k: 3
 });
 
 Special.registerSpecial(
@@ -509,7 +509,7 @@ Special.registerSpecial(
 	"S-blocks",
 	"Only generate S and Z blocks for a limited amount of time.",
 	function(player, msg) {
-		for(var i = 0; i < 8; ++i)
+		for(var i = 0; i < 4; ++i)
 			player.nextBlocks.unshift(new Block(Math.random() < 0.5 ? 5 : 6, 0));
 		return true;
 	}
