@@ -33,25 +33,25 @@ function PlayerView(player) {
 			case Special.QUAKE: self.specialQuake(); break;
 			case Special.BOMB: self.specialBomb(); break;
 			case Special.MOSES: self.specialMoses(); break;
+			case Special.ZEBRA: self.specialZebra(); break;
+			case Special.CLEAR_SPECIALS: self.specialClearSpecials(); break;
 		}
 	});
-}
-
-PlayerView.prototype.notify = function(msg) {
-	var self = this;
-	var offset = 0;
-	var $msg = $(msg);
-	for (var i = 0; this.notifierSlots[i]; i++, offset++) ;
-	this.notifierSlots[offset] = true;
-	$msg.data('offset', offset);
-	$msg.css('top', offset * 50);
-	setTimeout(function(obj){
-		obj.animate({'opacity':0}, 500, function(){
-			self.notifierSlots[$(this).data('offset')] = false;
-			$(this).remove();
-		});
-	}, 2000, $msg);
-	this.el.append($msg);
+	this.player.on(Player.EVENT_NOTIFY, function(msg) {
+		var offset = 0;
+		var $msg = $(msg);
+		for (var i = 0; self.notifierSlots[i]; i++, offset++) ;
+		self.notifierSlots[offset] = true;
+		$msg.data('offset', offset);
+		$msg.css('top', offset * 50);
+		setTimeout(function(obj){
+			obj.animate({'opacity':0}, 500, function(){
+				self.notifierSlots[obj.data('offset')] = false;
+				obj.remove();
+			});
+		}, 2000, $msg);
+		self.el.append($msg);
+	});
 }
 
 PlayerView.prototype.render = function() {
@@ -196,7 +196,7 @@ PlayerView.prototype.specialBomb = function() {
 PlayerView.prototype.specialMoses = function() {
 	var $rainbow = $('<div class="nyancat-rainbow" />');
 	var $nyancat = $('<div class="nyancat" />');
-	var centerOffset = this.el.find('.board .row:first > .cell:eq(' + Math.floor(this.player.width/2) + ')').offset();
+	var centerOffset = this.el.find('.board .row:first .cell').eq(Math.floor(this.player.width/2)).offset();
 	var boardHeight = this.el.find('.board').height();
 	centerOffset.left -= 3;
 	$rainbow.appendTo('#container')
@@ -209,4 +209,53 @@ PlayerView.prototype.specialMoses = function() {
 		.offset(centerOffset)
 		.css({ top: centerOffset.top - 8 })
 		.animate({ top: '+='+boardHeight }, 1000, function(){ $(this).remove(); });
+	if (!this.isPlayer) {
+		centerOffset.left -= 5;
+		$nyancat.add($rainbow).offset(centerOffset);
+		$nyancat.css({'-webkit-transform': 'scale(0.5)'});
+		$rainbow.css({'-webkit-transform': 'scaleX(0.5)'});
+	}
+}
+
+PlayerView.prototype.specialZebra = function() {
+	if (!this.isPlayer)
+		this.player.zebra = typeof this.player.zebra === 'undefined' ? false : !this.player.zebra;
+	var animationDir = this.player.zebra ? '-' : '+';
+	var animationLen = this.isPlayer ? 300 : 150;
+	var $rows = this.el.find('.board .row');
+	for (var x = (this.player.zebra ? 1 : 0), i = 0; x < this.player.width; x += 2, i++) {
+		var $column = $('<div class="column"/>');
+		for (var y = 0; y < this.player.height; y++) {
+			var b = this.player.data[y * this.player.width + x];
+			if (this.isPlayer && this.player.invisible) {
+				if (!this.player.inBlockVisinity(x, y))
+					b = 0;
+			}
+			var $cell = $('<div class="cell"/>');
+			$cell.addClass(b !== 0 ? (typeof b === 'string' ? 'special special-'+b : 'block block-'+b) : 'empty');
+			$column.append($cell);
+		}
+		$column.appendTo(this.el)
+			.css({position: 'absolute'})
+			.offset($rows.first().find('.cell').eq(x).offset());
+		setTimeout(function(obj){
+			obj.animate({top: animationDir+'='+animationLen+'px', opacity: 0}, 300, function(){ obj.remove(); });
+		}, i*100, $column);
+	}
+}
+
+PlayerView.prototype.specialClearSpecials = function() {
+	var self = this;
+	//var nodes = $();
+	this.el.find('.board .special').each(function() {
+		var node = $('<div class="sparkle" />')
+			.offset($(this).offset())
+			.appendTo('#container')
+			.css({'background-image': "url('../images/sparkle.gif?" + Date.now() + "')"});
+		if (!self.isPlayer)
+			node.css({'-webkit-transform': 'scale(0.5)', margin: '-4px -4px'});
+		//nodes.add(node);
+		node.fadeOut(2000, function(){ node.remove(); });
+	});
+	//setTimeout(function(obj){ obj.fadeOut(500, function(){ obj.remove(); }); }, 500, nodes);
 }

@@ -133,7 +133,8 @@ $(document).ready(function() {
 	      <p><label for="settings_km_drop">Hard drop</label><input id="settings_km_drop" class="keycode_listener" type="text" name="drop" /></p>
         <p><label for="settings_km_softdrop">Sonic drop</label><input id="settings_km_softdrop" class="keycode_listener" type="text" name="soft_drop" /></p>
         <p><label for="settings_km_hold">Hold piece</label><input id="settings_km_hold" class="keycode_listener" type="text" name="hold" /></p>
-	      <p><label for="settings_km_rotatecw">Rotate CW</label><input id="settings_km_rotatecw" class="keycode_listener" type="text" name="rotate_cw" /></p>
+        <p><label for="settings_km_talk">Talk</label><input id="settings_km_talk" class="keycode_listener" type="text" name="talk" /></p>
+        <p><label for="settings_km_rotatecw">Rotate CW</label><input id="settings_km_rotatecw" class="keycode_listener" type="text" name="rotate_cw" /></p>
 	      <p><label for="settings_km_rotateccw">Rotate CCW</label><input id="settings_km_rotateccw" class="keycode_listener" type="text" name="rotate_ccw" /></p>
 	      <p><label for="settings_km_self">Self</label><input id="settings_km_self" class="keycode_listener" type="text" name="inventory_self" /></p>
 	      <p><label for="settings_km_targetleft">Target left</label><input id="settings_km_targetleft" class="keycode_listener" type="text" name="inventory_target_left" /></p>
