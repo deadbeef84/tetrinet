@@ -1,4 +1,5 @@
 var util = require('util'),
+	Config = require('./config'),
 	Message = require('./message'),
 	Player = require('./player');
 
@@ -190,11 +191,11 @@ Room.prototype.startGame = function() {
 		var self = this;
 		var count = 0;
 		var countdownTimer = setInterval(function() {
-			if(++count == 6) {
+			if(count++ >= Config.SERVER_COUNTDOWN) {
 				clearInterval(countdownTimer);
 				self.doStartGame();
 			} else {
-				self.broadcast(Message.CHAT, {text: 'Starting in ' + (6 - count), id: null});
+				self.broadcast(Message.CHAT, {text: 'Starting in ' + (Config.SERVER_COUNTDOWN - count + 1), id: null});
 			}
 		}, 1000);
 	}

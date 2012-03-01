@@ -443,6 +443,11 @@ em.self { /* your name */
 	opacity: 0.5;
 	background: url(../images/rickroll.gif);
 }
+/* speed */
+.speed .player.self .board::after {
+	opacity: 0.5;
+	background: url(../images/starfield.gif) 50% 50%;
+}
 /* nyancat */
 .nyancat {
 	background: url(../images/nyancat-vert.gif);

@@ -164,50 +164,44 @@ PlayerView.prototype.specialQuake = function() {
 			board.css({
 				'margin-left': Math.round(Math.random()*(count&1?-1:1)*30),
 				'margin-top': Math.round((Math.random()-0.5)*30)
-				//'-webkit-transform': 'rotate(' + Math.round((Math.random()-0.5)*40) + 'deg)'
 			});
 			setTimeout(shakeFunction, 50);
 		}
 		else {
-			board.css({
-				'margin-left': 0,
-				'margin-top': 0
-				//'-webkit-transform': 'rotate(0deg)'
-			});
+			board.css({'margin-left':0,'margin-top':0});
 		}
 	};
 	shakeFunction();
 }
 
 PlayerView.prototype.specialBomb = function() {
-	// BOOOM!
-	var nodes = $();
+	var self = this;
 	this.el.find('.board .special-b').each(function() {
-		nodes.add(
-			$('<div class="explosion" />')
-				.offset($(this).offset())
-				.appendTo('#container')
-				.css({'background-image': "url('../images/explosion.gif?" + Date.now() + "')"}));
+		var node = $('<div class="explosion" />')
+			.offset($(this).offset())
+			.appendTo('#container')
+			.css({'background-image': "url('../images/explosion.gif?" + Date.now() + "')"});
+		if (!self.isPlayer)
+			node.css({'-webkit-transform': 'scale(0.5)'});
+		setTimeout(function(obj){ obj.remove(); }, 2000, node);
 	});
-	if(nodes.length)
-		setTimeout(function(){ nodes.remove(); }, 2000);
 }
 
 PlayerView.prototype.specialMoses = function() {
 	var $rainbow = $('<div class="nyancat-rainbow" />');
 	var $nyancat = $('<div class="nyancat" />');
-	var centerOffset = this.el.find('.board .row:first .cell').eq(Math.floor(this.player.width/2)).offset();
+	var centerOffset = this.el.find('.board .row:first').children().eq(Math.floor(this.player.width/2)).offset();
 	var boardHeight = this.el.find('.board').height();
 	centerOffset.left -= 3;
 	$rainbow.appendTo('#container')
 		.offset(centerOffset)
-		.css({ height: 0 })
+		.css({height:0})
 		.animate({ height: boardHeight }, 1000, function(){
 			$(this).animate({ opacity: 0 }, 1000, function(){ $(this).remove(); });
 		});
 	$nyancat.appendTo('#container')
 		.offset(centerOffset)
-		.css({ top: centerOffset.top - 8 })
+		.css({top:centerOffset.top-8})
 		.animate({ top: '+='+boardHeight }, 1000, function(){ $(this).remove(); });
 	if (!this.isPlayer) {
 		centerOffset.left -= 5;
@@ -221,7 +215,7 @@ PlayerView.prototype.specialZebra = function() {
 	if (!this.isPlayer)
 		this.player.zebra = typeof this.player.zebra === 'undefined' ? false : !this.player.zebra;
 	var animationDir = this.player.zebra ? '-' : '+';
-	var animationLen = this.isPlayer ? 300 : 150;
+	var animationLen = this.isPlayer ? 200 : 100;
 	var $rows = this.el.find('.board .row');
 	for (var x = (this.player.zebra ? 1 : 0), i = 0; x < this.player.width; x += 2, i++) {
 		var $column = $('<div class="column"/>');
@@ -239,14 +233,13 @@ PlayerView.prototype.specialZebra = function() {
 			.css({position: 'absolute'})
 			.offset($rows.first().find('.cell').eq(x).offset());
 		setTimeout(function(obj){
-			obj.animate({top: animationDir+'='+animationLen+'px', opacity: 0}, 300, function(){ obj.remove(); });
-		}, i*100, $column);
+			obj.animate({top: animationDir+'='+animationLen+'px', opacity: 0}, 500, function(){ obj.remove(); });
+		}, i*50, $column);
 	}
 }
 
 PlayerView.prototype.specialClearSpecials = function() {
 	var self = this;
-	//var nodes = $();
 	this.el.find('.board .special').each(function() {
 		var node = $('<div class="sparkle" />')
 			.offset($(this).offset())
@@ -254,8 +247,6 @@ PlayerView.prototype.specialClearSpecials = function() {
 			.css({'background-image': "url('../images/sparkle.gif?" + Date.now() + "')"});
 		if (!self.isPlayer)
 			node.css({'-webkit-transform': 'scale(0.5)', margin: '-4px -4px'});
-		//nodes.add(node);
 		node.fadeOut(2000, function(){ node.remove(); });
 	});
-	//setTimeout(function(obj){ obj.fadeOut(500, function(){ obj.remove(); }); }, 500, nodes);
 }

@@ -420,7 +420,7 @@ Special.registerSpecial(
 					player.data[y * player.width + x] = player.data[y * player.width + x] ? 0 : 1 + Math.floor(Math.random() * Block.blockData.length);
 				player.emit(Board.EVENT_CHANGE);
 				if(--y >= 6)
-					setTimeout(invertRow, 100);
+					setTimeout(invertRow, 50);
 			}
 		}
 		invertRow();
@@ -447,6 +447,7 @@ Special.registerSpecial(
 		player.speedTimer.start();
 		player.dropTimer.delay = 50 + maxHeight * 6;
 		player.dropTimer.start();
+		$('body').addClass('speed');
 		return false;
 	}
 );
