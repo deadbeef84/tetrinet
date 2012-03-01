@@ -246,7 +246,7 @@ PlayerView.prototype.specialClearSpecials = function() {
 			.appendTo('#container')
 			.css({'background-image': "url('../images/sparkle.gif?" + Date.now() + "')"});
 		if (!self.isPlayer)
-			node.css({'-webkit-transform': 'scale(0.5)', margin: '-4px -4px'});
-		node.fadeOut(2000, function(){ node.remove(); });
+			node.css({'-webkit-transform': 'scale(0.5)'});
+		node.fadeOut(4000, function(){ node.remove(); });
 	});
 }
