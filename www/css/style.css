@@ -226,10 +226,15 @@ em.self { /* your name */
 		left: -77px;
 	}
 	.player.self .inventory {
+		float: left;
 		clear: both;
 		margin: 5px -100px 0 0;
 		text-align: left;
 		width: 100%;
+	}
+	.player.self .inventory p {
+		float: left;
+		margin-top: 0.5em;
 	}
 
 /* game states */
@@ -374,6 +379,7 @@ em.self { /* your name */
 .self .cell.special-p { background-position: -384px 0; } /* speed */
 .self .cell.special-y { background-position: -400px 0; } /* surprise */
 .self .cell.special-k { background-position: -416px 0; } /* s-block */
+.self .cell.special-t { background-position: -432px 0; } /* inventory bomb */
 
 .cell.special-a { background-position: -40px -16px; } /* add */
 .cell.special-c { background-position: -48px -16px; } /* clear */
@@ -397,6 +403,7 @@ em.self { /* your name */
 .cell.special-p { background-position: -192px -16px; } /* speed */
 .cell.special-y { background-position: -200px -16px; } /* surprise */
 .cell.special-k { background-position: -208px -16px; } /* s-block */
+.cell.special-t { background-position: -216px -16px; } /* inventory bomb */
 
 /* flip */
 .flip {
@@ -423,6 +430,10 @@ em.self { /* your name */
 	position: absolute;
 	margin: -8px -8px;
 	z-index: 10;
+}
+/* inventory bomb */
+.player.self .inventory.bomb .row .cell{
+	opacity: 0;
 }
 /* rickrolling */
 .rickroll-1 .player.self .board::after {

@@ -190,7 +190,6 @@ GameView.prototype.init = function() {
 	
 	var initSettings = function() {
 		$('#settings_name').val(Settings.name);
-		$('#settings_buffersize').val(Settings.log.buffer_size);
 		$('#settings_keyrepeatdelay').val(Settings.misc.keypress_repeat_delay);
 		$('#settings_keyrepeatinterval').val(Settings.misc.keypress_repeat_interval);
 		if (Settings.misc.ghost_block)
@@ -201,6 +200,11 @@ GameView.prototype.init = function() {
 			$('#settings_attacknotifications').attr('checked', 'checked');
 		else
 			$('#settings_attacknotifications').removeAttr('checked');
+		$('#settings_buffersize').val(Settings.log.buffer_size);
+		if (Settings.log.autoscroll)
+			$('#settings_logautoscroll').attr('checked', 'checked');
+		else
+			$('#settings_logautoscroll').removeAttr('checked');
 		$('#settings_keys input').each(function(index) {
 			$(this).val(getCharFromKeyCode(Settings.keymap[$(this).attr('name')]));
 			$(this).data('keycode', Settings.keymap[$(this).attr('name')]);
@@ -229,6 +233,7 @@ GameView.prototype.init = function() {
 		Settings.misc.keypress_repeat_delay = Math.max(1, parseInt($('#settings_keyrepeatdelay').val()));
 		Settings.misc.keypress_repeat_interval = Math.max(1, parseInt($('#settings_keyrepeatinterval').val()));
 		Settings.log.buffer_size = Math.max(1, parseInt($('#settings_buffersize').val()));
+		Settings.log.autoscroll = $('#settings_logautoscroll').is(':checked');
 		Bw.setCookie('settings_name', Settings.name);
 		Bw.setCookie('settings_misc', Settings.misc);
 		Bw.setCookie('settings_keymap', Settings.keymap);
@@ -308,7 +313,8 @@ GameView.prototype.init = function() {
 		$('#gamelog > div').hide();
 		var c = $('#gamelog > div:eq(' + index + ')');
 		c.show();
-		c[0].scrollTop = c[0].scrollHeight;
+		if (Settings.log.autoscroll)
+			c[0].scrollTop = c[0].scrollHeight;
 		Settings.log.selected_filter = index;
 		Bw.setCookie('settings_log', Settings.log);
 	});

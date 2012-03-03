@@ -36,6 +36,7 @@ function PlayerView(player) {
 			case Special.MOSES: self.specialMoses(); break;
 			case Special.ZEBRA: self.specialZebra(); break;
 			case Special.CLEAR_SPECIALS: self.specialClearSpecials(); break;
+			case Special.INVENTORY_BOMB: self.specialInventoryBomb(); break;
 		}
 	});
 	this.player.on(Player.EVENT_NOTIFY, function(msg) {
@@ -53,6 +54,40 @@ function PlayerView(player) {
 		}, 2000, $msg);
 		self.el.append($msg);
 	});
+}
+
+PlayerView.shakeObject = function(obj, count, delay, width, height, defaultMargin, callback) {
+	var args = {
+		obj: obj,
+		count: count,
+		countStart: count,
+		delay: delay,
+		width: width,
+		height: height,
+		defaultMargin: defaultMargin,
+		callback: callback
+	};
+	var shake = function(args) {
+		if (args.count--) {
+			var factor = (args.count+1) / args.countStart;
+			var horizontal = Math.round(Math.random()*(args.count&1?-1:1)*args.width*factor);
+			var vertical = Math.round((Math.random()-0.5)*args.height*factor);
+			args.obj.css({
+				'margin-left': horizontal,
+				'margin-right': -horizontal,
+				'margin-top': vertical,
+				'margin-bottom': -vertical
+			});
+			setTimeout(shake, args.delay, args);
+		}
+		else {
+			console.log(args.obj);
+			args.obj.css('margin', args.defaultMargin);
+			if (typeof args.callback === 'function')
+				(args.callback).call(args.obj);
+		}
+	};
+	shake(args);
 }
 
 PlayerView.prototype.render = function() {
@@ -164,21 +199,7 @@ PlayerView.prototype.specialNuke = function() {
 }
 
 PlayerView.prototype.specialQuake = function() {
-	var count = 20;
-	var $board = this.el.find('.board');
-	var shakeFunction = function(){
-		if (count--) {
-			$board.css({
-				'margin-left': Math.round(Math.random()*(count&1?-1:1)*30),
-				'margin-top': Math.round((Math.random()-0.5)*30)
-			});
-			setTimeout(shakeFunction, 50);
-		}
-		else {
-			$board.css({'margin-left':0,'margin-top':0});
-		}
-	};
-	shakeFunction();
+	PlayerView.shakeObject(this.el.find('.board'), 30, 50, 30, 30, 0);
 }
 
 PlayerView.prototype.specialBomb = function() {
@@ -256,4 +277,18 @@ PlayerView.prototype.specialClearSpecials = function() {
 			node.css({'-webkit-transform': 'scale(0.5)'});
 		node.fadeOut(4000, function(){ node.remove(); });
 	});
+}
+
+PlayerView.prototype.specialInventoryBomb = function() {
+	var self = this;
+	var $inventory = this.el.find('.inventory');
+	$inventory.find('.cell').each(function(i, obj){
+		var $clone = $(this).clone()
+			.appendTo(self.el)
+			.css({position: 'absolute'})
+			.offset($(this).offset());
+		PlayerView.shakeObject($clone, 30, 50, 10, 5, 0, function(){ this.fadeOut(200); });
+	});
+	$inventory.addClass('bomb');
+	setTimeout(function(){ $inventory.removeClass('bomb'); }, 30*50);
 }

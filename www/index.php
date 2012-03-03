@@ -120,11 +120,12 @@ $(document).ready(function() {
       <form id="settings">
         <h3>Misc</h3>
         <p><label for="settings_name">Name</label><input id="settings_name" type="text" name="name" /></p>
-        <p><label for="settings_buffersize">Log buffer size</label><input id="settings_buffersize" type="text" name="buffersize" /></p>
         <p><label for="settings_ghostblock">Ghost block</label><input id="settings_ghostblock" type="checkbox" name="ghostblock" /></p>
         <p><label for="settings_attacknotifications">Attack notifications</label><input id="settings_attacknotifications" type="checkbox" name="attacknotifications" /></p>
         <p><label for="settings_keyrepeatdelay">Key repeat delay</label><input id="settings_keyrepeatdelay" type="text" name="keyrepeatdelay" /></p>
         <p><label for="settings_keyrepeatinterval">Key repeat interval</label><input id="settings_keyrepeatinterval" type="text" name="keyrepeatinterval" /></p>
+        <p><label for="settings_buffersize">Log buffer size</label><input id="settings_buffersize" type="text" name="buffersize" /></p>
+        <p><label for="settings_logautoscroll">Log auto scroll</label><input id="settings_logautoscroll" type="checkbox" name="autoscroll" /></p>
         <h3>Keys</h3>
         <div id="settings_keys">
 	      <p><label for="settings_km_left">Left</label><input id="settings_km_left" class="keycode_listener" type="text" name="left" /></p>
