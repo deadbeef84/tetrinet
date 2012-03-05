@@ -2,7 +2,7 @@ function PlayerView(player) {
 	this.player = player;
 	this.isPlayer = (this.player instanceof Player);
 	this.notifierSlots = [];
-	this.nukeCount = 0;
+	this.nukeTimer = 0;
 
 	this.el = $(
 		'<div class="player">'+
@@ -178,23 +178,17 @@ PlayerView.prototype.removeLine = function(y) {
 }
 
 PlayerView.prototype.specialNuke = function() {
-	var $board = this.el.find('.board').addClass('nuke');
-	var $animation = $('<div class="nuke-animation"/>')
+	var $board = this.el.find('.board')
+		.addClass('nuke')
 		.css({
-			position: 'absolute',
-			display: 'block',
-			height: $board.height(),
-			width: $board.width(),
 			background: "black center bottom no-repeat url('../images/nuke.gif?" + Date.now() + "')",
 			'background-size': 'cover'
-		})
-		.appendTo(this.el)
-		.offset($board.offset());
-	this.nukeCount++;
-	setTimeout(function() {
-		if (!--this.nukeCount)
-			$board.removeClass('nuke');
-		$animation.remove();
+		});
+	if (this.nukeTimer)
+		clearTimeout(this.nukeTimer);
+	this.nukeTimer = setTimeout(function() {
+		$board.removeClass('nuke').css('background', 'transparent');
+		this.nukeTimer = 0;
 	}, 1800); // 60 frames * 0.03 seconds
 }
 
