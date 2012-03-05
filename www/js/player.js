@@ -20,7 +20,7 @@ function Player() {
 	this.reflectTimer.on(Timer.EVENT_TIMER, function() { self.reflect = false; });
 	
 	this.speedTimer = new Timer(Player.TIME_SPEED, 1);
-	this.speedTimer.on(Timer.EVENT_TIMER, function() { self.speed = false; });
+	this.speedTimer.on(Timer.EVENT_TIMER, function() { self.speed = false; $('body').removeClass('speed'); });
 }
 // Extend Board
 Bw.extend(Player, Board);

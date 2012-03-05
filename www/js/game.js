@@ -155,7 +155,8 @@ Game.prototype.gameLog = function(msg, logClass) {
 	var c = $(logClass.join(','));
 	c.append('<p>'+msg+'</p>');
 	c.each(function(){
-		this.scrollTop = this.scrollHeight;
+		if (Settings.log.autoscroll)
+			this.scrollTop = this.scrollHeight;
 		while ($(this).children().length > Settings.log.buffer_size)
 			$(this).children(':first').remove();
 	});
@@ -220,7 +221,7 @@ Game.prototype.updatePlayers = function() {
 	for(var pp in this.players) {
 		var p = this.players[pp];
 		p.view.el.find('h2')
-			.text('(' + (p.id + 1) + ') ' + p.name)
+			.html('<span class="player-id">(' + (p.id + 1) + ')</span> <span class="player-name">' + p.name + '</span>')
 			.css({backgroundColor: p.team});
 	}
 }
@@ -462,7 +463,6 @@ Game.prototype.handleMessage = function(msg) {
 			this.updatePlayers();
 			this.team = '';
 			$('#team').val(this.team);
-			$('#gamelog > div').empty();
 			if(msg.r) {
 				// joined room
 				this.options = msg.r.options;
@@ -472,6 +472,8 @@ Game.prototype.handleMessage = function(msg) {
 				// back to lobby
 				$('#lobby').show();
 				$('#ingame').hide();
+				$('#gamelog > div').empty();
+				$('#chat').empty();
 			}
 			break;
 			
