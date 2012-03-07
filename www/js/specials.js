@@ -58,6 +58,7 @@ Special.INVERT = 'v';
 Special.SPEED = 'p';
 Special.RANDOM = 'y';
 Special.SBLOCKS = 'k';
+Special.INVENTORY_BOMB = 't';
 
 Special.setOccurancy({
 	a: 16,
@@ -81,7 +82,8 @@ Special.setOccurancy({
 	v: 2,
 	p: 4,
 	y: 3,
-	k: 3
+	k: 3,
+	t: 0
 });
 
 Special.registerSpecial(
@@ -420,7 +422,7 @@ Special.registerSpecial(
 					player.data[y * player.width + x] = player.data[y * player.width + x] ? 0 : 1 + Math.floor(Math.random() * Block.blockData.length);
 				player.emit(Board.EVENT_CHANGE);
 				if(--y >= 6)
-					setTimeout(invertRow, 100);
+					setTimeout(invertRow, 50);
 			}
 		}
 		invertRow();
@@ -447,6 +449,7 @@ Special.registerSpecial(
 		player.speedTimer.start();
 		player.dropTimer.delay = 50 + maxHeight * 6;
 		player.dropTimer.start();
+		$('body').addClass('speed');
 		return false;
 	}
 );
@@ -470,6 +473,33 @@ Special.registerSpecial(
 	function(player, msg) {
 		for(var i = 0; i < 4; ++i)
 			player.nextBlocks.unshift(new Block(Math.random() < 0.5 ? 5 : 6, 0));
+		return true;
+	}
+);
+	
+Special.registerSpecial(
+	Special.INVENTORY_BOMB,
+	"Inventory bomb",
+	"Reorders and randomly removes specials from an opponents inventory.",
+	function(player, msg) {
+		var newInventory = [];
+		$.each(player.inventory, function(i, obj) {
+			if (Math.random() > 0.05)
+				newInventory.push(Math.random() > 0.5 ? obj : Special.getRandomSpecial());
+		});
+		for (var i = 1; i < newInventory.length - 1; i++) {
+			var swap = i;
+			var rand = Math.random();
+			if (rand < 0.25)
+				i--;
+			else if (rand < 0.5)
+				i++;
+			var obj = newInventory[swap];
+			newInventory[swap] = newInventory[i];
+			newInventory[i] = obj;
+		}
+		console.log(player.inventory, newInventory);
+		player.inventory = newInventory;
 		return true;
 	}
 );

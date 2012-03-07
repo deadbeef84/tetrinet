@@ -9,6 +9,7 @@ Settings = {
 		keypress_repeat_interval: 50
 	},
 	log: {
+		autoscroll: true,
 		buffer_size: 100,
 		selected_filter: 0,
 		custom_filters: []

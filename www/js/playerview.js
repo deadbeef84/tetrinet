@@ -2,6 +2,7 @@ function PlayerView(player) {
 	this.player = player;
 	this.isPlayer = (this.player instanceof Player);
 	this.notifierSlots = [];
+	this.nukeTimer = 0;
 
 	this.el = $(
 		'<div class="player">'+
@@ -35,6 +36,7 @@ function PlayerView(player) {
 			case Special.MOSES: self.specialMoses(); break;
 			case Special.ZEBRA: self.specialZebra(); break;
 			case Special.CLEAR_SPECIALS: self.specialClearSpecials(); break;
+			case Special.INVENTORY_BOMB: self.specialInventoryBomb(); break;
 		}
 	});
 	this.player.on(Player.EVENT_NOTIFY, function(msg) {
@@ -52,6 +54,40 @@ function PlayerView(player) {
 		}, 2000, $msg);
 		self.el.append($msg);
 	});
+}
+
+PlayerView.shakeObject = function(obj, count, delay, width, height, defaultMargin, callback) {
+	var args = {
+		obj: obj,
+		count: count,
+		countStart: count,
+		delay: delay,
+		width: width,
+		height: height,
+		defaultMargin: defaultMargin,
+		callback: callback
+	};
+	var shake = function(args) {
+		if (args.count--) {
+			var factor = (args.count+1) / args.countStart;
+			var horizontal = Math.round(Math.random()*(args.count&1?-1:1)*args.width*factor);
+			var vertical = Math.round((Math.random()-0.5)*args.height*factor);
+			args.obj.css({
+				'margin-left': horizontal,
+				'margin-right': -horizontal,
+				'margin-top': vertical,
+				'margin-bottom': -vertical
+			});
+			setTimeout(shake, args.delay, args);
+		}
+		else {
+			console.log(args.obj);
+			args.obj.css('margin', args.defaultMargin);
+			if (typeof args.callback === 'function')
+				(args.callback).call(args.obj);
+		}
+	};
+	shake(args);
 }
 
 PlayerView.prototype.render = function() {
@@ -142,72 +178,52 @@ PlayerView.prototype.removeLine = function(y) {
 }
 
 PlayerView.prototype.specialNuke = function() {
-	var $board = this.el.find('.board');
-	$board.addClass('nuke');
-	var xpos = Math.round((480 - $board.width()) * 0.5)-20;
-	$board.css({
-		'background': "black -"+xpos+"px bottom no-repeat url('../images/nuke.gif?" + Date.now() + "')"
-	});
-	setTimeout(function() {
-		$board.removeClass('nuke');
-		$board.css({
-			'background': 'transparent'
+	var $board = this.el.find('.board')
+		.addClass('nuke')
+		.css({
+			background: "black center bottom no-repeat url('../images/nuke.gif?" + Date.now() + "')",
+			'background-size': 'cover'
 		});
-	}, 2000);
+	if (this.nukeTimer)
+		clearTimeout(this.nukeTimer);
+	this.nukeTimer = setTimeout(function() {
+		$board.removeClass('nuke').css('background', 'transparent');
+		this.nukeTimer = 0;
+	}, 1800); // 60 frames * 0.03 seconds
 }
 
 PlayerView.prototype.specialQuake = function() {
-	var count = 20;
-	var board = this.el.find('.board');
-	var shakeFunction = function(){
-		if (count--) {
-			board.css({
-				'margin-left': Math.round(Math.random()*(count&1?-1:1)*30),
-				'margin-top': Math.round((Math.random()-0.5)*30)
-				//'-webkit-transform': 'rotate(' + Math.round((Math.random()-0.5)*40) + 'deg)'
-			});
-			setTimeout(shakeFunction, 50);
-		}
-		else {
-			board.css({
-				'margin-left': 0,
-				'margin-top': 0
-				//'-webkit-transform': 'rotate(0deg)'
-			});
-		}
-	};
-	shakeFunction();
+	PlayerView.shakeObject(this.el.find('.board'), 30, 50, 30, 30, 0);
 }
 
 PlayerView.prototype.specialBomb = function() {
-	// BOOOM!
-	var nodes = $();
+	var self = this;
 	this.el.find('.board .special-b').each(function() {
-		nodes.add(
-			$('<div class="explosion" />')
-				.offset($(this).offset())
-				.appendTo('#container')
-				.css({'background-image': "url('../images/explosion.gif?" + Date.now() + "')"}));
+		var node = $('<div class="explosion" />')
+			.offset($(this).offset())
+			.appendTo('#container')
+			.css({'background-image': "url('../images/explosion.gif?" + Date.now() + "')"});
+		if (!self.isPlayer)
+			node.css({'-webkit-transform': 'scale(0.5)'});
+		setTimeout(function(obj){ obj.remove(); }, 2000, node);
 	});
-	if(nodes.length)
-		setTimeout(function(){ nodes.remove(); }, 2000);
 }
 
 PlayerView.prototype.specialMoses = function() {
 	var $rainbow = $('<div class="nyancat-rainbow" />');
 	var $nyancat = $('<div class="nyancat" />');
-	var centerOffset = this.el.find('.board .row:first .cell').eq(Math.floor(this.player.width/2)).offset();
+	var centerOffset = this.el.find('.board .row:first').children().eq(Math.floor(this.player.width/2)).offset();
 	var boardHeight = this.el.find('.board').height();
 	centerOffset.left -= 3;
 	$rainbow.appendTo('#container')
 		.offset(centerOffset)
-		.css({ height: 0 })
+		.css({height:0})
 		.animate({ height: boardHeight }, 1000, function(){
 			$(this).animate({ opacity: 0 }, 1000, function(){ $(this).remove(); });
 		});
 	$nyancat.appendTo('#container')
 		.offset(centerOffset)
-		.css({ top: centerOffset.top - 8 })
+		.css({top:centerOffset.top-8})
 		.animate({ top: '+='+boardHeight }, 1000, function(){ $(this).remove(); });
 	if (!this.isPlayer) {
 		centerOffset.left -= 5;
@@ -221,7 +237,7 @@ PlayerView.prototype.specialZebra = function() {
 	if (!this.isPlayer)
 		this.player.zebra = typeof this.player.zebra === 'undefined' ? false : !this.player.zebra;
 	var animationDir = this.player.zebra ? '-' : '+';
-	var animationLen = this.isPlayer ? 300 : 150;
+	var animationLen = this.isPlayer ? 200 : 100;
 	var $rows = this.el.find('.board .row');
 	for (var x = (this.player.zebra ? 1 : 0), i = 0; x < this.player.width; x += 2, i++) {
 		var $column = $('<div class="column"/>');
@@ -239,23 +255,34 @@ PlayerView.prototype.specialZebra = function() {
 			.css({position: 'absolute'})
 			.offset($rows.first().find('.cell').eq(x).offset());
 		setTimeout(function(obj){
-			obj.animate({top: animationDir+'='+animationLen+'px', opacity: 0}, 300, function(){ obj.remove(); });
-		}, i*100, $column);
+			obj.animate({top: animationDir+'='+animationLen+'px', opacity: 0}, 500, function(){ obj.remove(); });
+		}, i*50, $column);
 	}
 }
 
 PlayerView.prototype.specialClearSpecials = function() {
 	var self = this;
-	//var nodes = $();
 	this.el.find('.board .special').each(function() {
 		var node = $('<div class="sparkle" />')
 			.offset($(this).offset())
 			.appendTo('#container')
 			.css({'background-image': "url('../images/sparkle.gif?" + Date.now() + "')"});
 		if (!self.isPlayer)
-			node.css({'-webkit-transform': 'scale(0.5)', margin: '-4px -4px'});
-		//nodes.add(node);
-		node.fadeOut(2000, function(){ node.remove(); });
+			node.css({'-webkit-transform': 'scale(0.5)'});
+		node.fadeOut(4000, function(){ node.remove(); });
 	});
-	//setTimeout(function(obj){ obj.fadeOut(500, function(){ obj.remove(); }); }, 500, nodes);
+}
+
+PlayerView.prototype.specialInventoryBomb = function() {
+	var self = this;
+	var $inventory = this.el.find('.inventory');
+	$inventory.find('.cell').each(function(i, obj){
+		var $clone = $(this).clone()
+			.appendTo(self.el)
+			.css({position: 'absolute'})
+			.offset($(this).offset());
+		PlayerView.shakeObject($clone, 30, 50, 10, 5, 0, function(){ this.fadeOut(200); });
+	});
+	$inventory.addClass('bomb');
+	setTimeout(function(){ $inventory.removeClass('bomb'); }, 30*50);
 }
