@@ -47,9 +47,6 @@ Player.ROTATION_SYSTEM_SRS = 1;
 Player.BLOCK_GENERATOR_RANDOM = 0;
 Player.BLOCK_GENERATOR_7BAG = 1;
 
-Player.BLOCK_GENERATOR_RANDOM = 0;
-Player.BLOCK_GENERATOR_7BAG = 1;
-
 Player.prototype.reset = function(seed) {
 	this.currentBlock = null;
 	this.holdBlock = null;
@@ -249,9 +246,10 @@ Player.prototype.doCreateNewBlock = function() {
 Player.prototype.setCurrentBlock = function(block) {
 	var bb = block.getBoundingBox();
 	var bw = bb.maxx - bb.minx + 1;
+	var bh = bb.maxy - bb.miny + 1;
 	this.currentBlock = block;
-	this.currentBlock.x = -bb.minx + Math.floor((this.width - bw) / 2);
-	this.currentBlock.y = -bb.miny;
+	this.currentBlock.x = Math.floor((this.width - bw) / 2) - bb.minx;
+	this.currentBlock.y = Board.VANISH_ZONE_HEIGHT - bb.miny - bh;
 	this.emit(Board.EVENT_UPDATE);
 	if (this.collide(this.currentBlock)) {
 		this.putBlock(this.currentBlock);

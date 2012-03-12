@@ -1,22 +1,27 @@
 function Board() {
 	this.width = 12;
-	this.height = 24;
+	this.height = 24 + Board.VANISH_ZONE_HEIGHT;
 	this.data = [];
 	this.clear();
 }
+
 Bw.extend(Board, Bw.EventEmitter);
+
+Board.VANISH_ZONE_HEIGHT = 4
+
 Board.EVENT_UPDATE = "update";
 Board.EVENT_CHANGE = "change";
 Board.EVENT_LINES = "lines";
 Board.EVENT_REMOVE_LINE = "remove line";
 Board.PUT_BLOCK = "putblock";
+
 Board.NO_COLLISION = 0;
 Board.COLLISION_BLOCKS = 1;
 Board.COLLISION_BOUNDS = 2;
 
 Board.prototype.setSize = function(w, h) {
 	this.width = w;
-	this.height = h;
+	this.height = h + Board.VANISH_ZONE_HEIGHT;
 	this.data = [];
 	this.clear();
 }
@@ -36,7 +41,7 @@ Board.prototype.checklines = function(action) {
 		t = true;
 		for(x = 0; x < this.width; ++x)
 			t = t && this.data[y * this.width + x];
-		if(t) {
+		if (t) {
 			this.emit(Board.EVENT_REMOVE_LINE, y - l);
 			removed = removed.concat(this.data.splice(y * this.width, this.width));
 			for(x=0; x < this.width; ++x) // add empty line to the top
