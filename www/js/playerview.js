@@ -99,7 +99,16 @@ PlayerView.prototype.render = function() {
 		this.player.updateGhostBlock();
 		
 	// update board
-	for(y = 0; y < this.player.height; ++y) {
+	var toprow = '';
+	if(this.isPlayer) {
+		toprow += '<div class="row">';
+		for(x = 0; x < this.player.width; ++x) {
+			b = this.player.at(x,Board.VANISH_ZONE_HEIGHT-1);
+			toprow += '<div class="cell '+(b !== 0 ? (typeof b === 'string' ? 'special special-'+b : 'block block-'+b) : 'empty')+'"> </div>';
+		}
+		toprow += '</div>';
+	}
+	for(y = Board.VANISH_ZONE_HEIGHT; y < this.player.height; ++y) {
 		html += '<div class="row">';
 		for(x = 0; x < this.player.width; ++x) {
 			b = this.player.at(x,y);
@@ -107,7 +116,7 @@ PlayerView.prototype.render = function() {
 		}
 		html += '</div>';
 	}
-	this.el.find('.board').html('<div class="board-wrapper">'+html+'</div>');
+	this.el.find('.board').html('<div class="toprow-wrapper">'+toprow+'</div><div class="board-wrapper">'+html+'</div>');
 	
 	if(!this.isPlayer)
 		return;
@@ -169,12 +178,15 @@ PlayerView.prototype.renderInventory = function() {
 }
 
 PlayerView.prototype.removeLine = function(y) {
-	var $original = this.el.find('.board .row').eq(y);
-	var $clear = $original.clone()
-		.appendTo(this.el)
-		.css({position: 'absolute'})
-		.offset($original.offset())
-		.animate({top: '+=20px', opacity: 0}, 250, function() { $clear.remove(); });
+	var row = y - Board.VANISH_ZONE_HEIGHT;
+	if (row > 0) {
+		var $original = this.el.find('.board-wrapper .row').eq(row);
+		var $clear = $original.clone()
+			.appendTo(this.el)
+			.css({position: 'absolute'})
+			.offset($original.offset())
+			.animate({top: '+=20px', opacity: 0}, 250, function() { $clear.remove(); });
+	}
 }
 
 PlayerView.prototype.specialNuke = function() {
@@ -193,12 +205,12 @@ PlayerView.prototype.specialNuke = function() {
 }
 
 PlayerView.prototype.specialQuake = function() {
-	PlayerView.shakeObject(this.el.find('.board'), 30, 50, 30, 30, 0);
+	PlayerView.shakeObject(this.el.find('.board'), 20, 50, 30, 30, 0);
 }
 
 PlayerView.prototype.specialBomb = function() {
 	var self = this;
-	this.el.find('.board .special-b').each(function() {
+	this.el.find('.board-wrapper .special-b').each(function() {
 		var node = $('<div class="explosion" />')
 			.offset($(this).offset())
 			.appendTo('#container')
@@ -238,10 +250,10 @@ PlayerView.prototype.specialZebra = function() {
 		this.player.zebra = typeof this.player.zebra === 'undefined' ? false : !this.player.zebra;
 	var animationDir = this.player.zebra ? '-' : '+';
 	var animationLen = this.isPlayer ? 200 : 100;
-	var $rows = this.el.find('.board .row');
+	var $rows = this.el.find('.board-wrapper .row');
 	for (var x = (this.player.zebra ? 1 : 0), i = 0; x < this.player.width; x += 2, i++) {
 		var $column = $('<div class="column"/>');
-		for (var y = 0; y < this.player.height; y++) {
+		for (var y = Board.VANISH_ZONE_HEIGHT; y < this.player.height; y++) {
 			var b = this.player.data[y * this.player.width + x];
 			if (this.isPlayer && this.player.invisible) {
 				if (!this.player.inBlockVisinity(x, y))
@@ -262,7 +274,7 @@ PlayerView.prototype.specialZebra = function() {
 
 PlayerView.prototype.specialClearSpecials = function() {
 	var self = this;
-	this.el.find('.board .special').each(function() {
+	this.el.find('.board-wrapper .special').each(function() {
 		var node = $('<div class="sparkle" />')
 			.offset($(this).offset())
 			.appendTo('#container')

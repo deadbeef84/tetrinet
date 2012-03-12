@@ -310,6 +310,12 @@ em.self { /* your name */
 	background: black url(../images/skin/original.png) no-repeat 0 -24px;
 	width: 192px;
 }
+.toprow-wrapper {
+	background: black url(../images/skin/original.png) no-repeat 0 -24px;
+	width: 192px;
+	height: 2px;
+	overflow: hidden;
+}
 .row {
 	float: left;
 	width: 100%;
@@ -410,6 +416,7 @@ em.self { /* your name */
 	-webkit-transform: scaleX(-1);
 }
 /* nuke */
+.board.nuke .toprow-wrapper,
 .board.nuke .board-wrapper {
 	background: transparent;
 }
