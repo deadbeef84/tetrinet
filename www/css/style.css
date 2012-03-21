@@ -315,6 +315,10 @@ em.self { /* your name */
 	width: 192px;
 	height: 2px;
 	overflow: hidden;
+	display: none;
+}
+.self .toprow-wrapper {
+	display: block;
 }
 .row {
 	float: left;
