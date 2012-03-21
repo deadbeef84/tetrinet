@@ -2,6 +2,7 @@ function GameView(game) {
 	this.game = game;
 	this.keypressTimers = [];
 	this.keypressActive = [];
+	this.keypressRepeating = false;
 	this.target = 0;
 	this.targetList = [];
 }
@@ -60,30 +61,35 @@ GameView.prototype.init = function() {
 			Settings.keymap.right,
 			Settings.keymap.down
 		];
+		var outOfGameKeys = [
+			Settings.keymap.talk
+		];
 
-		if (game.player && game.player.isPlaying && !self.keypressActive[e.which]) {
-			
-			keydownAction(e.which);
+		if (game.player && game.player.isPlaying && !self.keypressActive[e.which] || outOfGameKeys.indexOf(e.which) != -1) {
 			self.keypressActive[e.which] = true;
-
+			keydownAction(e.which);
 			if (repeatedKeys.indexOf(e.which) != -1) {
-				self.keypressTimers[e.which] = setTimeout(function() {
+				for (var i in self.keypressTimers)
+					clearTimeout(self.keypressTimers[i]);
+				self.keypressTimers[e.which]  = setTimeout(function() {
 					keydownAction(e.which);
+					self.keypressRepeating = true;
 					self.keypressTimers[e.which] = setInterval(function() {
 						keydownAction(e.which);
 					}, Settings.misc.keypress_repeat_interval);
-				}, Settings.misc.keypress_repeat_delay);
+				}, self.keypressRepeating ? Settings.misc.keypress_repeat_interval : Settings.misc.keypress_repeat_delay);
 			}
 			return false;
 		}
 	});
 	
 	$(document).keyup(function(e){
-		self.keypressActive[e.which] = false;
 		if (self.keypressTimers[e.which]) {
 			clearTimeout(self.keypressTimers[e.which]);
 			delete self.keypressTimers[e.which];
 		}
+		self.keypressActive[e.which] = false;
+		self.keypressRepeating = false;
 	});
 	
 	// touch controls

@@ -264,7 +264,7 @@ Player.prototype.setCurrentBlock = function(block) {
 }
 
 Player.prototype.hold = function() {
-	if (this.holdPossible) {
+	if (this.holdPossible && this.currentBlock) {
 		this.holdPossible = false;
 		if (this.holdBlock) {
 			var newBlock = this.holdBlock;

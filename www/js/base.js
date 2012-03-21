@@ -25,6 +25,8 @@ function isArray(ar) {
       || (ar && ar !== Object.prototype && isArray(ar.__proto__));
 }
 
+function inArray(arr, obj) { return arr.indexOf(obj) != -1; };
+
 Bw = {};
 
 Bw.extend = function(ctor, superCtor) {
