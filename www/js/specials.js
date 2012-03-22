@@ -217,7 +217,7 @@ Special.registerSpecial(
 						}
 					}
 					for(var i = 0; i < around.length; ++i) {
-						var yy = 6 + Math.floor(Math.random() * (player.height - 6));
+						var yy = Board.VANISH_ZONE_HEIGHT + 6 + Math.floor(Math.random() * (player.height - Board.VANISH_ZONE_HEIGHT - 6));
 						var xx = Math.floor(Math.random() * player.width);
 						player.data[yy*player.width + xx] = around[i];
 					}
@@ -236,7 +236,7 @@ Special.registerSpecial(
 	function(player, msg) {
 		if(msg.data) {
 			player.data = msg.data;
-			for(var y = 0; y < 5; ++y) {
+			for(var y = 0; y < Board.VANISH_ZONE_HEIGHT + 6; ++y) {
 				for(var x = 0; x < player.width; ++x) {
 					player.data[y * player.width + x] = 0;
 				}
@@ -421,7 +421,7 @@ Special.registerSpecial(
 				for(var x = 0; x < player.width; ++x)
 					player.data[y * player.width + x] = player.data[y * player.width + x] ? 0 : 1 + Math.floor(Math.random() * Block.blockData.length);
 				player.emit(Board.EVENT_CHANGE);
-				if(--y >= 6)
+				if(--y >= Board.VANISH_ZONE_HEIGHT + 6)
 					setTimeout(invertRow, 50);
 			}
 		}

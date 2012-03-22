@@ -101,12 +101,12 @@ PlayerView.prototype.render = function() {
 	// update board
 	var toprow = '';
 	if(this.isPlayer) {
-		toprow += '<div class="row">';
+		toprow += '<div class="toprow-wrapper"><div class="row">';
 		for(x = 0; x < this.player.width; ++x) {
 			b = this.player.at(x,Board.VANISH_ZONE_HEIGHT-1);
 			toprow += '<div class="cell '+(b !== 0 ? (typeof b === 'string' ? 'special special-'+b : 'block block-'+b) : 'empty')+'"> </div>';
 		}
-		toprow += '</div>';
+		toprow += '</div></div>';
 	}
 	for(y = Board.VANISH_ZONE_HEIGHT; y < this.player.height; ++y) {
 		html += '<div class="row">';
@@ -116,7 +116,7 @@ PlayerView.prototype.render = function() {
 		}
 		html += '</div>';
 	}
-	this.el.find('.board').html('<div class="toprow-wrapper">'+toprow+'</div><div class="board-wrapper">'+html+'</div>');
+	this.el.find('.board').html(toprow+'<div class="board-wrapper">'+html+'</div>');
 	
 	if(!this.isPlayer)
 		return;
