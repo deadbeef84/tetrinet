@@ -149,7 +149,7 @@ GameView.prototype.init = function() {
 		}
 	});
 	
-	$('#startbtn button').click(function() {
+	$('#startbtn').click(function() {
 		game.send({t:Message.START});
 	});
 	
@@ -159,7 +159,7 @@ GameView.prototype.init = function() {
 	});
 	
 	$('#lobby ul').delegate('a', 'click', function() {
-		game.send({t: Message.SET_ROOM, r: $(this).text()});
+		game.send({t: Message.SET_ROOM, r: $(this).data('room')});
 		return false;
 	});
 	
@@ -167,6 +167,15 @@ GameView.prototype.init = function() {
 		game.send({t: Message.SET_ROOM, r: ''});
 		return false;
 	});
+
+	$('#chatbox input').focus(function() {
+		$('#chatbox').removeClass('collapsed');
+	});
+	$('#chatbox input').blur(function() {
+		if(game.player && game.player.isPlaying)
+			$('#chatbox').addClass('collapsed');
+	});
+
 	
 	$('#chatbox form').submit(function() {
 		var msg = $('#message').val();

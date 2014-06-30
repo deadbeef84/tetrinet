@@ -53,6 +53,11 @@ Player.prototype.handleMessage = function(p) {
 				this.room.broadcast(Message.UPDATE_BOARD, {id: this.index, d: p.d}, this );
 			break;
 			
+		case Message.UPDATE_PIECE:
+			if(this.room)
+				this.room.broadcast(Message.UPDATE_PIECE, {id: this.index, pt: p.pt, x: p.x, y: p.y, r: p.r}, this );
+			break;
+			
 		case Message.GAMEOVER:
 			this.isPlaying = false;
 			if(this.room)

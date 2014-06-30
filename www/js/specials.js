@@ -74,8 +74,8 @@ Special.setOccurancy({
 	z: 1,
 	f: 6,
 	i: 5,
-	r: 5,
-	g: 2,
+	x: 5,
+	o: 2,
 	u: 2,
 	d: 6,
 	m: 2,
@@ -356,7 +356,7 @@ Special.registerSpecial(
 	"The falling piece will be sent to the bottom of the field, or stuck in the middle.",
 	function(player, msg) {
 		if(player.currentBlock) {
-			if(player.currentBlock.y >= 6) {
+			if(player.currentBlock.y >= Board.VANISH_ZONE_HEIGHT + 6) {
 				player.putBlock(player.currentBlock);
 				player.createNewBlock();
 			} else {

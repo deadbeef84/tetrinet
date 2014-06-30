@@ -60,12 +60,10 @@ if(!window.console) {
 
 Bw.windowIsActive = false;
 $(window).focus(function() {
-	console.log('window is active');
 	Bw.windowIsActive = true;
 });
 
 $(window).blur(function() {
-	console.log('window is inactive');
 	Bw.windowIsActive = false;
 });
 

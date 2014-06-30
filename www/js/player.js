@@ -90,20 +90,6 @@ Player.prototype.stop = function() {
 	this.dropTimer.stop();
 	this.newBlockTimer.stop();
 	this.emit(Board.EVENT_UPDATE);
-	// clear rickrolls
-	$('body').removeClass('rickroll-1 rickroll-2 rickroll-3');
-}
-
-Player.prototype.updateGhostBlock = function() {
-	this.ghostBlock = null;
-	if(this.currentBlock) {
-		this.ghostBlock = new Block(0,0);
-		for(var key in this.currentBlock)
-			this.ghostBlock[key] = this.currentBlock[key];
-		while(!this.collide(this.ghostBlock))
-			++this.ghostBlock.y;
-		--this.ghostBlock.y;
-	}
 }
 
 Player.prototype.updateGhostBlock = function() {

@@ -55,6 +55,7 @@ function filewithmtime($file) {
   
   <link href="http://fonts.googleapis.com/css?family=Bevan:regular" media="all" type="text/css" rel="stylesheet" />
   <link href="http://fonts.googleapis.com/css?family=Ubuntu:regular,bold&amp;subset=Latin" media="all" type="text/css" rel="stylesheet" />
+  <link href="bootstrap/css/bootstrap.min.css" media="all" type="text/css" rel="stylesheet" />
   <link href="css/style.css" media="all" type="text/css" rel="stylesheet" />
   <link type="text/css" rel="stylesheet" href="openid-selector/css/openid.css" />
   
@@ -224,13 +225,12 @@ $(document).ready(function() {
   
   <div id="container">
   
-    <a href="" id="settings_show" class="settings_toggle" title="Settings">Settings</a>
+    <a href="" id="settings_show" class="settings_toggle" title="Settings"><img src="images/settings.png" width="20" height="20" alt="Settings" /></a>
   
-    <header>
-      <h1>Tetrinet</h1>
-    </header>
-
     <div id="login">
+      <header>
+        <h1>Tetrinet</h1>
+      </header>
       <?php if($CONFIG['openid_enabled'] && !$CONFIG['singleplayer_enabled'] && $loggedIn === false) {?>
       <script>
       $(document).ready(function() {
@@ -257,8 +257,10 @@ $(document).ready(function() {
       </form>
       <?php } else { ?>
       <form action="#" method="get" id="login-form">
-        <input type="text" id="name" name="name" value="" />
-        <button>Enter</button>
+		<div class="input-append">
+		  <input type="text" id="name" name="name" placeholder="Name" value="" />
+          <button class="btn">Enter</button>
+		</div>
       </form>
         <?php if($loggedIn) {?>
       <p><a href="?logout=1">Logout (<?php echo $loggedIn ?>)</a></p>
@@ -268,31 +270,31 @@ $(document).ready(function() {
 
     <div id="lobby" style="display:none">
       <h2>Rooms</h2>
-      <a href="" id="createroom_show">Create room</a>
       <ul>
         <li>Loading...</li>
       </ul>
+	  <p><a href="" id="createroom_show" class="btn">+</a></p>
     </div>
 
-    <div id="ingame" style="display:none">
-      <a href="" id="leave_room">Leave room</a>
+    <div id="ingame" class="form-inline" style="display:none">
+	  <div id="topbar">
+      <a href="" id="leave_room" class="btn">←</a>
       <select id="team">
-        <option value="">[None]</option>
+        <option value="">[Team: None]</option>
         <option value="salmon">Red</option>
         <option value="lightblue">Blue</option>
         <option value="lightgreen">Green</option>
         <option value="khaki">Yellow</option>
         <option value="hotpink">Pink</option>
       </select>
-      <div id="startbtn">
-        <button>Start Game</button>
+      <button id="startbtn" class="btn">Start Game</button>
       </div>
       <div id="gamearea">
       </div>
       <div id="chatbox">
         <div id="chat"></div>
         <form>
-          <label for="message">Say: </label><input type="text" id="message"/>
+          <input type="text" id="message" placeholder="Enter message..." class="input-block-level"/>
         </form>
       </div>
       <div id="gamelogbox">

@@ -1,11 +1,18 @@
+html {
+	height: 100%;
+}
 body {
 	font-family:Ubuntu, sans-serif;
+	background-image: url(../images/skin/bg.png);
+	background-image: -webkit-radial-gradient(50% 50%, circle, rgba(0,0,0,0) 15%, rgba(0,0,0,0.25) 100%), url(../images/skin/bg.png);
+	height: 100%;
+	margin: 0;
 }
 a img { border: 0; }
 h1 {
-	font-family: 'Bevan', serif;
-	font-size: 48px;
-	text-transform: uppercase;
+	text-indent: -9999px;
+	height: 239px;
+	background: url(../images/logotype2.png) no-repeat center top;
 	margin: 0;
 }
 h2 { /* player names */
@@ -23,6 +30,18 @@ em.self { /* your name */
 	margin: 0 auto;
 }
 
+#login {
+	width: 100%;
+	margin-top: -200px;
+	position: absolute;
+	top: 50%;
+	left: 0;
+}
+
+#login-form {
+	margin-top: 2em;
+}
+
 #popup {
 	display: none;
 }
@@ -31,21 +50,26 @@ em.self { /* your name */
 	text-align: center;
 	margin: 0 auto;
 }
-#startbtn {
-	position: fixed;
-	width: 100%;
-	left: 0;
-	bottom:10px;
-	z-index: 1;
+#topbar {
+	padding-top: 5px;
 }
 #chatbox {
 	text-align: left;
-	float: left;
-	width: 50%;
+	width: 25%;
 	height: 150px;
-	background-color: #cfc;
+	background-color: rgba(0,0,0,0.5);
+	border-radius: 0 0 10px 10px;
+	position: fixed;
+	top: 0;
+	right: 10px;
+	padding: 0 10px 10px;
+	-webkit-transition: all 0.5s ease-out;
+}
+#chatbox.collapsed {
+	top: -110px;
 }
 	#chat {
+		color: white;
 		height: 120px;
 		overflow: auto;
 	}
@@ -59,6 +83,7 @@ em.self { /* your name */
 	width: 50%;
 	background-color: #fcc;
 	height: 150px;
+	display: none;
 }
 	#gamelog p {
 		line-height: 1em;
@@ -136,48 +161,20 @@ em.self { /* your name */
 }
 #lobby ul {
 	padding: 0;
+	margin: 0;
 }
 	#lobby ul li {
 		list-style-type: none;
 		width: 200px;
-		color: #666666;
-		padding: 15px 6px;
 		margin: 5px auto;
-		background: -moz-linear-gradient(
-			top,
-			#ccd4d8 0%,
-			#ffffff 10%,
-			#b2b6b7);
-		background: -webkit-gradient(
-			linear, left top, left bottom, 
-			from(#ccd4d8),
-			color-stop(0.10, #ffffff),
-			to(#b2b6b7));
-		border-radius: 8px;
-		-moz-border-radius: 8px;
-		-webkit-border-radius: 8px;
-		border: 1px solid #b2b6b7;
-		-moz-box-shadow:
-			0px 0px 0px rgba(000,000,000,0.5),
-			inset 0px 0px 0px rgba(255,255,255,0.7);
-		-webkit-box-shadow:
-			0px 0px 0px rgba(000,000,000,0.5),
-			inset 0px 0px 0px rgba(255,255,255,0.7);
-		text-shadow:
-			0px 0px 0px rgba(000,000,000,0),
-			0px 0px 0px rgba(255,255,255,0);
 	}
 	#lobby ul li a {
-		color: #444;
-		text-decoration: none;
-	}
-	#lobby ul li a:hover {
-		color: #666;
+		display: block;
 	}
 
 /* players */
 .player {
-	width: 96px;
+	width: 138px;
 	padding: 5px;
 	position: relative;
 	margin-bottom: 5px;
@@ -185,15 +182,19 @@ em.self { /* your name */
 	float: left;
 }
 	.player h2 {
-		margin: 0;
-		line-height: 20px;
-		font-size: 11px;
+		color: white;
+		margin: -2px 0 0 0;
+		background: url(../images/ribbon1.png) no-repeat;
+		padding: 4px 10px 0;
+		line-height: 14px;
+		font-size: 12px;
 		font-weight: normal;
 		white-space: nowrap;
 		overflow: hidden;
+		text-overflow: ellipsis;
+		text-shadow: 0 1px 0 rgba(0,0,0,.3);
 	}
 	.player .board {
-		float: left;
 		position: relative;
 		-webkit-transition: -webkit-transform ease-in-out 1s; /* needed for quake */
 	}
@@ -205,25 +206,26 @@ em.self { /* your name */
 	
 /* self */
 .player.self {
-	width: 272px;
+	width: 275px;
 	margin-right: 10px;
 }
 	.player.self h2 {
 		font-size: 16px;
+		background-image: url(../images/ribbon1-self.png);
+		line-height: 30px;
+		padding: 8px 20px 0;
+		margin-top: -5px;
 	}
 	.player.self .nextpiece, .player.self .holdpiece {
 		position: absolute;
 		z-index: 1;
-		top: 25px;
-		left: 202px;
+		top: 0;
+		left: 238px;
 		width: 64px;
-		background-color: #eee;
-		border: 2px solid #aaa;
 		padding: 5px;
 	}
 	.player.self .holdpiece {
-		border: 2px dashed #999;
-		left: -77px;
+		left: -30px;
 	}
 	.player.self .inventory {
 		float: left;
@@ -238,6 +240,12 @@ em.self { /* your name */
 	}
 
 /* game states */
+.player.winner .nextpiece,
+.player.gameover .nextpiece,
+.player.winner .holdpiece,
+.player.gameover .holdpiece {
+	display: none;
+}
 .player.winner .board::after {
 	background: black url(../images/win.png) no-repeat 50% 50%;
 	opacity: .9;
@@ -245,8 +253,8 @@ em.self { /* your name */
 .player.self.winner .board::after {
 	background-image: url(../images/win-self.png);
 }
-.player.gameover {
-	background-color: red;
+.player.gameover .board {
+	box-shadow: 0 0 10px red;
 }
 .player.gameover .board::after {
 	background: black url(../images/skull.jpg) no-repeat 50% 50%;
@@ -303,16 +311,18 @@ em.self { /* your name */
 /* the board */
 .board-wrapper {
 	width: 96px;
-	background: black url(../images/skin/original.png) no-repeat -192px -24px;
+	margin: 0 auto;
+	background: url(../images/skin/retro.png) no-repeat -192px -24px;
 	overflow: hidden;
 }
 .self .board-wrapper {
-	background: black url(../images/skin/original.png) no-repeat 0 -24px;
+	background: url(../images/skin/retro.png) no-repeat 0 -24px;
 	width: 192px;
 }
 .toprow-wrapper {
-	background: black url(../images/skin/original.png) no-repeat 0 -24px;
+	background: url(../images/skin/retro.png) no-repeat 0 -24px;
 	width: 192px;
+	margin: 0 auto;
 	height: 2px;
 	overflow: hidden;
 	display: none;
@@ -323,6 +333,7 @@ em.self { /* your name */
 .row {
 	float: left;
 	width: 100%;
+	margin-left: 0;
 }
 .column {
 	float: left;
@@ -334,7 +345,7 @@ em.self { /* your name */
 	height: 8px;
 	line-height: 8px;
 	font-size: 0;
-	background: url(../images/skin/original.png) no-repeat 0 0;
+	background: url(../images/skin/retro.png) no-repeat 0 0;
 }
 .self .row {
 	height: 16px;
@@ -486,10 +497,14 @@ em.self { /* your name */
 }
 #settings_show {
 	position: absolute;
+	top: 5px;
+	left: 5px;
 	display: none;
 }
 #cb_container {
 	background: #ccc;
+	max-height: 90%;
+	overflow: auto;
 }
 #cb_titlebar {
 	margin: 0;

@@ -18,6 +18,7 @@ var messages =
     ,'SET_ROOM'
     ,'NAME'
     ,'SET_TEAM'
+    ,'UPDATE_PIECE'
 ];
 
 for(var i=0; i<messages.length; ++i) {

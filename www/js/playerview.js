@@ -3,16 +3,18 @@ function PlayerView(player) {
 	this.isPlayer = (this.player instanceof Player);
 	this.notifierSlots = [];
 	this.nukeTimer = 0;
+	this.dom = null;
 
 	this.el = $(
 		'<div class="player">'+
-			'<h2>Player</h2>'+
 			'<div class="board"></div>'+
+			'<h2>Player</h2>'+
 			'<div class="nextpiece"></div>'+
 			'<div class="holdpiece"></div>'+
 			'<div class="inventory"></div>'+
 		'</div>').appendTo('#gamearea');
 		
+	this.build();
 	this.render();
 	
 	var self = this;
@@ -90,6 +92,51 @@ PlayerView.shakeObject = function(obj, count, delay, width, height, defaultMargi
 	shake(args);
 }
 
+PlayerView.prototype.build = function() {
+	var x, y, r, c;
+	
+	var board = this.el.find('.board').empty();
+	this.dom = {};
+	
+	var wrapper = $('<div class="board-wrapper" />');
+	for(y = Board.VANISH_ZONE_HEIGHT; y < this.player.height; ++y) {
+		this.dom[y] = [];
+		r = $('<div class="row" />').appendTo(wrapper);
+		for(x = 0; x < this.player.width; ++x) {
+			this.dom[y][x] = $('<div />').appendTo(r)[0];
+		}
+	}
+	wrapper.appendTo(board);
+	
+	if(this.isPlayer) {
+		this.dom['toprow'] = [];
+		r = $('<div class="toprow-wrapper"><div class="row"></div></div>').prependTo(board).find('.row');
+		for(x = 0; x < this.player.width; ++x) {
+			this.dom['toprow'][x] = $('<div />').appendTo(r)[0];
+		}
+		
+		wrapper = this.el.find('.nextpiece').empty();
+		for(var i = 0; i < this.player.options.nextpiece; i++) {
+			if(i)
+				$('<div class="row empty"></div>').appendTo(wrapper);
+			for(y = 0; y < 2; ++y) {
+				this.dom['nb' + (i * 2 + y)] = [];
+				r = $('<div class="row"></div>').appendTo(wrapper);
+				for(x = 0; x < 4; ++x)
+					this.dom['nb' + (i * 2 + y)][x] = $('<div />').appendTo(r)[0];
+			}
+		}
+		
+		wrapper = this.el.find('.holdpiece').empty();
+		for(y = 0; y < 2; ++y) {
+			this.dom['hp'+y] = [];
+			r = $('<div class="row"></div>').appendTo(wrapper);
+			for(x = 0; x < 4; ++x)
+				this.dom['hp'+y][x] = $('<div />').appendTo(r)[0];
+		}
+	}
+}
+
 PlayerView.prototype.render = function() {
 	var html = '';
 	var x, y, b;
@@ -99,69 +146,57 @@ PlayerView.prototype.render = function() {
 		this.player.updateGhostBlock();
 		
 	// update board
-	var toprow = '';
-	if(this.isPlayer) {
-		toprow += '<div class="toprow-wrapper"><div class="row">';
-		for(x = 0; x < this.player.width; ++x) {
-			b = this.player.at(x,Board.VANISH_ZONE_HEIGHT-1);
-			toprow += '<div class="cell '+(b !== 0 ? (typeof b === 'string' ? 'special special-'+b : 'block block-'+b) : 'empty')+'"> </div>';
-		}
-		toprow += '</div></div>';
-	}
 	for(y = Board.VANISH_ZONE_HEIGHT; y < this.player.height; ++y) {
-		html += '<div class="row">';
 		for(x = 0; x < this.player.width; ++x) {
 			b = this.player.at(x,y);
-			html += '<div class="cell '+(b !== 0 ? (typeof b === 'string' ? 'special special-'+b : 'block block-'+b) : 'empty')+'"> </div>';
+			this.dom[y][x].className = 'cell ' + (b !== 0 ? (typeof b === 'string' ? 'special special-'+b : 'block block-'+b) : 'empty');
 		}
-		html += '</div>';
 	}
-	this.el.find('.board').html(toprow+'<div class="board-wrapper">'+html+'</div>');
 	
 	if(!this.isPlayer)
 		return;
+
+	// update toprow
+	for(x = 0; x < this.player.width; ++x) {
+		b = this.player.at(x,Board.VANISH_ZONE_HEIGHT-1);
+		this.dom['toprow'][x].className = 'cell ' + (b !== 0 ? (typeof b === 'string' ? 'special special-'+b : 'block block-'+b) : 'empty');
+	}
 	
 	// update preview (next) blocks
 	if(this.player.nextBlocks && this.player.nextBlocks.length) {
-		html = '';
 		for(var i = 0; i < this.player.options.nextpiece; i++) {
 			var bp = {};
 			var nextBlock = this.player.nextBlocks[i];
 			for(x = 0; x < nextBlock.data.length; ++x)
 				bp[nextBlock.data[x][0]+'_'+nextBlock.data[x][1]] = nextBlock.type + 1;
 			for(y = 0; y < 2; ++y) {
-				html += '<div class="row">';
 				for(x = 0; x < 4; ++x) {
 					b = bp[x+'_'+y];
-					html += '<div class="cell '+(b ? 'block block-'+(i>0?'8':b) : 'empty')+'"> </div>';
+					this.dom['nb' + (i * 2 + y)][x].className = 'cell ' + (b ? 'block block-'+(i>0?'8':b) : 'empty');
 				}
-				html += '</div>';
 			}
-			if (i < this.player.options.nextpiece - 1)
-				html += '<div class="row empty"/>';
 		}
-		this.el.find('.nextpiece').html('<div>'+html+'</div>');
 	}
 	
 	// Update hold block
 	if (this.player.holdBlock) {
-		html = '';
 		var bp = {};
-		for(x = 0; x < this.player.holdBlock.data.length; ++x)
-			bp[this.player.holdBlock.data[x][0]+'_'+this.player.holdBlock.data[x][1]] = this.player.holdBlock.type + 1;
+		var holdBlock = this.player.holdBlock;
+		for(x = 0; x < holdBlock.data.length; ++x)
+			bp[holdBlock.data[x][0]+'_'+holdBlock.data[x][1]] = holdBlock.type + 1;
 		for(y = 0; y < 2; ++y) {
-			html += '<div class="row">';
 			for(x = 0; x < 4; ++x) {
 				b = bp[x+'_'+y];
-				html += '<div class="cell '+(b ? 'block block-'+b : 'empty')+'"> </div>';
+				this.dom['hp'+y][x].className = 'cell ' + (b ? 'block block-'+b : 'empty');
 			}
-			html += '</div>';
 		}
-		this.el.find('.holdpiece').html('<div>'+html+'</div>');
 	} else {
-		this.el.find('.holdpiece').empty();
+		for(y = 0; y < 2; ++y) {
+			for(x = 0; x < 4; ++x) {
+				this.dom['hp'+y][x].className = 'cell empty';
+			}
+		}
 	}
-
 }
 
 PlayerView.prototype.renderInventory = function() {
@@ -190,6 +225,27 @@ PlayerView.prototype.removeLine = function(y) {
 }
 
 PlayerView.prototype.specialNuke = function() {
+	var $board = this.el.find('.board');
+	var center = $board.offset();
+	center.left += $board.width() / 2;
+	center.top += $board.height() / 2;
+	
+	$board.find('.special, .block').each(function() {
+		var o = $(this).offset();
+		var d = {
+			left: o.left - center.left,
+			top: o.top - center.top
+		};
+		var m = 1 / Math.sqrt(d.left * d.left + d.top * d.top);
+		d.left *= m * (200 + Math.random() * 250);
+		d.top *= m * (200 + Math.random() * 250);
+		$(this).clone()
+			.appendTo($board)
+			.css({position: 'absolute'})
+			.offset(o)
+			.animate({left: '+='+d.left+'px', top: '+='+d.top+'px'}, 250 + Math.random() * 250, function() { $(this).remove(); });
+	});
+			
 	var $board = this.el.find('.board')
 		.addClass('nuke')
 		.css({

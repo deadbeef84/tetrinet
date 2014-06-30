@@ -2,6 +2,7 @@ function Board() {
 	this.width = 12;
 	this.height = 24 + Board.VANISH_ZONE_HEIGHT;
 	this.data = [];
+	this.currentBlock = null;
 	this.clear();
 }
 
@@ -32,6 +33,8 @@ Board.prototype.clear = function() {
 }
 
 Board.prototype.at = function(x,y) {
+	if(this.currentBlock && this.currentBlock.hasPieceAt(x,y))
+		return this.currentBlock.type + 1;
 	return this.data[y * this.width + x];
 }
 

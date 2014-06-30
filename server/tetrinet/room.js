@@ -226,7 +226,7 @@ Room.prototype.doStartGame = function() {
 	this.playerStats = {};
 	
 	this.emit(Room.EVENT_START);
-	if(this.players.length > 2)
+	if(this.numPlayers() > 2)
 		this.checkGameState();
 }
 
