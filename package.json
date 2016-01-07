@@ -1,0 +1,31 @@
+{
+  "name": "tetrinet2",
+  "version": "0.0.0",
+  "description": "Web version of the classic tetrinet game.",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack",
+    "dev": "webpack --watch"
+  },
+  "keywords": [
+    "tetrinet",
+    "game"
+  ],
+  "author": "",
+  "license": "BSD-2-Clause",
+  "dependencies": {
+    "babel-loader": "^6.2.1",
+    "babel-polyfill": "^6.3.14",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-register": "^6.3.13",
+    "baobab": "^2.3.0",
+    "express": "^4.13.3",
+    "openid": "^1.0.0",
+    "optimist": "^0.6.1",
+    "socket.io": "^1.1.0",
+    "socket.io-client": "^1.4.1"
+  },
+  "devDependencies": {
+    "webpack": "^1.12.10"
+  }
+}

@@ -1,0 +1,40 @@
+Logging
+    system
+    lines
+    special
+    chat
+
+Main
+    Splash
+    OpenID
+    Settings
+    Notifications
+
+Game
+    Start/Stop
+
+Room
+    Join
+    Part
+
+Player
+
+
+Bot to play server side
+
+----
+
+{
+  rooms: {
+    name: {
+      players: {
+        id: {
+          isPlaying: true/false,
+          team: '',
+        }
+      },
+      options: {},
+      state: '',
+    },
+  },
+}
