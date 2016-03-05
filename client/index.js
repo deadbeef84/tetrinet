@@ -24,30 +24,35 @@ socket.on('init', state => {
   main.parentNode.appendChild(view)
 
   const player = new Player()
-  player.setOptions({height:24, width:12, specials: false, generator: 1, entrydelay: 0, rotationsystem: 1, tspin: true, holdpiece: true, nextpiece: 3})
+  player.setOptions({height: 24, width: 12, specials: false, generator: 1, entrydelay: 0, rotationsystem: 1, tspin: true, holdpiece: true, nextpiece: 3})
   const playerView = new PlayerView(player)
   view.appendChild(playerView.el[0])
   playerView.el.addClass('self')
 
-  document.addEventListener('keydown', ({key}) => {
-    switch (key) {
+  document.addEventListener('keydown', ({key, code, keyCode}) => {
+    switch (key || code || keyCode) {
       case 'Left':
+      case 'ArrowLeft':
         player.move(-1, 0, 0, false)
         break
       case 'Right':
+      case 'ArrowRight':
         player.move(1, 0, 0, false)
         break
       case 'Up':
+      case 'ArrowUp':
         player.move(0, 0, 1, false)
         break
       case 'Down':
+      case 'ArrowDown':
         player.move(0, 1, 0, false)
         break
       case ' ':
+      case 'Space':
         player.falldown(true)
         break
       default:
-        console.log(key)
+        console.log(key, code, keyCode)
     }
   })
   player.start()

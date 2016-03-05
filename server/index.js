@@ -1,18 +1,16 @@
 import optimist from 'optimist'
 import express from 'express'
-import {createServer} from 'http'
+import { createServer } from 'http'
 import socketio from 'socket.io'
-import Game from './game'
 import Room from './room'
+import Baobab from 'baobab'
 
 const app = express()
 const server = createServer(app)
 const io = socketio(server)
-// const game = new Game(io)
 
 app.use(express.static(__dirname + '/../build'))
 
-import Baobab from 'baobab'
 const tree = new Baobab({
   time: Date.now(),
   rooms: {},
@@ -20,7 +18,7 @@ const tree = new Baobab({
 
 const rooms = {}
 let roomId = 0
-function addRoom(options) {
+function addRoom (options) {
   const id = ++roomId
   const cursor = tree.select(['rooms', id])
   rooms[id] = new Room(cursor, options)
