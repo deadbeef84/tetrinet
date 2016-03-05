@@ -10,11 +10,6 @@ const server = createServer(app)
 const io = socketio(server)
 // const game = new Game(io)
 
-const argv = optimist
-  .usage('Usage: $0 --port [num]')
-  .default({port: 1080})
-  .argv
-
 app.use(express.static(__dirname + '/../build'))
 
 import Baobab from 'baobab'
@@ -48,6 +43,7 @@ io.on('connection', socket => {
 
 setInterval(() => tree.set('time', Date.now()), 1000)
 
-server.listen(argv.port, () => {
-  console.log('Server listening at port %d', argv.port)
+const port = process.env.PORT || 1080
+server.listen(port, () => {
+  console.log('Server listening at port', port)
 })

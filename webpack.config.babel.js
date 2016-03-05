@@ -1,8 +1,9 @@
 import path from 'path'
 import webpack from 'webpack'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
+import ExtractTextPlugin from 'extract-text-webpack-plugin'
 
-const isDevelopment = process.env.NODE_ENV === 'development'
+const isDevelopment = process.env.NODE_ENV !== 'production'
 export default {
   hotPort: 8080,
   cache: isDevelopment,
@@ -17,8 +18,11 @@ export default {
       test: /\.json$/,
       loader: 'json',
     }, {
-      test: /\.(gif|jpg|png|woff|woff2|eot|ttf|svg)$/,
-      loader: 'url-loader?limit=100000',
+      test: /\.css$/,
+      loader: ExtractTextPlugin.extract("style-loader", "css-loader")
+   }, {
+     test: /\.(gif|jpg|png|woff|woff2|eot|ttf|svg)$/,
+     loader: 'url-loader?limit=100000',
     }, {
       test: /\.jsx?$/,
       loader: 'babel',
@@ -33,6 +37,7 @@ export default {
     filename: '[name].js',
   },
   plugins: [
+    new ExtractTextPlugin("[name].css"),
     new HtmlWebpackPlugin({
       title: 'Tetrinet',
       template: 'client/index.html',
