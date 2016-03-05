@@ -1,21 +1,16 @@
 import path from 'path'
 import webpack from 'webpack'
+import HtmlWebpackPlugin from 'html-webpack-plugin'
 
-const devtools = process.env.CONTINUOUS_INTEGRATION
-  ? 'inline-source-map'
-  // cheap-module-eval-source-map, because we want original source, but we don't
-  // care about columns, which makes this devtool faster than eval-source-map.
-  // http://webpack.github.io/docs/configuration.html#devtool
-  : 'cheap-module-eval-source-map'
 const isDevelopment = process.env.NODE_ENV === 'development'
 export default {
   hotPort: 8080,
   cache: isDevelopment,
   debug: isDevelopment,
-  devtool: isDevelopment ? devtools : '',
+  devtool: isDevelopment ? 'cheap-module-eval-source-map' : '',
   entry: [
     'babel-polyfill',
-    './client/index',
+    './client',
   ],
   module: {
     loaders: [{
@@ -38,6 +33,10 @@ export default {
     filename: '[name].js',
   },
   plugins: [
+    new HtmlWebpackPlugin({
+      title: 'Tetrinet',
+      template: 'client/index.html',
+    }),
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: JSON.stringify(isDevelopment
