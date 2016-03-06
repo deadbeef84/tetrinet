@@ -1,6 +1,7 @@
 import $ from 'jquery'
 import Player from './player'
 import Board from './board'
+import Special from './special'
 
 export default class PlayerView {
   constructor (player) {
@@ -11,7 +12,7 @@ export default class PlayerView {
     this.dom = null
 
     this.el = $(
-      `<div class="player"><div class="board"></div><h2>Player</h2><div class="nextpiece"></div><div class="holdpiece"></div><div class="inventory"></div></div>`)
+      '<div class="player"><div class="board"></div><h2>Player</h2><div class="nextpiece"></div><div class="holdpiece"></div><div class="inventory"></div></div>')
 
     this.build()
     this.render()
@@ -25,10 +26,10 @@ export default class PlayerView {
     this.player.on(Player.EVENT_INVENTORY, () => {
       this.renderInventory()
     })
-    this.player.on(Board.EVENT_REMOVE_LINE, y => {
+    this.player.on(Board.EVENT_REMOVE_LINE, (y) => {
       this.removeLine(y)
     })
-    this.player.on(Player.EVENT_SPECIAL, msg => {
+    this.player.on(Player.EVENT_SPECIAL, (msg) => {
       switch (msg.s) {
         case Special.NUKE:
           this.specialNuke()
@@ -53,14 +54,15 @@ export default class PlayerView {
           break
       }
     })
-    this.player.on(Player.EVENT_NOTIFY, msg => {
+    this.player.on(Player.EVENT_NOTIFY, (msg) => {
       let offset = 0
       const $msg = $(msg)
-      for (let i = 0; this.notifierSlots[i]; i++, offset++)
+      for (let i = 0; this.notifierSlots[i]; i++, offset++) {
         this.notifierSlots[offset] = true
+      }
       $msg.data('offset', offset)
       $msg.css('top', offset * 50)
-      setTimeout(obj => {
+      setTimeout((obj) => {
         obj.animate({'opacity': 0}, 500, () => {
           this.notifierSlots[obj.data('offset')] = false
           obj.remove()
@@ -71,7 +73,7 @@ export default class PlayerView {
   }
 
   build () {
-    let x, y, r, c
+    let x, y, r
 
     const board = this.el.find('.board').empty()
     this.dom = {}
@@ -95,13 +97,15 @@ export default class PlayerView {
 
       wrapper = this.el.find('.nextpiece').empty()
       for (let i = 0; i < this.player.options.nextpiece; i++) {
-        if (i)
+        if (i) {
           $('<div class="row empty"></div>').appendTo(wrapper)
+        }
         for (y = 0; y < 2; ++y) {
           this.dom[`nb${i * 2 + y}`] = []
           r = $('<div class="row"></div>').appendTo(wrapper)
-          for (x = 0; x < 4; ++x)
+          for (x = 0; x < 4; ++x) {
             this.dom[`nb${i * 2 + y}`][x] = $('<div />').appendTo(r)[0]
+          }
         }
       }
 
@@ -109,19 +113,20 @@ export default class PlayerView {
       for (y = 0; y < 2; ++y) {
         this.dom[`hp${y}`] = []
         r = $('<div class="row"></div>').appendTo(wrapper)
-        for (x = 0; x < 4; ++x)
+        for (x = 0; x < 4; ++x) {
           this.dom[`hp${y}`][x] = $('<div />').appendTo(r)[0]
+        }
       }
     }
   }
 
   render () {
-    const html = ''
     let x, y, b
 
     // update ghost block
-    if (this.isPlayer)
+    if (this.isPlayer) {
       this.player.updateGhostBlock()
+    }
 
     // update board
     for (y = Board.VANISH_ZONE_HEIGHT; y < this.player.height; ++y) {
@@ -131,8 +136,9 @@ export default class PlayerView {
       }
     }
 
-    if (!this.isPlayer)
+    if (!this.isPlayer) {
       return
+    }
 
     // update toprow
     for (x = 0; x < this.player.width; ++x) {
@@ -143,10 +149,11 @@ export default class PlayerView {
     // update preview (next) blocks
     if (this.player.nextBlocks && this.player.nextBlocks.length) {
       for (let i = 0; i < this.player.options.nextpiece; i++) {
-        var bp = {}
+        let bp = {}
         const nextBlock = this.player.nextBlocks[i]
-        for (x = 0; x < nextBlock.data.length; ++x)
+        for (x = 0; x < nextBlock.data.length; ++x) {
           bp[`${nextBlock.data[x][0]}_${nextBlock.data[x][1]}`] = nextBlock.type + 1
+        }
         for (y = 0; y < 2; ++y) {
           for (x = 0; x < 4; ++x) {
             b = bp[`${x}_${y}`]
@@ -158,10 +165,11 @@ export default class PlayerView {
 
     // Update hold block
     if (this.player.holdBlock) {
-      var bp = {}
+      let bp = {}
       const holdBlock = this.player.holdBlock
-      for (x = 0; x < holdBlock.data.length; ++x)
+      for (x = 0; x < holdBlock.data.length; ++x) {
         bp[`${holdBlock.data[x][0]}_${holdBlock.data[x][1]}`] = holdBlock.type + 1
+      }
       for (y = 0; y < 2; ++y) {
         for (x = 0; x < 4; ++x) {
           b = bp[`${x}_${y}`]
@@ -185,8 +193,9 @@ export default class PlayerView {
       html += `<div class="cell ${b !== 0 ? (typeof b === 'string' ? 'special special-' + b : 'block block-' + b) : 'empty'}"> </div>`
     }
     html += '</div>'
-    if (inv.length)
+    if (inv.length) {
       html += `<p>${Special.getSpecial(inv[0]).name}</p>`
+    }
     this.el.find('.inventory').html(html)
   }
 
@@ -198,8 +207,7 @@ export default class PlayerView {
         .appendTo(this.el)
         .css({position: 'absolute'})
         .offset($original.offset())
-        .animate({top: '+=20px', opacity: 0}, 250, () => {
-          $clear.remove();})
+        .animate({top: '+=20px', opacity: 0}, 250, () => $clear.remove())
     }
   }
 
@@ -225,22 +233,23 @@ export default class PlayerView {
         .animate(
           {left: `+=${d.left}px`, top: `+=${d.top}px`},
           250 + Math.random() * 250,
-          function () { $(this).remove(); }
+          function () { $(this).remove() }
       )
     })
 
-    var $board = this.el.find('.board')
+    $board
       .addClass('nuke')
       .css({
         background: `black center bottom no-repeat url('../images/nuke.gif?${Date.now()}')`,
         'background-size': 'cover'
       })
-    if (this.nukeTimer)
+    if (this.nukeTimer) {
       clearTimeout(this.nukeTimer)
+    }
     this.nukeTimer = setTimeout(function () {
       $board.removeClass('nuke').css('background', 'transparent')
       this.nukeTimer = 0
-    }, 1800); // 60 frames * 0.03 seconds
+    }, 1800) // 60 frames * 0.03 seconds
   }
 
   specialQuake () {
@@ -248,15 +257,16 @@ export default class PlayerView {
   }
 
   specialBomb () {
+    const self = this
     this.el.find('.board-wrapper .special-b').each(function () {
       const node = $('<div class="explosion" />')
         .offset($(this).offset())
         .appendTo('#container')
         .css({'background-image': `url('../images/explosion.gif?${Date.now()}')`})
-      if (!self.isPlayer)
+      if (!self.isPlayer) {
         node.css({'-webkit-transform': 'scale(0.5)'})
-      setTimeout(obj => {
-        obj.remove();}, 2000, node)
+      }
+      setTimeout((obj) => obj.remove(), 2000, node)
     })
   }
 
@@ -270,12 +280,12 @@ export default class PlayerView {
       .offset(centerOffset)
       .css({height: 0})
       .animate({ height: boardHeight }, 1000, function () {
-        $(this).animate({ opacity: 0 }, 1000, function () { $(this).remove(); })
+        $(this).animate({ opacity: 0 }, 1000, function () { $(this).remove() })
       })
     $nyancat.appendTo('#container')
       .offset(centerOffset)
       .css({top: centerOffset.top - 8})
-      .animate({ top: `+=${boardHeight}` }, 1000, function () { $(this).remove(); })
+      .animate({ top: `+=${boardHeight}` }, 1000, function () { $(this).remove() })
     if (!this.isPlayer) {
       centerOffset.left -= 5
       $nyancat.add($rainbow).offset(centerOffset)
@@ -285,8 +295,9 @@ export default class PlayerView {
   }
 
   specialZebra () {
-    if (!this.isPlayer)
+    if (!this.isPlayer) {
       this.player.zebra = typeof this.player.zebra === 'undefined' ? false : !this.player.zebra
+    }
     const animationDir = this.player.zebra ? '-' : '+'
     const animationLen = this.isPlayer ? 200 : 100
     const $rows = this.el.find('.board-wrapper .row')
@@ -295,8 +306,9 @@ export default class PlayerView {
       for (let y = Board.VANISH_ZONE_HEIGHT; y < this.player.height; y++) {
         let b = this.player.data[y * this.player.width + x]
         if (this.isPlayer && this.player.invisible) {
-          if (!this.player.inBlockVisinity(x, y))
+          if (!this.player.inBlockVisinity(x, y)) {
             b = 0
+          }
         }
         const $cell = $('<div class="cell"/>')
         $cell.addClass(
@@ -307,12 +319,11 @@ export default class PlayerView {
       $column.appendTo(this.el)
         .css({position: 'absolute'})
         .offset($rows.first().find('.cell').eq(x).offset())
-      setTimeout(obj => {
+      setTimeout((obj) => {
         obj.animate(
           {top: `${animationDir}=${animationLen}px`, opacity: 0},
           500,
-          () => {
-            obj.remove();}
+          () => obj.remove()
         )
       }, i * 50, $column)
     }
@@ -325,10 +336,10 @@ export default class PlayerView {
         .offset($(this).offset())
         .appendTo('#container')
         .css({'background-image': `url('../images/sparkle.gif?${Date.now()}')`})
-      if (!self.isPlayer)
+      if (!self.isPlayer) {
         node.css({'-webkit-transform': 'scale(0.5)'})
-      node.fadeOut(4000, () => {
-        node.remove();})
+      }
+      node.fadeOut(4000, () => node.remove())
     })
   }
 
@@ -340,11 +351,10 @@ export default class PlayerView {
         .appendTo(self.el)
         .css({position: 'absolute'})
         .offset($(this).offset())
-      PlayerView.shakeObject($clone, 30, 50, 10, 5, 0, function () { this.fadeOut(200); })
+      PlayerView.shakeObject($clone, 30, 50, 10, 5, 0, function () { this.fadeOut(200) })
     })
     $inventory.addClass('bomb')
-    setTimeout(() => {
-      $inventory.removeClass('bomb');}, 30 * 50)
+    setTimeout(() => $inventory.removeClass('bomb'), 30 * 50)
   }
 }
 
@@ -357,8 +367,9 @@ PlayerView.shakeObject = (obj, count, delay, width, height, defaultMargin, callb
     width,
     height,
     defaultMargin,
-  callback}
-  const shake = args => {
+    callback
+  }
+  const shake = (args) => {
     if (args.count--) {
       const factor = (args.count + 1) / args.countStart
       const horizontal = Math.round(Math.random() * (args.count & 1 ? -1 : 1) * args.width * factor)
@@ -371,10 +382,10 @@ PlayerView.shakeObject = (obj, count, delay, width, height, defaultMargin, callb
       })
       setTimeout(shake, args.delay, args)
     } else {
-      console.log(args.obj)
       args.obj.css('margin', args.defaultMargin)
-      if (typeof args.callback === 'function')
-        ;(args.callback).call(args.obj)
+      if (typeof args.callback === 'function') {
+        args.callback.call(args.obj)
+      }
     }
   }
   shake(args)

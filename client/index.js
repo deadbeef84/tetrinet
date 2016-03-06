@@ -8,10 +8,10 @@ const socket = new Client({reconnection: false})
 socket.on('connect', () => {
   console.log('connected')
 })
-socket.on('init', state => {
+socket.on('init', (state) => {
   console.log(state)
   const tree = new Baobab(state)
-  socket.on('update', transactions => {
+  socket.on('update', (transactions) => {
     // console.log(transactions)
     transactions
       .map(({type, value, path}) => type === 'push'
@@ -58,9 +58,9 @@ socket.on('init', state => {
   player.start()
 
   // tree.select('time').on('update', ({target}) => main.textContent = target.get())
-  tree.on('update', x => main.textContent = JSON.stringify(x.data.currentData))
+  tree.on('update', (x) => { main.textContent = JSON.stringify(x.data.currentData) })
 
-  socket.on('self', path => {
+  socket.on('self', (path) => {
     console.log(path)
     setTimeout(() => socket.emit('update', {ready: true}), 2000)
   })

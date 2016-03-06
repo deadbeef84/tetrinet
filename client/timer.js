@@ -14,8 +14,7 @@ export default class Timer extends EventEmitter {
     this.stop()
     this.currentCount = 0
     this.startTime = new Date().getTime()
-    this.intervalId = setInterval(() => {
-      this._onTimer();}, this.delay)
+    this.intervalId = setInterval(() => this._onTimer(), this.delay)
   }
 
   stop () {

@@ -1,18 +1,21 @@
 {
   "name": "tetrinet2",
   "version": "0.0.0",
+  "author": "Jesper Ek <deadbeef84@gmail.com>",
   "description": "Web version of the classic tetrinet game.",
   "main": "index.js",
   "scripts": {
     "build": "webpack",
-    "dev": "webpack --watch"
+    "dev": "webpack --watch",
+    "lint": "standard"
   },
   "keywords": [
     "tetrinet",
     "game"
   ],
-  "author": "Jesper Ek <deadbeef84@gmail.com>",
-  "license": "BSD-2-Clause",
+  "standard": {
+    "parser": "babel-eslint"
+  },
   "dependencies": {
     "babel-loader": "^6.2.1",
     "babel-polyfill": "^6.3.14",
@@ -26,6 +29,7 @@
     "socket.io-client": "^1.4.1"
   },
   "devDependencies": {
+    "babel-eslint": "^5.0.0",
     "css-loader": "^0.23.1",
     "extract-text-webpack-plugin": "^1.0.1",
     "file-loader": "^0.8.5",

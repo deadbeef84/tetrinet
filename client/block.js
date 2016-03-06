@@ -13,8 +13,9 @@ export default class Block {
 
   setRotation (r) {
     const numRotations = Block.blockData[this.type].length
-    if (r < 0)
+    if (r < 0) {
       r = numRotations + r
+    }
     this.rotation = r % numRotations
     this.data = Block.blockData[this.type][this.rotation]
   }
@@ -36,10 +37,12 @@ export default class Block {
   }
 
   hasPieceAt (x, y) {
-    const lx = x - this.x, ly = y - this.y
+    const lx = x - this.x
+    const ly = y - this.y
     for (let i = 0; i < this.data.length; ++i) {
-      if (lx == this.data[i][0] && ly == this.data[i][1])
+      if (lx === this.data[i][0] && ly === this.data[i][1]) {
         return true
+      }
     }
     return false
   }

@@ -1,4 +1,4 @@
-import optimist from 'optimist'
+import path from 'path'
 import express from 'express'
 import { createServer } from 'http'
 import socketio from 'socket.io'
@@ -9,11 +9,11 @@ const app = express()
 const server = createServer(app)
 const io = socketio(server)
 
-app.use(express.static(__dirname + '/../build'))
+app.use(express.static(path.join(__dirname, '..', 'build')))
 
 const tree = new Baobab({
   time: Date.now(),
-  rooms: {},
+  rooms: {}
 })
 
 const rooms = {}
@@ -32,7 +32,7 @@ tree.on('update', ({data}) => {
   io.emit('update', data.transaction)
 })
 
-io.on('connection', socket => {
+io.on('connection', (socket) => {
   console.log('Client connected!')
   socket.emit('init', tree.get())
   const player = rooms[1].join(socket, {name: 'Jesper'})

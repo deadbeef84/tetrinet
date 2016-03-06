@@ -3,45 +3,41 @@ import Board from './board'
 import Block from './block'
 import Timer from './timer'
 
+const Special = { } // TODO
+
 function prng (seed) {
   return {
-    uint32(min = 0 , max = 100000) {
+    uint32 (min = 0, max = 100000) {
       return Math.floor(Math.random() * (max - min)) + min
     }
   }
 }
 
-class Player extends Board {
+export default class Player extends Board {
   constructor () {
     super()
     this.reset()
 
     this.dropTimer = new Timer(Player.DROP_DELAY)
-    this.dropTimer.on(Timer.EVENT_TIMER, () => {
-      this.drop();})
+    this.dropTimer.on(Timer.EVENT_TIMER, () => this.drop())
 
     this.newBlockTimer = new Timer(Player.NEWBLOCK_DELAY, 1)
-    this.newBlockTimer.on(Timer.EVENT_TIMER, () => {
-      this.doCreateNewBlock();})
+    this.newBlockTimer.on(Timer.EVENT_TIMER, () => this.doCreateNewBlock())
 
     this.flipTimer = new Timer(Player.TIME_FLIP, 1)
-    this.flipTimer.on(Timer.EVENT_TIMER, () => {
-      this.flip = false;})
+    this.flipTimer.on(Timer.EVENT_TIMER, () => { this.flip = false })
 
     this.invisibleTimer = new Timer(Player.TIME_INVISIBLE, 1)
-    this.invisibleTimer.on(Timer.EVENT_TIMER, () => {
-      this.invisible = false;})
+    this.invisibleTimer.on(Timer.EVENT_TIMER, () => { this.invisible = false })
 
     this.reflectTimer = new Timer(Player.TIME_REFLECT, 1)
-    this.reflectTimer.on(Timer.EVENT_TIMER, () => {
-      this.reflect = false;})
+    this.reflectTimer.on(Timer.EVENT_TIMER, () => { this.reflect = false })
 
     this.speedTimer = new Timer(Player.TIME_SPEED, 1)
-    this.speedTimer.on(
-      Timer.EVENT_TIMER,
-      () => {
-        this.speed = false; $('body').removeClass('speed');}
-    )
+    this.speedTimer.on(Timer.EVENT_TIMER, () => {
+      this.speed = false
+      $('body').removeClass('speed')
+    })
   }
 
   reset (seed) {
@@ -93,22 +89,27 @@ class Player extends Board {
     this.ghostBlock = null
     if (this.currentBlock) {
       this.ghostBlock = new Block(0, 0)
-      for (let key in this.currentBlock)
+      for (let key in this.currentBlock) {
         this.ghostBlock[key] = this.currentBlock[key]
-      while(!this.collide(this.ghostBlock))
-      ++this.ghostBlock.y
+      }
+      while (!this.collide(this.ghostBlock)) {
+        ++this.ghostBlock.y
+      }
       --this.ghostBlock.y
     }
   }
 
   at (x, y) {
-    if (this.currentBlock && this.currentBlock.hasPieceAt(x, y))
+    if (this.currentBlock && this.currentBlock.hasPieceAt(x, y)) {
       return this.currentBlock.type + 1
-    if (this.ghostBlock && this.ghostBlock.hasPieceAt(x, y))
+    }
+    if (this.ghostBlock && this.ghostBlock.hasPieceAt(x, y)) {
       return 10
+    }
     if (this.invisible) {
-      if (this.inBlockVisinity(x, y))
+      if (this.inBlockVisinity(x, y)) {
         return this.data[y * this.width + x]
+      }
       return 9
     }
     return this.data[y * this.width + x]
@@ -120,8 +121,9 @@ class Player extends Board {
       for (let i = 0; i < this.currentBlock.data.length; ++i) {
         bx = this.currentBlock.x + this.currentBlock.data[i][0]
         by = this.currentBlock.y + this.currentBlock.data[i][1]
-        if (Math.abs(x - bx) <= 4 && Math.abs(y - by) <= 4)
+        if (Math.abs(x - bx) <= 4 && Math.abs(y - by) <= 4) {
           return true
+        }
       }
     }
     return false
@@ -130,7 +132,8 @@ class Player extends Board {
   addLines (numLines) {
     super.addLines(numLines)
     if (this.currentBlock) {
-      const bb = this.currentBlock.getBoundingBox(), blockHeight = Math.abs(bb.maxy - bb.miny)
+      const bb = this.currentBlock.getBoundingBox()
+      const blockHeight = Math.abs(bb.maxy - bb.miny)
       this.currentBlock.y = Math.max(-blockHeight, this.currentBlock.y - numLines)
     }
     this.emit(Board.EVENT_CHANGE)
@@ -147,15 +150,16 @@ class Player extends Board {
 
     super.onRemoveLines(lines, data)
 
-    if (!this.options.specials)
+    if (!this.options.specials) {
       return
+    }
 
     let i, l
     for (i = 0; i < data.length; ++i) {
       // add removed specials to inventory
       if (typeof data[i] === 'string') {
         for (l = 0; l < lines && this.inventory.length < Player.INVENTORY_MAX; ++l) {
-          const p = this.inventory.length == 0 ? 0 : 1 + Math.floor((this.inventory.length - 1) * Math.random())
+          const p = this.inventory.length === 0 ? 0 : 1 + Math.floor((this.inventory.length - 1) * Math.random())
           this.inventory.splice(p, 0, data[i])
         }
       }
@@ -164,12 +168,13 @@ class Player extends Board {
     // attempt to add new specials
     const b = [] // b contains occupied blocks
     for (i = 0; i < this.data.length; ++i) {
-      if (this.data[i] > 0)
+      if (this.data[i] > 0) {
         b.push(i)
+      }
     }
 
     l = lines
-    while(b.length && l) {
+    while (b.length && l) {
       i = Math.floor(b.length * Math.random())
       this.data[b[i]] = Special.getRandomSpecial()
       b.splice(i, 1)
@@ -180,30 +185,33 @@ class Player extends Board {
   }
 
   drop () {
-    if (this.move(0, 1, 0, this.dropStick == 5)) {
+    if (this.move(0, 1, 0, this.dropStick === 5)) {
       ++this.dropStick
-    }
-    else
+    } else {
       this.emit(Player.EVENT_DROP)
+    }
   }
 
   initDrop () {
-    if (!this.speed)
+    if (!this.speed) {
       this.dropTimer.delay = Math.max(50, 750 - this.numLines * 5)
+    }
     this.dropTimer.start()
   }
 
   generateBlocks () {
-    while(this.nextBlocks.length < 3) {
+    while (this.nextBlocks.length < 3) {
       if (this.options.generator === Player.BLOCK_GENERATOR_RANDOM) {
         this.nextBlocks.push(new Block(this.random.uint32(), 0))
       } else {
         let i
         const blocks = []
-        for (i = 0; i < Block.blockData.length; ++i)
+        for (i = 0; i < Block.blockData.length; ++i) {
           blocks.push(i)
-        while(blocks.length)
-        this.nextBlocks.push(new Block(blocks.splice(this.random.uint32() % blocks.length, 1)[0], 0))
+        }
+        while (blocks.length) {
+          this.nextBlocks.push(new Block(blocks.splice(this.random.uint32() % blocks.length, 1)[0], 0))
+        }
       }
     }
   }
@@ -260,10 +268,12 @@ class Player extends Board {
   }
 
   move (x, y, r, stick) {
-    if (!this.currentBlock)
+    if (!this.currentBlock) {
       return
-    if (this.flip)
+    }
+    if (this.flip) {
       x *= -1
+    }
     const initialRotation = this.currentBlock.rotation
     this.currentBlock.x += x
     this.currentBlock.y += y
@@ -271,9 +281,9 @@ class Player extends Board {
       this.currentBlock.rotate(r)
     }
     const c = this.collide(this.currentBlock)
-    if (c != Board.NO_COLLISION) {
+    if (c !== Board.NO_COLLISION) {
       let rotationSucceeded = false
-      if (x == 0 && y == 0 && r && !stick) {
+      if (x === 0 && y === 0 && r && !stick) {
         switch (this.options.rotationsystem) {
           case Player.ROTATION_SYSTEM_CLASSIC:
             rotationSucceeded = this.handleCollisionClassic(c)
@@ -284,15 +294,16 @@ class Player extends Board {
             break
         }
       }
-      if (x == 0 && y == 0 && !stick && rotationSucceeded) {
+      if (x === 0 && y === 0 && !stick && rotationSucceeded) {
         this.emit(Board.EVENT_UPDATE)
         return false
       } else {
         // revert position
         this.currentBlock.x -= x
         this.currentBlock.y -= y
-        if (r)
+        if (r) {
           this.currentBlock.rotate(-r)
+        }
         if (stick) {
           this.putBlock(this.currentBlock)
           this.createNewBlock()
@@ -305,27 +316,33 @@ class Player extends Board {
   }
 
   handleCollisionClassic (c) {
-    const bb = this.currentBlock.getBoundingBox(), ox = this.currentBlock.x, oy = this.currentBlock.y
+    const bb = this.currentBlock.getBoundingBox()
+    const ox = this.currentBlock.x
+    const oy = this.currentBlock.y
 
     switch (c) {
       case Board.COLLISION_BOUNDS:
         // collided with floor when rotating?
-        for (var i = 0; i < Math.abs(bb.maxy - bb.miny); i++) {
+        for (let i = 0; i < Math.abs(bb.maxy - bb.miny); i++) {
           this.currentBlock.y--
-          if (this.collide(this.currentBlock) == Board.NO_COLLISION)
+          if (this.collide(this.currentBlock) === Board.NO_COLLISION) {
             return true
+          }
         }
         // collided with wall when rotating?
         this.currentBlock.x = (this.currentBlock.x < (this.width / 2)) ? -bb.minx : this.width - bb.maxx - 1
-        if (this.collide(this.currentBlock) == Board.NO_COLLISION)
+        if (this.collide(this.currentBlock) === Board.NO_COLLISION) {
           return true
+        }
         break
       case Board.COLLISION_BLOCKS:
         // collided with floor when rotating?
-        for (var i = 0; i < Math.abs(bb.maxy - bb.miny) && this.collide(this.currentBlock); i++)
+        for (let i = 0; i < Math.abs(bb.maxy - bb.miny) && this.collide(this.currentBlock); i++) {
           this.currentBlock.y--
-        if (this.collide(this.currentBlock) == Board.NO_COLLISION)
+        }
+        if (this.collide(this.currentBlock) === Board.NO_COLLISION) {
           return true
+        }
         break
     }
     this.currentBlock.x = ox
@@ -334,33 +351,38 @@ class Player extends Board {
   }
 
   handleCollisionSRS (initialRotation, r) {
+    /*eslint-disable */
     const TEST_OFFSETS_JLSTZ = [
-      [ [-1, 0], [-1, -1], [ 0, 2], [-1, 2] ], // 0 -> R / 0 -> 1
-      [ [ 1, 0], [ 1, 1], [ 0, -2], [ 1, -2] ], // R -> 2 / 1 -> 2
-      [ [ 1, 0], [ 1, -1], [ 0, 2], [ 1, 2] ], // 2 -> L / 2 -> 3
-      [ [-1, 0], [-1, 1], [ 0, -2], [-1, -2] ], // L -> 0 / 3 -> 0
-      [ [ 1, 0], [ 1, -1], [ 0, 2], [ 1, 2] ], // 0 -> L / 0 -> 3
-      [ [ 1, 0], [ 1, 1], [ 0, -2], [ 1, -2] ], // R -> 0 / 1 -> 0
-      [ [-1, 0], [-1, -1], [ 0, 2], [-1, 2] ], // 2 -> R / 2 -> 1
-      [ [-1, 0], [-1, 1], [ 0, -2], [-1, -2] ] // L -> 2 / 3 -> 2
+      [ [-1, 0], [-1,-1], [ 0, 2], [-1, 2] ],	// 0 -> R / 0 -> 1
+      [ [ 1, 0], [ 1, 1], [ 0,-2], [ 1,-2] ],	// R -> 2 / 1 -> 2
+      [ [ 1, 0], [ 1,-1], [ 0, 2], [ 1, 2] ],	// 2 -> L / 2 -> 3
+      [ [-1, 0], [-1, 1], [ 0,-2], [-1,-2] ],	// L -> 0 / 3 -> 0
+      [ [ 1, 0], [ 1,-1], [ 0, 2], [ 1, 2] ],	// 0 -> L / 0 -> 3
+      [ [ 1, 0], [ 1, 1], [ 0,-2], [ 1,-2] ],	// R -> 0 / 1 -> 0
+      [ [-1, 0], [-1,-1], [ 0, 2], [-1, 2] ],	// 2 -> R / 2 -> 1
+      [ [-1, 0], [-1, 1], [ 0,-2], [-1,-2] ] 	// L -> 2 / 3 -> 2
     ]
     const TEST_OFFSETS_I = [
-      [ [-2, 0], [ 1, 0], [-2, 1], [ 1, -2] ], // 0 -> R / 0 -> 1
-      [ [-1, 0], [ 2, 0], [-1, -2], [ 2, 1] ], // R -> 2 / 1 -> 2
-      [ [ 2, 0], [-1, 0], [ 2, -1], [-1, 2] ], // 2 -> L / 2 -> 3
-      [ [ 1, 0], [-2, 0], [ 1, 2], [-2, -1] ], // L -> 0 / 3 -> 0
-      [ [-1, 0], [ 2, 0], [-1, -2], [ 2, 1] ], // 0 -> L / 0 -> 3
-      [ [ 2, 0], [-1, 0], [ 2, -1], [-1, 2] ], // R -> 0 / 1 -> 0
-      [ [ 1, 0], [-2, 0], [ 1, 2], [-2, -1] ], // 2 -> R / 2 -> 1
-      [ [-2, 0], [ 1, 0], [-2, 1], [ 1, -2] ] // L -> 2 / 3 -> 2
+      [ [-2, 0], [ 1, 0], [-2, 1], [ 1,-2] ],	// 0 -> R / 0 -> 1
+      [ [-1, 0], [ 2, 0], [-1,-2], [ 2, 1] ],	// R -> 2 / 1 -> 2
+      [ [ 2, 0], [-1, 0], [ 2,-1], [-1, 2] ],	// 2 -> L / 2 -> 3
+      [ [ 1, 0], [-2, 0], [ 1, 2], [-2,-1] ],	// L -> 0 / 3 -> 0
+      [ [-1, 0], [ 2, 0], [-1,-2], [ 2, 1] ],	// 0 -> L / 0 -> 3
+      [ [ 2, 0], [-1, 0], [ 2,-1], [-1, 2] ],	// R -> 0 / 1 -> 0
+      [ [ 1, 0], [-2, 0], [ 1, 2], [-2,-1] ],	// 2 -> R / 2 -> 1
+      [ [-2, 0], [ 1, 0], [-2, 1], [ 1,-2] ] 	// L -> 2 / 3 -> 2
     ]
-    const ox = this.currentBlock.x, oy = this.currentBlock.y, offsets = this.currentBlock.type != 1 ? TEST_OFFSETS_JLSTZ : TEST_OFFSETS_I
-    t = initialRotation + Math.max(0, -r * 4)
+    /*eslint-enable */
+    const ox = this.currentBlock.x
+    const oy = this.currentBlock.y
+    const offsets = this.currentBlock.type !== 1 ? TEST_OFFSETS_JLSTZ : TEST_OFFSETS_I
+    const t = initialRotation + Math.max(0, -r * 4)
     for (let i = 0; i < 4; i++) {
       this.currentBlock.x = ox + offsets[t][i][0]
       this.currentBlock.y = oy + offsets[t][i][1]
-      if (this.collide(this.currentBlock) == Board.NO_COLLISION)
+      if (this.collide(this.currentBlock) === Board.NO_COLLISION) {
         return true
+      }
     }
     this.currentBlock.x = ox
     this.currentBlock.y = oy
@@ -368,10 +390,12 @@ class Player extends Board {
   }
 
   falldown (put) {
-    if (!this.currentBlock)
+    if (!this.currentBlock) {
       return
-    while(!this.collide(this.currentBlock))
-    ++this.currentBlock.y
+    }
+    while (!this.collide(this.currentBlock)) {
+      ++this.currentBlock.y
+    }
 
     // revert position
     --this.currentBlock.y
@@ -384,10 +408,12 @@ class Player extends Board {
   }
 
   moveUpIfBlocked () {
-    if (!this.currentBlock)
+    if (!this.currentBlock) {
       return
-    const bb = this.currentBlock.getBoundingBox(), blockHeight = Math.abs(bb.maxy - bb.miny)
-    while(this.collide(this.currentBlock)) {
+    }
+    const bb = this.currentBlock.getBoundingBox()
+    const blockHeight = Math.abs(bb.maxy - bb.miny)
+    while (this.collide(this.currentBlock)) {
       if (this.currentBlock.y <= -blockHeight) {
         this.putBlock(this.currentBlock)
         this.createNewBlock()
@@ -430,5 +456,3 @@ Player.ROTATION_SYSTEM_SRS = 1
 
 Player.BLOCK_GENERATOR_RANDOM = 0
 Player.BLOCK_GENERATOR_7BAG = 1
-
-export default Player
