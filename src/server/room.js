@@ -31,12 +31,13 @@ export default class Room extends EventEmitter {
   }
 
   join (socket, options) {
-    const cursor = this.cursor.select(['players', socket.id])
-    this.players[socket.id] = new Player(socket, cursor, options, this)
+    const id = socket.client.id
+    const cursor = this.cursor.select(['players', id])
+    this.players[id] = new Player(socket, cursor, options, this)
     socket.on('disconnect', (x) => {
       cursor.unset()
-      delete this.players[socket.id]
+      delete this.players[id]
     })
-    return this.players[socket.id]
+    return this.players[id]
   }
 }

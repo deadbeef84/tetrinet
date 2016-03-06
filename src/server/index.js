@@ -9,7 +9,7 @@ const app = express()
 const server = createServer(app)
 const io = socketio(server)
 
-app.use(express.static(path.join(__dirname, '..', 'build')))
+app.use(express.static(path.join(__dirname, '..', '..', 'build')))
 
 const tree = new Baobab({
   time: Date.now(),
@@ -35,8 +35,15 @@ tree.on('update', ({data}) => {
 io.on('connection', (socket) => {
   console.log('Client connected!')
   socket.emit('init', tree.get())
-  const player = rooms[1].join(socket, {name: 'Jesper'})
-  socket.emit('self', player.cursor.path)
+  socket.on('join', (id, respond) => {
+    const room = rooms[id]
+    const player = room.join(socket, {name: 'Jesper'})
+    respond({
+      id,
+      room: room.cursor.path,
+      player: player.cursor.path
+    })
+  })
 })
 
 setInterval(() => tree.set('time', Date.now()), 1000)

@@ -11,7 +11,7 @@ export default {
   devtool: isDevelopment ? 'cheap-module-eval-source-map' : '',
   entry: [
     'babel-polyfill',
-    './client'
+    './src/client'
   ],
   module: {
     loaders: [{
@@ -36,7 +36,7 @@ export default {
     new ExtractTextPlugin('[name].css'),
     new HtmlWebpackPlugin({
       title: 'Tetrinet',
-      template: 'client/index.html'
+      template: 'src/client/index.html'
     }),
     new webpack.DefinePlugin({
       'process.env': {
