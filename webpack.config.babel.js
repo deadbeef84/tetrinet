@@ -25,11 +25,7 @@ export default {
       loader: 'url-loader?limit=100000'
     }, {
       test: /\.jsx?$/,
-      loader: 'babel',
-      exclude: /node_modules/,
-      query: {
-        presets: ['es2015']
-      }
+      loader: 'babel'
     }]
   },
   output: {
@@ -44,9 +40,7 @@ export default {
     }),
     new webpack.DefinePlugin({
       'process.env': {
-        NODE_ENV: JSON.stringify(isDevelopment
-          ? 'development'
-          : 'production'),
+        NODE_ENV: JSON.stringify(isDevelopment ? 'development' : 'production'),
         IS_BROWSER: true
       }
     }),

@@ -2,9 +2,9 @@ export default class Block {
   constructor (rndType, rndRot) {
     this.x = 0
     this.y = 0
-    this.type = rndType % Block.blockData.length
-    this.rotation = rndRot % Block.blockData[this.type].length
-    this.data = Block.blockData[this.type][this.rotation]
+    this.type = rndType % numBlockTypes
+    this.rotation = rndRot % blockData[this.type].length
+    this.data = blockData[this.type][this.rotation]
   }
 
   rotate (r) {
@@ -12,12 +12,12 @@ export default class Block {
   }
 
   setRotation (r) {
-    const numRotations = Block.blockData[this.type].length
+    const numRotations = blockData[this.type].length
     if (r < 0) {
       r = numRotations + r
     }
     this.rotation = r % numRotations
-    this.data = Block.blockData[this.type][this.rotation]
+    this.data = blockData[this.type][this.rotation]
   }
 
   getBoundingBox () {
@@ -46,9 +46,10 @@ export default class Block {
     }
     return false
   }
+
 }
 
-Block.blockData = [
+export const blockData = [
   // O
   [[[1, 0], [2, 0], [1, 1], [2, 1]]],
   // I
@@ -94,3 +95,5 @@ Block.blockData = [
     [[0, 0], [0, 1], [1, 1], [1, 2]]
   ]
 ]
+
+export const numBlockTypes = blockData.length

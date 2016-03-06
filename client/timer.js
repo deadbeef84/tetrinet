@@ -1,7 +1,7 @@
 import EventEmitter from 'events'
 
 export default class Timer extends EventEmitter {
-  constructor (delay, count) {
+  constructor (delay, count = Infinity) {
     super()
     this.delay = delay
     this.count = count
@@ -13,8 +13,15 @@ export default class Timer extends EventEmitter {
   start () {
     this.stop()
     this.currentCount = 0
-    this.startTime = new Date().getTime()
-    this.intervalId = setInterval(() => this._onTimer(), this.delay)
+    this.startTime = Date.now()
+    this.intervalId = setInterval(() => {
+      ++this.currentCount
+      this.emit(Timer.EVENT_TIMER)
+      if (this.currentCount >= this.count) {
+        this.stop()
+        this.emit(Timer.EVENT_TIMER_COMPLETE)
+      }
+    }, this.delay)
   }
 
   stop () {
@@ -29,16 +36,7 @@ export default class Timer extends EventEmitter {
   }
 
   time () {
-    return (new Date().getTime()) - this.startTime
-  }
-
-  _onTimer () {
-    ++this.currentCount
-    this.emit(Timer.EVENT_TIMER)
-    if (typeof this.count !== 'undefined' && this.currentCount >= this.count) {
-      this.stop()
-      this.emit(Timer.EVENT_TIMER_COMPLETE)
-    }
+    return Date.now() - this.startTime
   }
 
   addDelay (time) {

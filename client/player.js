@@ -1,9 +1,8 @@
 import $ from 'jquery'
 import Board from './board'
-import Block from './block'
+import Block, {numBlockTypes} from './block'
 import Timer from './timer'
-
-const Special = { } // TODO
+import Special from './special'
 
 function prng (seed) {
   return {
@@ -14,6 +13,28 @@ function prng (seed) {
 }
 
 export default class Player extends Board {
+  static TIME_FLIP = 10000;
+  static TIME_INVISIBLE = 10000;
+  static TIME_REFLECT = 10000;
+  static TIME_SPEED = 15000;
+
+  static INVENTORY_MAX = 18;
+  static DROP_DELAY = 1000;
+  static NEWBLOCK_DELAY = 150;
+
+  static EVENT_GAMEOVER = 'gameover';
+  static EVENT_INVENTORY = 'inventory';
+  static EVENT_NEW_BLOCK = 'new_block';
+  static EVENT_DROP = 'drop';
+  static EVENT_SPECIAL = 'special';
+  static EVENT_NOTIFY = 'notify';
+
+  static ROTATION_SYSTEM_CLASSIC = 0;
+  static ROTATION_SYSTEM_SRS = 1;
+
+  static BLOCK_GENERATOR_RANDOM = 0;
+  static BLOCK_GENERATOR_7BAG = 1;
+
   constructor () {
     super()
     this.reset()
@@ -89,9 +110,7 @@ export default class Player extends Board {
     this.ghostBlock = null
     if (this.currentBlock) {
       this.ghostBlock = new Block(0, 0)
-      for (let key in this.currentBlock) {
-        this.ghostBlock[key] = this.currentBlock[key]
-      }
+      Object.assign(this.ghostBlock, this.currentBlock)
       while (!this.collide(this.ghostBlock)) {
         ++this.ghostBlock.y
       }
@@ -117,10 +136,9 @@ export default class Player extends Board {
 
   inBlockVisinity (x, y) {
     if (this.currentBlock) {
-      let bx, by
       for (let i = 0; i < this.currentBlock.data.length; ++i) {
-        bx = this.currentBlock.x + this.currentBlock.data[i][0]
-        by = this.currentBlock.y + this.currentBlock.data[i][1]
+        let bx = this.currentBlock.x + this.currentBlock.data[i][0]
+        let by = this.currentBlock.y + this.currentBlock.data[i][1]
         if (Math.abs(x - bx) <= 4 && Math.abs(y - by) <= 4) {
           return true
         }
@@ -154,11 +172,10 @@ export default class Player extends Board {
       return
     }
 
-    let i, l
-    for (i = 0; i < data.length; ++i) {
+    for (let i = 0; i < data.length; ++i) {
       // add removed specials to inventory
       if (typeof data[i] === 'string') {
-        for (l = 0; l < lines && this.inventory.length < Player.INVENTORY_MAX; ++l) {
+        for (let l = 0; l < lines && this.inventory.length < Player.INVENTORY_MAX; ++l) {
           const p = this.inventory.length === 0 ? 0 : 1 + Math.floor((this.inventory.length - 1) * Math.random())
           this.inventory.splice(p, 0, data[i])
         }
@@ -167,15 +184,15 @@ export default class Player extends Board {
 
     // attempt to add new specials
     const b = [] // b contains occupied blocks
-    for (i = 0; i < this.data.length; ++i) {
+    for (let i = 0; i < this.data.length; ++i) {
       if (this.data[i] > 0) {
         b.push(i)
       }
     }
 
-    l = lines
+    let l = lines
     while (b.length && l) {
-      i = Math.floor(b.length * Math.random())
+      let i = Math.floor(b.length * Math.random())
       this.data[b[i]] = Special.getRandomSpecial()
       b.splice(i, 1)
       l--
@@ -206,7 +223,7 @@ export default class Player extends Board {
       } else {
         let i
         const blocks = []
-        for (i = 0; i < Block.blockData.length; ++i) {
+        for (i = 0; i < numBlockTypes; ++i) {
           blocks.push(i)
         }
         while (blocks.length) {
@@ -434,25 +451,3 @@ export default class Player extends Board {
     }
   }
 }
-
-Player.TIME_FLIP = 10000
-Player.TIME_INVISIBLE = 10000
-Player.TIME_REFLECT = 10000
-Player.TIME_SPEED = 15000
-
-Player.INVENTORY_MAX = 18
-Player.DROP_DELAY = 1000
-Player.NEWBLOCK_DELAY = 150
-
-Player.EVENT_GAMEOVER = 'gameover'
-Player.EVENT_INVENTORY = 'inventory'
-Player.EVENT_NEW_BLOCK = 'new_block'
-Player.EVENT_DROP = 'drop'
-Player.EVENT_SPECIAL = 'special'
-Player.EVENT_NOTIFY = 'notify'
-
-Player.ROTATION_SYSTEM_CLASSIC = 0
-Player.ROTATION_SYSTEM_SRS = 1
-
-Player.BLOCK_GENERATOR_RANDOM = 0
-Player.BLOCK_GENERATOR_7BAG = 1

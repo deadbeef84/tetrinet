@@ -2,6 +2,18 @@ import EventEmitter from 'events'
 import Block from './block'
 
 export default class Board extends EventEmitter {
+  static VANISH_ZONE_HEIGHT = 4;
+
+  static EVENT_UPDATE = 'update';
+  static EVENT_CHANGE = 'change';
+  static EVENT_LINES = 'lines';
+  static EVENT_REMOVE_LINE = 'remove line';
+  static EVENT_PUT_BLOCK = 'putblock';
+
+  static NO_COLLISION = 0;
+  static COLLISION_BLOCKS = 1;
+  static COLLISION_BOUNDS = 2;
+
   constructor () {
     super()
     this.width = 12
@@ -76,7 +88,7 @@ export default class Board extends EventEmitter {
         this.data[y * this.width + x] = block.type + 1
       }
     }
-    this.emit(Board.PUT_BLOCK)
+    this.emit(Board.EVENT_PUT_BLOCK)
     this.checklines(true)
   }
 
@@ -101,15 +113,3 @@ export default class Board extends EventEmitter {
     return Board.NO_COLLISION
   }
 }
-
-Board.VANISH_ZONE_HEIGHT = 4
-
-Board.EVENT_UPDATE = 'update'
-Board.EVENT_CHANGE = 'change'
-Board.EVENT_LINES = 'lines'
-Board.EVENT_REMOVE_LINE = 'remove line'
-Board.PUT_BLOCK = 'putblock'
-
-Board.NO_COLLISION = 0
-Board.COLLISION_BLOCKS = 1
-Board.COLLISION_BOUNDS = 2
