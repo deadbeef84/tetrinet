@@ -1,8 +1,8 @@
 import React, {Component} from 'react'
 import ReactDOM from 'react-dom'
 import {branch} from 'baobab-react/higher-order'
-import TetrinetPlayer from '../../common/tetrinet/player'
-import Board from '../../common/tetrinet/board'
+import TetrinetPlayer from '../../common/player'
+import Board from '../../common/board'
 import PlayerView from '../playerview'
 import {sendBoard} from '../actions'
 

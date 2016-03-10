@@ -1,7 +1,7 @@
 import $ from 'jquery'
-import Player from '../common/tetrinet/player'
-import Board from '../common/tetrinet/board'
-import Special from '../common/tetrinet/special'
+import Player from '../common/player'
+import Board from '../common/board'
+import Special from '../common/special'
 
 export default class PlayerView {
   constructor (player) {
