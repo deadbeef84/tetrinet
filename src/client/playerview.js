@@ -212,7 +212,7 @@ export default class PlayerView {
   }
 
   specialNuke () {
-    var $board = this.el.find('.board')
+    const $board = this.el.find('.board')
     const center = $board.offset()
     center.left += $board.width() / 2
     center.top += $board.height() / 2

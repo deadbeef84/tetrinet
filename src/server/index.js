@@ -38,6 +38,7 @@ io.on('connection', (socket) => {
   socket.on('join', (id, respond) => {
     const room = rooms[id]
     const player = room.join(socket, {name: 'Jesper'})
+    room.addBot()
     respond({
       id,
       room: room.cursor.path,

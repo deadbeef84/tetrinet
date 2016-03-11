@@ -15,10 +15,10 @@ export default class Player extends EventEmitter {
       ...options,
       state: Player.IDLE,
       ready: false,
-      data: 'foo'
+      data: ''
     })
 
-    socket.on('update', (data) => {
+    socket && socket.on('update', (data) => {
       this.cursor.merge(data)
     })
   }

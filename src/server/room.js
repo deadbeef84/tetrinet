@@ -1,5 +1,7 @@
 import EventEmitter from 'events'
 import Player from './player'
+import Bot from '../common/bot'
+import Board from '../common/board'
 
 export default class Room extends EventEmitter {
 
@@ -38,6 +40,17 @@ export default class Room extends EventEmitter {
       cursor.unset()
       delete this.players[id]
     })
+    return this.players[id]
+  }
+
+  addBot () {
+    const id = `Bot ${Math.floor(Math.random() * 1000000)}`
+    const cursor = this.cursor.select(['players', id])
+    this.players[id] = new Player(null, cursor, {name: id}, this)
+    const bot = new Bot()
+    bot.setOptions({height: 24, width: 12, specials: false, generator: 1, entrydelay: 0, rotationsystem: 1, tspin: true, holdpiece: true, nextpiece: 3})
+    bot.start()
+    bot.on(Board.EVENT_CHANGE, () => cursor.set('data', bot.data))
     return this.players[id]
   }
 }
