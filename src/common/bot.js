@@ -25,10 +25,8 @@ export default class Bot extends Player {
       for (let x = 0; x < this.width; x++) {
         row += this.data[(this.height - 1 - y) * this.width + x] ? '1' : '0'
       }
-      console.log(row)
       this.ai.board[y] = parse(row)
     }
-    console.log('-------------')
   }
 
   getBoardHeight (player) {
