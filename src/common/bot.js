@@ -395,7 +395,7 @@ const PIECES = []
 for (let i in blockData) {
   PIECES[i] = []
   for (let j in blockData[i]) {
-    const block = new Block(i, j)
+    const block = new Block({type: i, rotation: j})
     const bb = block.getBoundingBox()
     const piece = {
       width: bb.maxx - bb.minx + 1,

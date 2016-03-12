@@ -1,10 +1,9 @@
 export default class Block {
-  constructor (rndType, rndRot) {
-    this.x = 0
-    this.y = 0
-    this.type = rndType % numBlockTypes
-    this.rotation = rndRot % blockData[this.type].length
-    this.data = blockData[this.type][this.rotation]
+  constructor ({x = 0, y = 0, type = 0, rotation = 0} = {}) {
+    this.x = x
+    this.y = y
+    this.type = type % numBlockTypes
+    this.setRotation(rotation)
   }
 
   rotate (r) {
@@ -17,34 +16,31 @@ export default class Block {
       r = numRotations + r
     }
     this.rotation = r % numRotations
-    this.data = blockData[this.type][this.rotation]
+  }
+
+  getData () {
+    return blockData[this.type][this.rotation]
+  }
+
+  getCoords () {
+    return this.getData().map(([px, py]) => [this.x + px, this.y + py])
   }
 
   getBoundingBox () {
-    const bb = {
-      minx: 1000,
-      maxx: 0,
-      miny: 1000,
-      maxy: 0
+    const xs = this.getData().map(([x]) => x)
+    const ys = this.getData().map(([, y]) => y)
+    return {
+      minx: Math.min(...xs),
+      maxx: Math.max(...xs),
+      miny: Math.min(...ys),
+      maxy: Math.max(...ys)
     }
-    for (let i = 0; i < this.data.length; ++i) {
-      bb.minx = Math.min(bb.minx, this.data[i][0])
-      bb.maxx = Math.max(bb.maxx, this.data[i][0])
-      bb.miny = Math.min(bb.miny, this.data[i][1])
-      bb.maxy = Math.max(bb.maxy, this.data[i][1])
-    }
-    return bb
   }
 
   hasPieceAt (x, y) {
     const lx = x - this.x
     const ly = y - this.y
-    for (let i = 0; i < this.data.length; ++i) {
-      if (lx === this.data[i][0] && ly === this.data[i][1]) {
-        return true
-      }
-    }
-    return false
+    return this.getData().some(([px, py]) => lx === px && ly === py)
   }
 
 }

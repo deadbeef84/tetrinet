@@ -3,8 +3,9 @@ import ReactDOM from 'react-dom'
 import {branch} from 'baobab-react/higher-order'
 import TetrinetPlayer from '../../common/player'
 import Board from '../../common/board'
+import Block from '../../common/block'
 import PlayerView from '../playerview'
-import {sendBoard} from '../actions'
+import {sendBoard, sendBlock} from '../actions'
 
 class Player extends Component {
   componentDidMount () {
@@ -47,7 +48,7 @@ class Player extends Component {
       })
       player.start()
       player.on(Board.EVENT_CHANGE, () => sendBoard(player.data))
-      // player.on(Board.EVENT_UPDATE, () => sendPiece())
+      player.on(Board.EVENT_UPDATE, () => sendBlock(player.currentBlock))
     } else {
       this.board = new Board()
       const playerView = new PlayerView(this.board)
@@ -64,6 +65,7 @@ class Player extends Component {
     const { player = {}, self } = this.props
     if (!self && this.board) {
       this.board.data = player.data
+      this.board.currentBlock = player.block ? new Block(player.block) : null
       this.board.emit(Board.EVENT_UPDATE)
     }
     return (

@@ -121,17 +121,15 @@ export default class PlayerView {
   }
 
   render () {
-    let x, y, b
-
     // update ghost block
     if (this.isPlayer) {
       this.player.updateGhostBlock()
     }
 
     // update board
-    for (y = Board.VANISH_ZONE_HEIGHT; y < this.player.height; ++y) {
-      for (x = 0; x < this.player.width; ++x) {
-        b = this.player.at(x, y)
+    for (let y = Board.VANISH_ZONE_HEIGHT; y < this.player.height; ++y) {
+      for (let x = 0; x < this.player.width; ++x) {
+        let b = this.player.at(x, y)
         this.dom[y][x].className = `cell ${b !== 0 ? (typeof b === 'string' ? 'special special-' + b : 'block block-' + b) : 'empty'}`
       }
     }
@@ -141,8 +139,8 @@ export default class PlayerView {
     }
 
     // update toprow
-    for (x = 0; x < this.player.width; ++x) {
-      b = this.player.at(x, Board.VANISH_ZONE_HEIGHT - 1)
+    for (let x = 0; x < this.player.width; ++x) {
+      let b = this.player.at(x, Board.VANISH_ZONE_HEIGHT - 1)
       this.dom['toprow'][x].className = `cell ${b !== 0 ? (typeof b === 'string' ? 'special special-' + b : 'block block-' + b) : 'empty'}`
     }
 
@@ -151,12 +149,13 @@ export default class PlayerView {
       for (let i = 0; i < this.player.options.nextpiece; i++) {
         let bp = {}
         const nextBlock = this.player.nextBlocks[i]
-        for (x = 0; x < nextBlock.data.length; ++x) {
-          bp[`${nextBlock.data[x][0]}_${nextBlock.data[x][1]}`] = nextBlock.type + 1
+        const data = nextBlock.getData()
+        for (let j = 0; j < data.length; ++j) {
+          bp[`${data[j][0]}_${data[j][1]}`] = nextBlock.type + 1
         }
-        for (y = 0; y < 2; ++y) {
-          for (x = 0; x < 4; ++x) {
-            b = bp[`${x}_${y}`]
+        for (let y = 0; y < 2; ++y) {
+          for (let x = 0; x < 4; ++x) {
+            let b = bp[`${x}_${y}`]
             this.dom[`nb${i * 2 + y}`][x].className = `cell ${b ? 'block block-' + (i > 0 ? '8' : b) : 'empty'}`
           }
         }
@@ -167,18 +166,19 @@ export default class PlayerView {
     if (this.player.holdBlock) {
       let bp = {}
       const holdBlock = this.player.holdBlock
-      for (x = 0; x < holdBlock.data.length; ++x) {
-        bp[`${holdBlock.data[x][0]}_${holdBlock.data[x][1]}`] = holdBlock.type + 1
+      const data = holdBlock.getData()
+      for (let x = 0; x < data.length; ++x) {
+        bp[`${data[x][0]}_${data[x][1]}`] = holdBlock.type + 1
       }
-      for (y = 0; y < 2; ++y) {
-        for (x = 0; x < 4; ++x) {
-          b = bp[`${x}_${y}`]
+      for (let y = 0; y < 2; ++y) {
+        for (let x = 0; x < 4; ++x) {
+          let b = bp[`${x}_${y}`]
           this.dom[`hp${y}`][x].className = `cell ${b ? 'block block-' + b : 'empty'}`
         }
       }
     } else {
-      for (y = 0; y < 2; ++y) {
-        for (x = 0; x < 4; ++x) {
+      for (let y = 0; y < 2; ++y) {
+        for (let x = 0; x < 4; ++x) {
           this.dom[`hp${y}`][x].className = 'cell empty'
         }
       }

@@ -1,5 +1,5 @@
 import EventEmitter from 'events'
-import Block from './block'
+import Block, {numBlockTypes} from './block'
 
 export default class Board extends EventEmitter {
   static VANISH_ZONE_HEIGHT = 4;
@@ -75,40 +75,26 @@ export default class Board extends EventEmitter {
     for (let y = 0; y < numLines; ++y) {
       const empty = Math.floor(Math.random() * this.width)
       for (let x = 0; x < this.width; ++x) {
-        this.data.push(x === empty ? 0 : 1 + Math.floor(Math.random() * Block.blockData.length))
+        this.data.push(x === empty ? 0 : 1 + Math.floor(Math.random() * numBlockTypes))
       }
     }
   }
 
   putBlock (block) {
-    for (let i = 0; i < block.data.length; ++i) {
-      let x = block.x + block.data[i][0]
-      let y = block.y + block.data[i][1]
-      if (y >= 0) {
-        this.data[y * this.width + x] = block.type + 1
-      }
-    }
+    block.getCoords()
+      .filter(([x, y]) => x >= 0 && x < this.width && y >= 0 && y < this.height)
+      .forEach(([x, y]) => this.data[y * this.width + x] = block.type + 1)
     this.emit(Board.EVENT_PUT_BLOCK)
     this.checklines(true)
   }
 
   collide (block) {
-    // check bounds
-    let bx, by
-    for (let i = 0; i < block.data.length; ++i) {
-      bx = block.x + block.data[i][0]
-      by = block.y + block.data[i][1]
-      if (bx < 0 || bx >= this.width || by >= this.height) {
-        return Board.COLLISION_BOUNDS
-      }
+    const coords = block.getCoords()
+    if (coords.some(([x, y]) => x < 0 || x >= this.width || y < 0 || y >= this.height)) {
+      return Board.COLLISION_BOUNDS
     }
-    // check collision
-    for (let i = 0; i < block.data.length; ++i) {
-      bx = block.x + block.data[i][0]
-      by = block.y + block.data[i][1]
-      if (this.data[by * this.width + bx]) {
-        return Board.COLLISION_BLOCKS
-      }
+    if (coords.some(([x, y]) => this.data[y * this.width + x])) {
+      return Board.COLLISION_BLOCKS
     }
     return Board.NO_COLLISION
   }

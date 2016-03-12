@@ -1,4 +1,4 @@
-import Block from './block'
+import Block, {numBlockTypes} from './block'
 import Board from './board'
 import Player from './player'
 import $ from 'jquery'
@@ -169,7 +169,7 @@ Special.registerSpecial(
     let change = false
     for (let i = 0; i < player.data.length; ++i) {
       if (typeof player.data[i] === 'string') {
-        player.data[i] = 1 + Math.floor(Math.random() * Block.blockData.length)
+        player.data[i] = 1 + Math.floor(Math.random() * numBlockTypes)
         change = true
       }
     }
@@ -346,7 +346,7 @@ Special.registerSpecial(
           }
         } else {
           if (around === 3) {
-            alive = 1 + Math.floor(Math.random() * Block.blockData.length)
+            alive = 1 + Math.floor(Math.random() * numBlockTypes)
           }
         }
         d.push(alive)
@@ -429,7 +429,7 @@ Special.registerSpecial(
       }
       if (inv) {
         for (let x = 0; x < player.width; ++x) {
-          player.data[y * player.width + x] = player.data[y * player.width + x] ? 0 : 1 + Math.floor(Math.random() * Block.blockData.length)
+          player.data[y * player.width + x] = player.data[y * player.width + x] ? 0 : 1 + Math.floor(Math.random() * numBlockTypes)
         }
         player.emit(Board.EVENT_CHANGE)
         if (--y >= Board.VANISH_ZONE_HEIGHT + 6) {
@@ -479,7 +479,7 @@ Special.registerSpecial(
   'Only generate S and Z blocks for a limited amount of time.',
   (player, msg) => {
     for (let i = 0; i < 4; ++i) {
-      player.nextBlocks.unshift(new Block(Math.random() < 0.5 ? 5 : 6, 0))
+      player.nextBlocks.unshift(new Block({type: Math.random() < 0.5 ? 5 : 6}))
     }
     return true
   }

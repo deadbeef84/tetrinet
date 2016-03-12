@@ -9,3 +9,7 @@ export function selectRoom (id) {
 export function sendBoard (data) {
   client.emit('update', {data})
 }
+
+export function sendBlock (block) {
+  client.emit('update', {block})
+}

@@ -109,8 +109,7 @@ export default class Player extends Board {
   updateGhostBlock () {
     this.ghostBlock = null
     if (this.currentBlock) {
-      this.ghostBlock = new Block(0, 0)
-      Object.assign(this.ghostBlock, this.currentBlock)
+      this.ghostBlock = Object.assign(new Block(), this.currentBlock)
       while (!this.collide(this.ghostBlock)) {
         ++this.ghostBlock.y
       }
@@ -135,16 +134,10 @@ export default class Player extends Board {
   }
 
   inBlockVisinity (x, y) {
-    if (this.currentBlock) {
-      for (let i = 0; i < this.currentBlock.data.length; ++i) {
-        let bx = this.currentBlock.x + this.currentBlock.data[i][0]
-        let by = this.currentBlock.y + this.currentBlock.data[i][1]
-        if (Math.abs(x - bx) <= 4 && Math.abs(y - by) <= 4) {
-          return true
-        }
-      }
-    }
-    return false
+    return this.currentBlock
+      ? this.currentBlock.getCoords()
+        .some(([px, py]) => Math.abs(x - px) <= 4 && Math.abs(y - py) <= 4)
+      : false
   }
 
   addLines (numLines) {
@@ -219,7 +212,7 @@ export default class Player extends Board {
   generateBlocks () {
     while (this.nextBlocks.length < 3) {
       if (this.options.generator === Player.BLOCK_GENERATOR_RANDOM) {
-        this.nextBlocks.push(new Block(this.random.uint32(), 0))
+        this.nextBlocks.push(new Block({type: this.random.uint32()}))
       } else {
         let i
         const blocks = []
@@ -227,7 +220,7 @@ export default class Player extends Board {
           blocks.push(i)
         }
         while (blocks.length) {
-          this.nextBlocks.push(new Block(blocks.splice(this.random.uint32() % blocks.length, 1)[0], 0))
+          this.nextBlocks.push(new Block({type: blocks.splice(this.random.uint32() % blocks.length, 1)[0]}))
         }
       }
     }

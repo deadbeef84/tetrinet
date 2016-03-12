@@ -51,6 +51,7 @@ export default class Room extends EventEmitter {
     bot.setOptions({height: 24, width: 12, specials: false, generator: 1, entrydelay: 0, rotationsystem: 1, tspin: true, holdpiece: true, nextpiece: 3})
     bot.start()
     bot.on(Board.EVENT_CHANGE, () => cursor.set('data', bot.data))
+    bot.on(Board.EVENT_UPDATE, () => cursor.set('block', bot.currentBlock))
     return this.players[id]
   }
 }
