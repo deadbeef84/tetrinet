@@ -3,14 +3,7 @@ import Board from './board'
 import Block, {numBlockTypes} from './block'
 import Timer from './timer'
 import Special from './special'
-
-function prng (seed) {
-  return {
-    uint32 (min = 0, max = 100000) {
-      return Math.floor(Math.random() * (max - min)) + min
-    }
-  }
-}
+import seedrandom from 'seedrandom'
 
 export default class Player extends Board {
   static TIME_FLIP = 10000;
@@ -61,7 +54,7 @@ export default class Player extends Board {
     })
   }
 
-  reset (seed) {
+  reset (seed = 'foobar') {
     this.currentBlock = null
     this.holdBlock = null
     this.nextBlocks = []
@@ -71,7 +64,8 @@ export default class Player extends Board {
     this.combo = 0
 
     this.dropStick = 0
-    this.random = seed ? prng(seed) : prng()
+    this.random = seedrandom(seed)
+    this.random.uint32 = () => this.random.int32() >>> 0
     this.inventory = []
     this.zebra = false
     this.flip = false
@@ -88,7 +82,7 @@ export default class Player extends Board {
     this.newBlockTimer.delay = options.entrydelay
   }
 
-  start (seed) {
+  start (seed = 'default') {
     this.reset(seed)
     this.clear()
     this.isPlaying = true
