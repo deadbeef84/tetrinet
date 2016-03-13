@@ -1,40 +1,37 @@
-Logging
-    system
-    lines
-    special
-    chat
+Messages
+  system
+  lines
+  special
+  chat
 
 Main
-    Splash
-    OpenID
-    Settings
-    Notifications
+  Splash
+  OpenID
+  Settings
+  Notifications
+  Input
 
-Game
-    Start/Stop
-
-Room
-    Join
-    Part
+Game/Room
+  Start/Stop
+  Join
+  Part
+  Bot to play server side
+  Send specials
+  send lines
+  share level
+  Randomize player index
+  Sudden death timer
+  Teams
+  T-Spin / back-to-back
+  Game stats (keys, blocks, lines cleared/sent, t-spins)
 
 Player
+  board
+  next pieces
+  hold piece
+  inventory
 
-
-Bot to play server side
-
-----
-
-{
-  rooms: {
-    name: {
-      players: {
-        id: {
-          isPlaying: true/false,
-          team: '',
-        }
-      },
-      options: {},
-      state: '',
-    },
-  },
-}
+Stats
+  store
+  true skill ranking
+  views
