@@ -13,3 +13,8 @@ export function sendBoard (data) {
 export function sendBlock (block) {
   client.emit('update', {block})
 }
+
+export function gameover () {
+  console.log('gameover')
+  client.emit('update', {state: 0})
+}

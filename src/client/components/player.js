@@ -5,7 +5,7 @@ import TetrinetPlayer from '../../common/player'
 import Board from '../../common/board'
 import Block from '../../common/block'
 import PlayerView from '../playerview'
-import {sendBoard, sendBlock} from '../actions'
+import {sendBoard, sendBlock, gameover} from '../actions'
 
 class Player extends Component {
   componentDidMount () {
@@ -46,9 +46,10 @@ class Player extends Component {
             console.log(key, code, keyCode)
         }
       })
-      player.start()
+      player.on(TetrinetPlayer.EVENT_GAMEOVER, () => gameover())
       player.on(Board.EVENT_CHANGE, () => sendBoard(player.data))
       player.on(Board.EVENT_UPDATE, () => sendBlock(player.currentBlock))
+      this.player = player
     } else {
       this.board = new Board()
       const playerView = new PlayerView(this.board)
@@ -61,9 +62,17 @@ class Player extends Component {
   }
 
   render () {
-    console.log('Player::render')
+    //console.log('Player::render')
     const { player = {}, self } = this.props
-    if (!self && this.board) {
+    if (self && this.player) {
+      if (player.state === 2 && !this.player.isPlaying) {
+        console.log('starting!')
+        this.player.start()
+      } else if (player.state !== 2 && this.player.isPlaying) {
+        console.log('stopping')
+        this.player.stop()
+      }
+    } else if (!self && this.board) {
       this.board.data = player.data
       this.board.currentBlock = player.block ? new Block(player.block) : null
       this.board.emit(Board.EVENT_UPDATE)

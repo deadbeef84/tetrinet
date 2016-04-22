@@ -2,9 +2,8 @@ import EventEmitter from 'events'
 
 export default class Player extends EventEmitter {
   static IDLE = 0;
-  static PLAYING = 1;
-  static DEAD = 2;
-  static WINNER = 3;
+  static READY = 1;
+  static PLAYING = 2;
 
   constructor (socket, cursor, options, room) {
     super()
@@ -13,8 +12,7 @@ export default class Player extends EventEmitter {
 
     this.cursor.set({
       ...options,
-      state: Player.IDLE,
-      ready: false,
+      state: Player.READY,
       data: ''
     })
 

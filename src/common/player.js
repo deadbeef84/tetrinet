@@ -95,6 +95,7 @@ export default class Player extends Board {
   }
 
   stop () {
+    this.isPlaying = false
     this.dropTimer.stop()
     this.newBlockTimer.stop()
     this.emit(Board.EVENT_UPDATE)
