@@ -18,14 +18,16 @@ const tree = new Baobab({
 
 const rooms = {}
 let roomId = 0
-function addRoom (options) {
+function addRoom (options, rules) {
   const id = ++roomId
   const cursor = tree.select(['rooms', id])
-  rooms[id] = new Room(cursor, options)
+  rooms[id] = new Room(cursor, options, rules)
   return rooms[id]
 }
 
-addRoom({name: 'Testing'}).addBot()
+const room = addRoom({ name: 'Testing' }, { specials: true })
+room.addBot({delay: 25})
+room.addBot({delay: 200})
 
 tree.on('update', ({data}) => {
   // console.dir(data, {depth:5})

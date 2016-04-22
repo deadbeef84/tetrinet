@@ -18,7 +18,7 @@ class Rooms extends Component {
       <div>
         <h2>Select room</h2>
         {Object.entries(rooms || {}).map(([id, {name}]) =>
-          <div key={id} onClick={() => this::join(id)}>Room: {name}</div>)}
+          <div style={{cursor: 'pointer'}} key={id} onClick={() => this::join(id)}>Room: {name}</div>)}
       </div>
     )
   }

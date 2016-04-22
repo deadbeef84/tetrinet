@@ -6,6 +6,11 @@ export function selectRoom (id) {
   })
 }
 
+export function ready () {
+  client.emit('update', {state: 1})
+}
+
+
 export function sendBoard (data) {
   client.emit('update', {data})
 }
@@ -15,6 +20,13 @@ export function sendBlock (block) {
 }
 
 export function gameover () {
-  console.log('gameover')
   client.emit('update', {state: 0})
+}
+
+export function sendSpecial (data) {
+  client.emit('special', data)
+}
+
+export function on (type, cb) {
+  client.on(type, cb)
 }

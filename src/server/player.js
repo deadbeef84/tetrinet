@@ -7,12 +7,13 @@ export default class Player extends EventEmitter {
 
   constructor (socket, cursor, options, room) {
     super()
+    this.socket = socket
     this.cursor = cursor
     this.room = room
 
     this.cursor.set({
       ...options,
-      state: Player.READY,
+      state: Player.IDLE,
       data: ''
     })
 

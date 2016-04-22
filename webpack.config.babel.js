@@ -25,6 +25,7 @@ export default {
       loader: 'url-loader?limit=100000'
     }, {
       test: /\.jsx?$/,
+      exclude: /(node_modules|bower_components)/,
       loader: 'babel'
     }]
   },
@@ -35,8 +36,7 @@ export default {
   plugins: [
     new ExtractTextPlugin('[name].css'),
     new HtmlWebpackPlugin({
-      title: 'Tetrinet',
-      template: 'src/client/index.html'
+      title: 'Tetrinet'
     }),
     new webpack.DefinePlugin({
       'process.env': {

@@ -72,6 +72,10 @@ export default class PlayerView {
     })
   }
 
+  setName (value) {
+    this.el.find('h2').text(value)
+  }
+
   build () {
     let x, y, r
 

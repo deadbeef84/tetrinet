@@ -3,9 +3,10 @@ import Board from './board'
 import Player from './player'
 
 export default class Bot extends Player {
-  constructor (game) {
+  constructor (game, options) {
     super()
     this.game = game
+    this.botOptions = options
 
     this.processBlock = (event) => {
       if (this.isPlaying) {
@@ -121,7 +122,7 @@ export default class Bot extends Player {
     if (finished) {
       this.falldown(true)
     } else {
-      setTimeout(() => this.moveBlock(target), Bot.MOVE_DELAY)
+      setTimeout(() => this.moveBlock(target), this.botOptions.delay)
     }
   }
 }

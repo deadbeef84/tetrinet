@@ -52,6 +52,8 @@ export default class Player extends Board {
       this.speed = false
       $('body').removeClass('speed')
     })
+
+    this.setOptions({height: 24, width: 12, specials: false, generator: 1, entrydelay: 0, rotationsystem: 1, tspin: true, holdpiece: true, nextpiece: 3})
   }
 
   reset (seed = 'foobar') {
@@ -82,7 +84,8 @@ export default class Player extends Board {
     this.newBlockTimer.delay = options.entrydelay
   }
 
-  start (seed = 'default') {
+  start (seed = 'default', rules) {
+    this.setOptions(rules)
     this.reset(seed)
     this.clear()
     this.isPlaying = true
