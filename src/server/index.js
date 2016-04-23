@@ -26,8 +26,8 @@ function addRoom (options, rules) {
 }
 
 const room = addRoom({ name: 'Testing' }, { specials: true })
-room.addBot({delay: 25})
-room.addBot({delay: 200})
+// room.addBot({delay: 25})
+room.addBot({delay: 150})
 
 tree.on('update', ({data}) => {
   // console.dir(data, {depth:5})

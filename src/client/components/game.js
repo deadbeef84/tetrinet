@@ -3,12 +3,13 @@ import ReactDOM from 'react-dom'
 import PropTypes from 'baobab-react/prop-types'
 import {branch} from 'baobab-react/higher-order'
 import Player from '../../common/player'
-// import Special from '../../common/special'
 import Board from '../../common/board'
 import Block from '../../common/block'
 import PlayerView from '../playerview'
 import client from '../client'
 import {sendBoard, sendBlock, gameover, sendSpecial, on, ready} from '../actions'
+import input from '../input'
+import { get as getSetting } from './settings'
 
 class Game extends Component {
   static contextTypes = {
@@ -71,10 +72,8 @@ function createPlayer (id, dom, cursor, room) {
     }
   })
 
-  console.log(room.get('rules'))
-
   const onKeydownListener = this::onKeydown
-  document.addEventListener('keydown', onKeydownListener)
+  input.on('input', onKeydownListener)
   player.on(Player.EVENT_GAMEOVER, () => gameover())
   player.on(Board.EVENT_CHANGE, () => sendBoard(player.data))
   player.on(Board.EVENT_UPDATE, () => sendBlock(player.currentBlock))
@@ -87,10 +86,10 @@ function createPlayer (id, dom, cursor, room) {
       : (state === 1 ? 'READY' : 'PLAYING')
     playerView.setName(`${index || '?'}. ${name} [${stateString}]`)
     if (state !== prev.state) {
-      if (state === 2 && !player.isPlaying) {
+      if (state === 2) {
         console.log('starting!')
         player.start(0, room.get('rules'))
-      } else if (state !== 2 && player.isPlaying) {
+      } else if (state !== 2) {
         console.log('stopping')
         player.stop()
       }
@@ -103,12 +102,13 @@ function createPlayer (id, dom, cursor, room) {
   onUpdate({data: {previousData: {}, currentData: cursor.get()}})
   cursor.on('update', onUpdate)
 
+  // TODO unregister this event-handler
   on('special', (data) => {
     player.use(data)
   })
 
   player.dispose = () => {
-    document.removeEventListener('keydown', onKeydownListener)
+    input.removeEventListener('input', onKeydownListener)
     player.removeAllListeners()
     cursor.off(onUpdate)
     dom.removeChild(el)
@@ -155,47 +155,39 @@ function createOpponent (id, dom, cursor, room) {
   return player
 }
 
-function onKeydown ({key, code, keyCode}) {
+function onKeydown (e) {
+  const key = e.which
   if (!this.self) {
     return
   }
-  switch (key || code || keyCode) {
-    case 'Left':
-    case 'ArrowLeft':
-      this.self.move(-1, 0, 0, false)
-      break
-    case 'Right':
-    case 'ArrowRight':
-      this.self.move(1, 0, 0, false)
-      break
-    case 'Up':
-    case 'ArrowUp':
-      this.self.move(0, 0, 1, false)
-      break
-    case 'Down':
-    case 'ArrowDown':
-      this.self.move(0, 1, 0, false)
-      break
-    case ' ':
-    case 'Space':
-      this.self.falldown(true)
-      break
-    case 'Digit0':
-    case 'Digit1':
-    case 'Digit2':
-    case 'Digit3':
-    case 'Digit4':
-    case 'Digit5':
-    case 'Digit6':
-    case 'Digit7':
-    case 'Digit8':
-    case 'Digit9':
-      const idx = parseInt(code.slice(5), 10)
-      this::useSpecial(idx)
-      break
-
-    default:
-      console.log(key, code, keyCode)
+  input.delay = getSetting('inputDelay')
+  input.interval = getSetting('inputInterval')
+  const actions = {
+    keyLeft: () => this.self.move(-1, 0, 0, false),
+    keyRight: () => this.self.move(1, 0, 0, false),
+    keyRotateCw: () => this.self.move(0, 0, 1, false),
+    keyRotateCcw: () => this.self.move(0, 0, -1, false),
+    keyDown: () => this.self.move(0, 1, 0, false),
+    keyDrop: () => this.self.falldown(true),
+    keySoftDrop: () => this.self.falldown(false),
+    keyHold: () => this.self.hold(),
+    keyInventory1: () => this::useSpecial(1),
+    keyInventory2: () => this::useSpecial(2),
+    keyInventory3: () => this::useSpecial(3),
+    keyInventory4: () => this::useSpecial(4),
+    keyInventory5: () => this::useSpecial(5),
+    keyInventory6: () => this::useSpecial(6),
+    keyInventory7: () => this::useSpecial(7),
+    keyInventory8: () => this::useSpecial(8),
+    keyInventory9: () => this::useSpecial(9)
+  }
+  const actionKey = Object.keys(actions)
+    .find(k => getSetting(k) === key)
+  if (actionKey) {
+    actions[actionKey]()
+    e.preventDefault()
+  } else {
+    console.log(key)
   }
 }
 

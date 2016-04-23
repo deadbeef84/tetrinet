@@ -10,7 +10,6 @@ export function ready () {
   client.emit('update', {state: 1})
 }
 
-
 export function sendBoard (data) {
   client.emit('update', {data})
 }

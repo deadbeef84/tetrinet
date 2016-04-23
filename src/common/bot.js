@@ -127,8 +127,6 @@ export default class Bot extends Player {
   }
 }
 
-Bot.MOVE_DELAY = 100
-
 class ElTetris {
   constructor (number_of_columns, number_of_rows) {
     this.number_of_rows = number_of_rows

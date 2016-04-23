@@ -28,6 +28,7 @@
     "baobab-react": "^1.0.1",
     "express": "^4.13.3",
     "jquery": "^2.2.1",
+    "keycode": "^2.1.1",
     "react": "^0.14.7",
     "react-dom": "^0.14.7",
     "seedrandom": "^2.4.2",

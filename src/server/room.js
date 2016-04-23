@@ -38,7 +38,10 @@ export default class Room extends EventEmitter {
         players
       } = x.data.currentData
       if (state === Room.STOPPED) {
-        if (Object.values(players).every(({state}) => state === Player.READY) && Object.values(players).length >= 3) {
+        if (Object.values(players).every(({state}) => state === Player.READY) &&
+            Object.keys(players).map(id => this.players[id])
+            .filter(p => !p.bot)
+            .length >= 1) {
           const indices = Object.keys(players)
           shuffle(indices)
           this.cursor.deepMerge({
@@ -96,10 +99,12 @@ export default class Room extends EventEmitter {
   addBot (options) {
     const id = `Bot ${Math.floor(Math.random() * 1000000)}`
     const cursor = this.cursor.select(['players', id])
-    this.players[id] = new Player(null, cursor, {name: id}, this)
-    const bot = new Bot(null, options)
-    this.players[id].bot = bot
     const state = cursor.select('state')
+    const player = new Player(null, cursor, {name: id}, this)
+    const bot = new Bot(null, options)
+    player.bot = bot
+    this.players[id] = player
+
     state.set(Player.READY)
     state.on('update', ({data: { currentData }}) => {
       if (currentData === Player.IDLE) {
@@ -111,10 +116,12 @@ export default class Room extends EventEmitter {
         bot.start(0, this.cursor.get('rules'))
       }
     })
-    //cursor.set('data', bot.data.slice(0))
     bot.on(Board.EVENT_CHANGE, () => cursor.set('data', bot.data))
-    bot.on(Player.EVENT_GAMEOVER, () => cursor.set('state', 0))
-    return this.players[id]
+    bot.on(Player.EVENT_GAMEOVER, () => {
+      console.log('Bot died')
+      state.set(Player.IDLE)
+    })
+    return player
   }
 }
 
