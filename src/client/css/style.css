@@ -311,9 +311,16 @@ em.self { /* your name */
 /* the board */
 .board-wrapper {
 	width: 96px;
+	height: 100%;
 	margin: 0 auto;
 	background: url(../images/skin/retro.png) no-repeat -192px -24px;
 	overflow: hidden;
+	position: relative;
+}
+.board-wrapper::after {
+	content: "";
+	position: absolute;
+	top:0; right:0; bottom:0; left:0;
 }
 .self .board-wrapper {
 	background: url(../images/skin/retro.png) no-repeat 0 -24px;
@@ -458,28 +465,33 @@ em.self { /* your name */
 	opacity: 0;
 }
 /* rickrolling */
-.rickroll-1 .player.self .board::after {
-	opacity: 0.5;
-	background: url(../images/rickroll.gif) 50% 0%;
+.board-wrapper.rickroll-3::after,
+.board-wrapper.rickroll-2::after,
+.board-wrapper.rickroll-1::after {
+	background: url(../images/rickroll.gif) 50% 50%;
+    opacity: 0.5;
+    background-size: cover;
 }
-.rickroll-2 .player.self::after {
+.player.self .board-wrapper.rickroll-3::before,
+.player.self .board-wrapper.rickroll-2::before {
 	content: ' ';
-	position: absolute;
+	position: fixed;
 	top:0; right:0; bottom:0; left:0;
 	opacity: 0.5;
 	background: url(../images/rickroll.gif);
+    background-size: cover;
 }
-.rickroll-3 #gamearea::after {
-	content: ' ';
-	position: absolute;
-	top:0; right:0; bottom:0; left:0;
-	opacity: 0.5;
-	background: url(../images/rickroll.gif);
+.player.self .board-wrapper.rickroll-3::before {
+	-webkit-animation: rickroll 0.5s infinite ease;
+}
+@-webkit-keyframes rickroll {
+	0% { -webkit-transform: scale(1); }
+	50% { -webkit-transform: scale(2.5) rotateZ(90deg); }
 }
 /* speed */
-.speed .player.self .board::after {
-	opacity: 0.5;
+ .board-wrapper.speed::after {
 	background: url(../images/starfield.gif) 50% 50%;
+    background-size: cover;
 }
 /* nyancat */
 .nyancat {

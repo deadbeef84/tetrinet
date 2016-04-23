@@ -130,6 +130,16 @@ export default class PlayerView {
       this.player.updateGhostBlock()
     }
 
+    let wrapper = this.el.find('.board-wrapper')
+    wrapper.removeClass('speed rickroll-1 rickroll-2 rickroll-3')
+    if (this.player.rickroll) {
+      let rickrollLevel = Math.min(3, this.player.rickroll)
+      wrapper.addClass('rickroll-' + rickrollLevel)
+    }
+    if (this.player.speed) {
+      wrapper.addClass('speed')
+    }
+
     // update board
     for (let y = Board.VANISH_ZONE_HEIGHT; y < this.player.height; ++y) {
       for (let x = 0; x < this.player.width; ++x) {
