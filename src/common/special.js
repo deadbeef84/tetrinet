@@ -4,6 +4,11 @@ import Player from './player'
 import $ from 'jquery'
 
 export default class Special {
+  static TIME_FLIP = 10000;
+  static TIME_INVISIBLE = 10000;
+  static TIME_REFLECT = 10000;
+  static TIME_SPEED = 15000;
+  static TIME_RICKROLL = 10000;
 }
 
 Special.specialIds = []
@@ -290,11 +295,18 @@ Special.registerSpecial(
   }
 )
 
-Special.registerSpecial(Special.FLIP, 'Flip', 'Flip left/right controls', (player, msg) => {
-  player.flip = !player.flip
-  player.flipTimer.start()
-  return false
-})
+Special.registerSpecial(
+  Special.FLIP,
+  'Flip',
+  'Flip left/right controls',
+  (player, msg) => {
+    player.flip = true
+    player.addSpecialTimer(Special.FLIP, true, Special.TIME_FLIP, () => {
+      player.flip = false
+    })
+    return false
+  }
+)
 
 Special.registerSpecial(
   Special.INVISIBLE,
@@ -302,8 +314,9 @@ Special.registerSpecial(
   'Limits the visibility of the field.',
   (player, msg) => {
     player.invisible = true
-    player.invisibleTimer.addDelay(Player.TIME_INVISIBLE)
-    player.invisibleTimer.start()
+    player.addSpecialTimer(Special.INVISIBLE, true, Special.TIME_INVISIBLE, () => {
+      player.invisible = false
+    })
     return true
   }
 )
@@ -314,8 +327,9 @@ Special.registerSpecial(
   'Reflect other players specials back to the attacker for 10 seconds.',
   (player, msg) => {
     player.reflect = true
-    player.reflectTimer.addDelay(Player.TIME_REFLECT)
-    player.reflectTimer.start()
+    player.addSpecialTimer(Special.REFLECT, true, Special.TIME_REFLECT, () => {
+      player.reflect = false
+    })
     return false
   }
 )
@@ -379,13 +393,10 @@ Special.registerSpecial(
   'Rickroll',
   'Never Gonna Give You Up...',
   (player, msg) => {
-    if (!global.document) {
-      return false
-    }
-    $('body').addClass(`rickroll-${++player.rickroll}`)
-    setTimeout(() => {
-      $('body').removeClass(`rickroll-${player.rickroll--}`)
-    }, 10000)
+    player.rickroll++
+    player.addSpecialTimer(Special.RICKROLL, false, Special.TIME_RICKROLL, () => {
+      player.rickroll--
+    })
     return false
   }
 )
@@ -459,14 +470,14 @@ Special.registerSpecial(
         }
       }
     }
-    player.speed = true
-    player.speedTimer.addDelay(Player.TIME_SPEED)
-    player.speedTimer.start()
+    // Set increased dropTimer delay, this will reset automatically
+    // when player.speed = false
     player.dropTimer.delay = 50 + maxHeight * 6
     player.dropTimer.start()
-    if (global.document) {
-      $('body').addClass('speed')
-    }
+    player.speed = true
+    player.addSpecialTimer(Special.SPEED, true, Special.TIME_SPEED, () => {
+      player.speed = false
+    })
     return false
   }
 )

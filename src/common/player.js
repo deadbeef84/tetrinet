@@ -6,10 +6,6 @@ import Special from './special'
 import seedrandom from 'seedrandom'
 
 export default class Player extends Board {
-  static TIME_FLIP = 10000;
-  static TIME_INVISIBLE = 10000;
-  static TIME_REFLECT = 10000;
-  static TIME_SPEED = 15000;
 
   static INVENTORY_MAX = 18;
   static DROP_DELAY = 1000;
@@ -37,21 +33,6 @@ export default class Player extends Board {
     this.newBlockTimer = new Timer(Player.NEWBLOCK_DELAY, 1)
     this.newBlockTimer.on(Timer.EVENT_TIMER, () => this.doCreateNewBlock())
 
-    this.flipTimer = new Timer(Player.TIME_FLIP, 1)
-    this.flipTimer.on(Timer.EVENT_TIMER, () => { this.flip = false })
-
-    this.invisibleTimer = new Timer(Player.TIME_INVISIBLE, 1)
-    this.invisibleTimer.on(Timer.EVENT_TIMER, () => { this.invisible = false })
-
-    this.reflectTimer = new Timer(Player.TIME_REFLECT, 1)
-    this.reflectTimer.on(Timer.EVENT_TIMER, () => { this.reflect = false })
-
-    this.speedTimer = new Timer(Player.TIME_SPEED, 1)
-    this.speedTimer.on(Timer.EVENT_TIMER, () => {
-      this.speed = false
-      // $('body').removeClass('speed')
-    })
-
     this.setOptions({height: 24, width: 12, specials: false, generator: 1, entrydelay: 0, rotationsystem: 1, tspin: true, holdpiece: true, nextpiece: 3})
   }
 
@@ -68,6 +49,8 @@ export default class Player extends Board {
     this.random = seedrandom(seed)
     this.random.uint32 = () => this.random.int32() >>> 0
     this.inventory = []
+    this.specialTimers = {}
+    this.specialTimerCount = 0
     this.zebra = false
     this.flip = false
     this.reflect = false
@@ -103,6 +86,7 @@ export default class Player extends Board {
     this.isPlaying = false
     this.dropTimer.stop()
     this.newBlockTimer.stop()
+    this.clearSpecialTimers()
     this.emit(Board.EVENT_UPDATE)
   }
 
@@ -437,6 +421,33 @@ export default class Player extends Board {
     if (change) {
       this.moveUpIfBlocked()
       this.emit(Board.EVENT_CHANGE)
+    }
+  }
+
+  addSpecialTimer (type, stacking, delay, callback) {
+    // Add time to existing timer
+    if (stacking && this.specialTimers[type]) {
+      this.specialTimers[type].addDelay(delay)
+      this.specialTimers[type].start()
+      return
+    }
+    // Create new timer
+    const timer = new Timer(delay, 1)
+    const id = stacking ? type : this.specialTimerCount++
+    this.specialTimers[id] = timer
+    this.specialTimers[id].start()
+    this.specialTimers[id].once(Timer.EVENT_TIMER, () => {
+      delete this.specialTimers[id]
+      callback(this)
+    })
+  }
+
+  clearSpecialTimers () {
+    for (let timer in this.specialTimers) {
+      if (this.specialTimers.hasOwnProperty(timer)) {
+        this.specialTimers[timer].stop()
+        this.specialTimers[timer].emit(Timer.EVENT_TIMER)
+      }
     }
   }
 }
