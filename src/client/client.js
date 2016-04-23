@@ -7,6 +7,11 @@ socket.on('connect', () => {
   console.log('connected')
 })
 
+socket.on('disconnect', () => {
+  console.log('disconnect')
+  setTimeout(() => document.location.reload(true), 2000)
+})
+
 socket.on('init', (state) => {
   tree.set(state)
 })

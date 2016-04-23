@@ -39,10 +39,13 @@ export default class Room extends EventEmitter {
         players
       } = x.data.currentData
       if (state === Room.STOPPED) {
-        if (Object.values(players).every(({state}) => state === Player.READY) &&
-            Object.keys(players).map(id => this.players[id])
-            .filter(p => !p.bot)
-            .length >= 1) {
+        const allReady = Object.values(players)
+          .every(({state}) => state === Player.READY)
+        const numHumans = Object.keys(players)
+          .map(id => this.players[id])
+          .filter(p => !p.bot)
+          .length
+        if (allReady && numHumans >= 1) {
           const indices = Object.keys(players)
           shuffle(indices)
           this.cursor.deepMerge({
@@ -55,14 +58,15 @@ export default class Room extends EventEmitter {
               }
             }), {})
           })
+          console.log('Starting game')
         }
       } else {
         const active = Object.keys(players)
           .map(id => ({ id, ...players[id] }))
           .filter(({state}) => state === Player.PLAYING)
         if (active.length === 1 && Object.values(players).length >= 1) {
+          console.log('game ended', state, players)
           const winner = active[0]
-          console.log(winner)
           this.cursor.deepMerge({
             state: Room.STOPPED,
             winners: [winner.id],
@@ -114,10 +118,10 @@ export default class Room extends EventEmitter {
     this.players[id] = player
 
     state.set(Player.READY)
-    state.on('update', ({data: { currentData }}) => {
+    state.on('update', ({data: { previousData, currentData }}) => {
       if (currentData === Player.IDLE) {
+        console.log('bot ready2')
         bot.stop()
-        console.log('bot ready')
         state.set(Player.READY)
       } else if (currentData === Player.PLAYING) {
         console.log('bot starting')

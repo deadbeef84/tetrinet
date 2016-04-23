@@ -79,7 +79,7 @@ export default class Settings extends Component {
                 <div key={prop}>
                   <label>
                     {label}
-                    <input type='input' value={keycode(value)} onKeyDown={({which}) => this::update(prop, which)}/>
+                    <input type='input' value={keycode(value)} onChange={() => {}} onKeyDown={({which}) => this::update(prop, which)}/>
                   </label>
                 </div>
               )

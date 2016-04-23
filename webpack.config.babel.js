@@ -59,6 +59,7 @@ export default {
       })
     ])
   ],
+  node: { fs: 'empty' },
   resolve: {
     extensions: ['', '.js', '.jsx', '.json'],
     root: __dirname

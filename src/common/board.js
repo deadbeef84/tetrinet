@@ -1,5 +1,5 @@
 import EventEmitter from 'events'
-import Block, {numBlockTypes} from './block'
+import {numBlockTypes} from './block'
 
 export default class Board extends EventEmitter {
   static VANISH_ZONE_HEIGHT = 4;
