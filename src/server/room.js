@@ -14,6 +14,7 @@ export default class Room extends EventEmitter {
   constructor (cursor, options, rules) {
     super()
     this.cursor = cursor
+    this.namespace = this.cursor.path.join('-')
     this.cursor.set({
       ...options,
       rules: {
@@ -59,7 +60,6 @@ export default class Room extends EventEmitter {
         const active = Object.keys(players)
           .map(id => ({ id, ...players[id] }))
           .filter(({state}) => state === Player.PLAYING)
-        //console.log('Active', active)
         if (active.length === 1 && Object.values(players).length >= 1) {
           const winner = active[0]
           console.log(winner)
@@ -77,9 +77,9 @@ export default class Room extends EventEmitter {
 
   join (socket, options) {
     const id = socket.client.id
-    // socket.join(this.cursor.path.join('-'))
     const cursor = this.cursor.select(['players', id])
     this.players[id] = new Player(socket, cursor, options, this)
+    socket.join(this.namespace)
     socket.on('disconnect', (x) => {
       cursor.unset()
       delete this.players[id]
@@ -92,6 +92,14 @@ export default class Room extends EventEmitter {
       } else if (target && target.bot) {
         target.bot.use(data)
       }
+    })
+    socket.on('lines', (lines) => {
+      console.log('lines', lines)
+      socket.broadcast.to(this.namespace).emit('lines', lines)
+      Object.values(this.players)
+        .map(({ bot }) => bot)
+        .filter(x => x)
+        .forEach(bot => bot.addLines(lines))
     })
     return this.players[id]
   }

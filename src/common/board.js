@@ -84,6 +84,21 @@ export default class Board extends EventEmitter {
     block.getCoords()
       .filter(([x, y]) => x >= 0 && x < this.width && y >= 0 && y < this.height)
       .forEach(([x, y]) => this.data[y * this.width + x] = block.type + 1)
+
+    const backToBack = this.lastDropTspin
+    this.lastDropTspin = false
+    if (block.type === 2) {
+      var surrounded = [[-1, -1], [1, -1], [-1, 1], [1, 1]]
+        .map(([x, y]) => [block.x + x + 1, block.y + y + 1])
+        .filter(([x, y]) => x >= 0 && x < this.width && y >= 0 && y < this.height)
+        .filter(([x, y]) => this.data[y * this.width + x])
+        .length
+      if (this.lastMoveRotate && surrounded >= 3) {
+        this.lastDropTspin = true
+      }
+    }
+    this.backToBack = backToBack && this.lastDropTspin
+
     this.emit(Board.EVENT_PUT_BLOCK)
     this.checklines(true)
   }

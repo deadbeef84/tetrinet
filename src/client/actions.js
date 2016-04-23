@@ -26,6 +26,10 @@ export function sendSpecial (data) {
   client.emit('special', data)
 }
 
+export function sendLines (lines) {
+  client.emit('lines', lines)
+}
+
 export function on (type, cb) {
   client.on(type, cb)
 }

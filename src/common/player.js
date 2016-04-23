@@ -18,7 +18,6 @@ export default class Player extends Board {
   static EVENT_GAMEOVER = 'gameover';
   static EVENT_INVENTORY = 'inventory';
   static EVENT_NEW_BLOCK = 'new_block';
-  static EVENT_DROP = 'drop';
   static EVENT_SPECIAL = 'special';
   static EVENT_NOTIFY = 'notify';
 
@@ -77,6 +76,9 @@ export default class Player extends Board {
     this.isPlaying = false
     this.rickroll = 0
     this.holdPossible = true
+
+    this.lastDropTspin = false
+    this.lastMoveRotate = false
   }
 
   setOptions (options) {
@@ -193,10 +195,11 @@ export default class Player extends Board {
   }
 
   drop () {
-    if (this.move(0, 1, 0, this.dropStick === 5)) {
-      ++this.dropStick
-    } else {
-      this.emit(Player.EVENT_DROP)
+    if (!this.move(0, 1, 0)) {
+      if (this.dropStick++ === 5) {
+        this.putBlock(this.currentBlock)
+        this.createNewBlock()
+      }
     }
   }
 
@@ -275,7 +278,7 @@ export default class Player extends Board {
     }
   }
 
-  move (x, y, r, stick) {
+  move (x, y, r) {
     if (!this.currentBlock) {
       return
     }
@@ -289,9 +292,10 @@ export default class Player extends Board {
       this.currentBlock.rotate(r)
     }
     const c = this.collide(this.currentBlock)
+    const rotationOnly = x === 0 && y === 0 && r
     if (c !== Board.NO_COLLISION) {
       let rotationSucceeded = false
-      if (x === 0 && y === 0 && r && !stick) {
+      if (rotationOnly) {
         switch (this.options.rotationsystem) {
           case Player.ROTATION_SYSTEM_CLASSIC:
             rotationSucceeded = this.handleCollisionClassic(c)
@@ -302,25 +306,19 @@ export default class Player extends Board {
             break
         }
       }
-      if (x === 0 && y === 0 && !stick && rotationSucceeded) {
-        this.emit(Board.EVENT_UPDATE)
-        return false
-      } else {
+      if (!rotationSucceeded) {
         // revert position
         this.currentBlock.x -= x
         this.currentBlock.y -= y
         if (r) {
           this.currentBlock.rotate(-r)
         }
-        if (stick) {
-          this.putBlock(this.currentBlock)
-          this.createNewBlock()
-        }
-        return true
+        return false
       }
     }
+    this.lastMoveRotate = rotationOnly
     this.emit(Board.EVENT_UPDATE)
-    return false
+    return true
   }
 
   handleCollisionClassic (c) {

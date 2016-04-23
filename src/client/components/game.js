@@ -7,7 +7,7 @@ import Board from '../../common/board'
 import Block from '../../common/block'
 import PlayerView from '../playerview'
 import client from '../client'
-import {sendBoard, sendBlock, gameover, sendSpecial, on, ready} from '../actions'
+import * as actions from '../actions'
 import input from '../input'
 import { get as getSetting } from './settings'
 
@@ -68,15 +68,31 @@ function createPlayer (id, dom, cursor, room) {
   el.addEventListener('click', () => {
     console.log('click')
     if (cursor.get('state') === 0) {
-      ready()
+      actions.ready()
     }
   })
 
   const onKeydownListener = this::onKeydown
   input.on('input', onKeydownListener)
-  player.on(Player.EVENT_GAMEOVER, () => gameover())
-  player.on(Board.EVENT_CHANGE, () => sendBoard(player.data))
-  player.on(Board.EVENT_UPDATE, () => sendBlock(player.currentBlock))
+  player.on(Player.EVENT_GAMEOVER, () => actions.gameover())
+  player.on(Board.EVENT_CHANGE, () => actions.sendBoard(player.data))
+  player.on(Board.EVENT_UPDATE, () => actions.sendBlock(player.currentBlock))
+  player.on(Board.EVENT_LINES, (lines) => {
+    let linesToAdd = lines === 4 ? 4 : lines - 1
+    // t-spin
+    if (player.lastDropTspin) {
+      linesToAdd = lines * 2
+    }
+    if (linesToAdd > 0 && player.backToBack) {
+      ++linesToAdd
+    }
+    if (linesToAdd > 0) {
+      actions.sendLines(linesToAdd)
+    }
+    // check board clear?
+    player.lastDropTspin && console.log('T-SPIN!')
+    player.backToBack && console.log('BACK2BACK')
+  })
 
   const onUpdate = (e) => {
     const prev = e.data.previousData
@@ -103,8 +119,12 @@ function createPlayer (id, dom, cursor, room) {
   cursor.on('update', onUpdate)
 
   // TODO unregister this event-handler
-  on('special', (data) => {
+  actions.on('special', (data) => {
     player.use(data)
+  })
+
+  actions.on('lines', (lines) => {
+    player.addLines(lines)
   })
 
   player.dispose = () => {
@@ -204,7 +224,7 @@ function useSpecial (idx) {
       const target = this.players[targetId]
       const s = inventory.shift()
       const msg = {s, id: targetId}
-      sendSpecial(msg)
+      actions.sendSpecial(msg)
       if (target instanceof Player) {
         target.use(msg)
       } else {
