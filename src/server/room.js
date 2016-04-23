@@ -113,7 +113,7 @@ export default class Room extends EventEmitter {
     })
     //cursor.set('data', bot.data.slice(0))
     bot.on(Board.EVENT_CHANGE, () => cursor.set('data', bot.data))
-    bot.on(Board.EVENT_UPDATE, () => cursor.set('block', bot.currentBlock))
+    bot.on(Player.EVENT_GAMEOVER, () => cursor.set('state', 0))
     return this.players[id]
   }
 }

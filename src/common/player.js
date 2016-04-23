@@ -1,4 +1,4 @@
-import $ from 'jquery'
+// import $ from 'jquery'
 import Board from './board'
 import Block, {numBlockTypes} from './block'
 import Timer from './timer'
@@ -50,7 +50,7 @@ export default class Player extends Board {
     this.speedTimer = new Timer(Player.TIME_SPEED, 1)
     this.speedTimer.on(Timer.EVENT_TIMER, () => {
       this.speed = false
-      $('body').removeClass('speed')
+      // $('body').removeClass('speed')
     })
 
     this.setOptions({height: 24, width: 12, specials: false, generator: 1, entrydelay: 0, rotationsystem: 1, tspin: true, holdpiece: true, nextpiece: 3})

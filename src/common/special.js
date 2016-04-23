@@ -379,6 +379,9 @@ Special.registerSpecial(
   'Rickroll',
   'Never Gonna Give You Up...',
   (player, msg) => {
+    if (!global.document) {
+      return false
+    }
     $('body').addClass(`rickroll-${++player.rickroll}`)
     setTimeout(() => {
       $('body').removeClass(`rickroll-${player.rickroll--}`)
@@ -461,7 +464,9 @@ Special.registerSpecial(
     player.speedTimer.start()
     player.dropTimer.delay = 50 + maxHeight * 6
     player.dropTimer.start()
-    $('body').addClass('speed')
+    if (global.document) {
+      $('body').addClass('speed')
+    }
     return false
   }
 )
@@ -490,12 +495,12 @@ Special.registerSpecial(
   'Inventory bomb',
   'Reorders and randomly removes specials from an opponents inventory.',
   (player, msg) => {
-    const newInventory = []
-    $.each(player.inventory, (i, obj) => {
-      if (Math.random() > 0.05) {
-        newInventory.push(Math.random() > 0.5 ? obj : Special.getRandomSpecial())
-      }
-    })
+    const newInventory = player.inventory
+      .map(obj => {
+        if (Math.random() > 0.05) {
+          return Math.random() > 0.5 ? obj : Special.getRandomSpecial()
+        }
+      })
     for (let i = 1; i < newInventory.length - 1; i++) {
       const swap = i
       const rand = Math.random()
